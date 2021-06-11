@@ -1,0 +1,51 @@
+object FormGain: TFormGain
+  Left = 299
+  Height = 157
+  Top = 250
+  Width = 298
+  Caption = 'FormGain'
+  ClientHeight = 157
+  ClientWidth = 298
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  OnHide = FormHide
+  OnShow = FormShow
+  object ScrollBarGain: TScrollBar
+    Left = 16
+    Height = 33
+    Top = 80
+    Width = 264
+    LargeChange = 5
+    Max = 1000
+    PageSize = 0
+    PopupMenu = PopupMenuReset
+    Position = 500
+    TabOrder = 0
+    OnChange = ScrollBarGainChange
+  end
+  object LabelGain: TLabel
+    Left = 16
+    Height = 20
+    Top = 40
+    Width = 71
+    Caption = 'LabelGain'
+    ParentColor = False
+  end
+  object CheckBoxHiFPS: TCheckBox
+    Left = 195
+    Height = 24
+    Top = 36
+    Width = 85
+    Caption = 'HighFPS'
+    OnChange = CheckBoxHiFPSChange
+    TabOrder = 1
+  end
+  object PopupMenuReset: TPopupMenu
+    Left = 208
+    Top = 96
+    object MenuItemReset: TMenuItem
+      Caption = 'Reset'
+      OnClick = MenuItemResetClick
+    end
+  end
+end

@@ -1,0 +1,20 @@
+# common
+*.exe
+*.dll
+*.res
+
+# lazarus and fpc
+backup/
+lib/
+*.lps
+*.ppu
+*.compiled
+*.o
+
+# delphi
+__history/
+__recovery/
+*.dcu
+*.local
+*.identcache
+*.rsm
