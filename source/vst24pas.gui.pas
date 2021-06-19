@@ -66,7 +66,7 @@ end;
 
 function TGuiEditor.Open(ptr: Pointer): boolean;
 begin
-  FGui.ParentWindow := ToVstPtr(ptr);
+  FGui.ParentWindow := ToIntPtr(ptr);
   FGui.Show;
   Result := True;
 end;

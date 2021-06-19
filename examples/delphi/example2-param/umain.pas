@@ -14,11 +14,11 @@ type
     procedure ProcessReplacing(inputs, outputs: TArrPSingle; SampleFrames: Int32); override;
     procedure SetParameter(index: Int32; Value: single); override;
     function GetParameter(index: Int32): single; override;
-    procedure GetParameterName(index: Int32; Text: PChar); override;
-    procedure GetParameterLabel(index: Int32; _label: PChar); override;
-    procedure GetParameterDisplay(index: Int32; Text: PChar); override;
-    function GetEffectName(Name: PChar): boolean; override;
-    function GetVendorString(Text: PChar): boolean; override;
+    procedure GetParameterName(index: Int32; Text: PAnsiChar); override;
+    procedure GetParameterLabel(index: Int32; _label: PAnsiChar); override;
+    procedure GetParameterDisplay(index: Int32; Text: PAnsiChar); override;
+    function GetEffectName(Name: PAnsiChar): boolean; override;
+    function GetVendorString(Text: PAnsiChar): boolean; override;
   end;
 
 implementation
@@ -32,7 +32,7 @@ begin
   SetParameter(0, 0.5);
 end;
 
-function TMyPlugin.GetEffectName(Name: PChar): boolean;
+function TMyPlugin.GetEffectName(Name: PAnsiChar): boolean;
 begin
   vststrncpy(Name, 'example2-param', 31);
   Result := True;
@@ -47,7 +47,7 @@ begin
   end;
 end;
 
-procedure TMyPlugin.GetParameterDisplay(index: Int32; Text: PChar);
+procedure TMyPlugin.GetParameterDisplay(index: Int32; Text: PAnsiChar);
 begin
   case index of
     0: dB2String(FGain * 2, Text, 7);
@@ -55,7 +55,7 @@ begin
   end;
 end;
 
-procedure TMyPlugin.GetParameterLabel(index: Int32; _label: PChar);
+procedure TMyPlugin.GetParameterLabel(index: Int32; _label: PAnsiChar);
 begin
   case index of
     0: vststrncpy(_label, 'dB', 2);
@@ -63,7 +63,7 @@ begin
   end;
 end;
 
-procedure TMyPlugin.GetParameterName(index: Int32; Text: PChar);
+procedure TMyPlugin.GetParameterName(index: Int32; Text: PAnsiChar);
 begin
   case index of
     0: vststrncpy(Text, 'Gain', 4);
@@ -71,7 +71,7 @@ begin
   end;
 end;
 
-function TMyPlugin.GetVendorString(Text: PChar): boolean;
+function TMyPlugin.GetVendorString(Text: PAnsiChar): boolean;
 begin
   vststrncpy(Text, 'PeaZomboss', 63);
   Result := True;

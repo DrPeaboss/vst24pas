@@ -29,9 +29,8 @@ const
 
 type
 {$ifdef DCC}
-  { Force DCC use AnsiChar }
-  PChar       = PAnsiChar;
-  char        = AnsiChar;
+  PInt32  = ^Int32;
+  PIntPtr = ^IntPtr;
   { Array for process }
   TArrSingle  = array[0..0] of single;
   PArrSingle  = ^TArrSingle;
@@ -41,11 +40,8 @@ type
   TArrPDouble = array of PArrDouble;
 {$endif}
 
-  PInt32     = ^Int32;
   PPSingle   = ^PSingle;
   PPDouble   = ^PDouble;
-  PVstIntPtr = ^VstIntPtr;
-  VstIntPtr  = NativeInt; // Size eq Pointer
 
 const
   { hostCanDos strings Plug-in }
@@ -95,26 +91,26 @@ const
 
 type
   { used for #effGetParamLabel, #effGetParamDisplay, #effGetParamName limit 8}
-  TArrStrParam      = array[0..kVstMaxParamStrLen - 1] of char;
+  TArrStrParam      = array[0..kVstMaxParamStrLen - 1] of AnsiChar;
   { used for #effGetProgramName, #effSetProgramName, #effGetProgramNameIndexed limit 24}
-  TArrStrProgName   = array[0..kVstMaxProgNameLen - 1] of char;
+  TArrStrProgName   = array[0..kVstMaxProgNameLen - 1] of AnsiChar;
   { used for #effGetEffectName limit 32}
-  TArrStrEffectName = array[0..kVstMaxEffectNameLen - 1] of char;
+  TArrStrEffectName = array[0..kVstMaxEffectNameLen - 1] of AnsiChar;
   { used for #effGetVendorString, #amGetVendorString limit 64}
-  TArrStrVendor     = array[0..kVstMaxVendorStrLen - 1] of char;
+  TArrStrVendor     = array[0..kVstMaxVendorStrLen - 1] of AnsiChar;
   { used for #effGetProductString, #amGetProductString limit 64}
-  TArrStrProduct    = array[0..kVstMaxProductStrLen - 1] of char;
+  TArrStrProduct    = array[0..kVstMaxProductStrLen - 1] of AnsiChar;
   { used for #TVstParameterProperties->shortLabel, #TVstPinProperties->shortLabel limit 8}
-  TArrStrShortLabel = array[0..kVstMaxShortLabelLen - 1] of char;
+  TArrStrShortLabel = array[0..kVstMaxShortLabelLen - 1] of AnsiChar;
   { used for #TVstParameterProperties->label limit 24}
-  TArrStrCategLabel = array[0..kVstMaxCategLabelLen - 1] of char;
+  TArrStrCategLabel = array[0..kVstMaxCategLabelLen - 1] of AnsiChar;
   { used for #TMidiProgramName, #TMidiProgramCategory, #TMidiKeyName,
     #TVstSpeakerProperties, #TVstPinProperties limit 64}
-  TArrStrName       = array[0..kVstMaxNameLen - 1] of char;
+  TArrStrName       = array[0..kVstMaxNameLen - 1] of AnsiChar;
   { used for #TVstParameterProperties->label, #TVstPinProperties->label limit 64}
-  TArrStrLabel      = array[0..kVstMaxLabelLen - 1] of char;
+  TArrStrLabel      = array[0..kVstMaxLabelLen - 1] of AnsiChar;
   { used for #TVstAudioFile->name limit 100}
-  TArrStrFileName   = array[0..kVstMaxFileNameLen - 1] of char;
+  TArrStrFileName   = array[0..kVstMaxFileNameLen - 1] of AnsiChar;
 
   { AEffect flag }
   TVstAEffectFlag  = (
@@ -382,9 +378,9 @@ type
   PAEffect = ^TAEffect; // forward
 
   AudioMasterCallback = function(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32;
-    Value: VstIntPtr; ptr: Pointer; opt: single): VstIntPtr; cdecl;
+    Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
   AEffectDispatcherProc = function(effect: PAEffect; opcode: TAEffectOpcodes; index: Int32;
-    Value: VstIntPtr; ptr: Pointer; opt: single): VstIntPtr; cdecl;
+    Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
   AEffectProcessProc = procedure(effect: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
   AEffectProcessDoubleProc = procedure(effect: PAEffect; inputs, outputs: PPDouble; sampleFrames: Int32); cdecl;
   AEffectSetParameterProc = procedure(effect: PAEffect; index: Int32; parameter: single); cdecl;
@@ -411,8 +407,8 @@ type
     NumInputs:     Int32;  // number of audio inputs
     NumOutputs:    Int32;  // number of audio outputs
     Flags:         TVstAEffectFlags; // @see TVstAEffectFlags
-    Resvd1:        VstIntPtr; // reserved for Host, must be 0
-    Resvd2:        VstIntPtr; // reserved for Host, must be 0
+    Resvd1:        IntPtr; // reserved for Host, must be 0
+    Resvd2:        IntPtr; // reserved for Host, must be 0
     { for algorithms which need input in the first place(Group delay or latency in Samples).
       This value should be initialized in a resume state.}
     InitialDelay:  Int32;
@@ -463,15 +459,15 @@ type
     ByteSize:    Int32;             // size of this event, excl. type and byteSize
     DeltaFrames: Int32; // sample frames related to the current block start sample position
     Flags:       Int32;             // generic flags, none defined yet
-    Data:        array[0..15] of char; // data size may vary, depending on event type
+    Data:        array[0..15] of AnsiChar; // data size may vary, depending on event type
   end;
 
   { A block of events for the current processed audio block.}
   PVstEvents = ^TVstEvents;
 
   TVstEvents = record
-    NumEvents: Int32;     // number of Events in array
-    Reserved:  VstIntPtr; // zero (Reserved for future use)
+    NumEvents: Int32;  // number of Events in array
+    Reserved:  IntPtr; // zero (Reserved for future use)
     Events:    array[0..1] of PVstEvent; // event pointer array, variable size
   end;
 
@@ -493,7 +489,7 @@ type
     Flags:           TVstMidiEventFlags; // @see TVstMidiEventFlags
     NoteLength:      Int32; // (in sample frames) of entire note, if available, else 0
     NoteOffset:      Int32; // offset (in sample frames) into note from note start if available, else 0
-    MidiData:        array[0..3] of char; // 1 to 3 MIDI bytes; midiData[3] is reserved (zero)
+    MidiData:        array[0..3] of AnsiChar; // 1 to 3 MIDI bytes; midiData[3] is reserved (zero)
     Detune:          Int8; // -64 to +63 cents; for scales other than 'well-tempered' ('microtuning')
     NoteOffVelocity: Int8; // Note Off Velocity [0, 127]
     Reserved1:       Int8; // zero (Reserved for future use)
@@ -509,9 +505,9 @@ type
     DeltaFrames: Int32;     // sample frames related to the current block start sample position
     Flags:       Int32;     // none defined yet (should be zero)
     DumpBytes:   Int32;     // byte size of sysexDump
-    Resvd1:      VstIntPtr; // zero (Reserved for future use)
-    SysexDump:   PChar;     // sysex dump
-    Resvd2:      VstIntPtr; // zero (Reserved for future use)
+    Resvd1:      IntPtr;    // zero (Reserved for future use)
+    SysexDump:   PAnsiChar; // sysex dump
+    Resvd2:      IntPtr;    // zero (Reserved for future use)
   end;
 
   { SMPTE Frame Rates.}
@@ -935,7 +931,7 @@ type
 
   TVstOfflineTask = record
 
-    ProcessName: array[0..95] of char;    // set by plug-in
+    ProcessName: array[0..95] of AnsiChar;    // set by plug-in
 
     { audio access}
 
@@ -966,13 +962,13 @@ type
     NumDestinationChannels: Int32;        // set by Host or plug-in
     SourceFormat: Int32;                  // set by Host
     DestinationFormat: Int32;             // set by plug-in
-    OutputText: array[0..511] of char;    // set by plug-in or Host
+    OutputText: array[0..511] of AnsiChar;    // set by plug-in or Host
 
     { progress notification}
 
     Progress:     double;                 // set by plug-in
     ProgressMode: Int32;                  // Reserved for future use
-    ProgressText: array[0..99] of char;   // set by plug-in
+    ProgressText: array[0..99] of AnsiChar;   // set by plug-in
     Flags:        TVstOfflineTaskFlags;   // set by Host and plug-in; see #TVstOfflineTaskFlags
     ReturnValue:  Int32;                  // Reserved for future use
     HostOwned:    Pointer;                // set by Host
@@ -1046,7 +1042,7 @@ type
 
   TVstAudioFileMarker = record
     Position: double;               // marker position
-    Name:     array[0..31] of char; // marker name
+    Name:     array[0..31] of AnsiChar; // marker name
     _Type:    Int32;                // marker type
     ID:       Int32;                // marker identifier
     Reserved: Int32;                // reserved for future use
@@ -1058,7 +1054,7 @@ type
   PVstWindow = ^TVstWindow;
   { no arguments }
   TVstWindow = record
-    Title:      array[0..127] of char;
+    Title:      array[0..127] of AnsiChar;
     XPos:       int16;
     YPos:       int16;
     Width:      int16;
@@ -1153,13 +1149,13 @@ type
   PVstFileType = ^TVstFileType;
   { TVstFileType }
   TVstFileType = record
-    Name:      array[0..127] of char; // display name
-    MacType:   array[0..7] of char;   // MacOS type
-    DosType:   array[0..7] of char;   // Windows file extension
-    UnixType:  array[0..7] of char;   // Unix file extension
-    MimeType1: array[0..127] of char; // MIME type
-    MimeType2: array[0..127] of char; // additional MIME type
-    procedure Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PChar);
+    Name:      array[0..127] of AnsiChar; // display name
+    MacType:   array[0..7] of AnsiChar;   // MacOS type
+    DosType:   array[0..7] of AnsiChar;   // Windows file extension
+    UnixType:  array[0..7] of AnsiChar;   // Unix file extension
+    MimeType1: array[0..127] of AnsiChar; // MIME type
+    MimeType2: array[0..127] of AnsiChar; // additional MIME type
+    procedure Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
   end;
 
 
@@ -1182,17 +1178,17 @@ type
     MacCreator:     Int32;                  // optional: 0 = no creator
     NumFileTypes:   Int32;                  // number of fileTypes
     FileTypes:      PVstFileType;           // list of fileTypes  @see TVstFileType
-    Title:          array[0..1023] of char; // text to display in file selector's title
-    InitialPath:    PChar;                  // initial path
+    Title:          array[0..1023] of AnsiChar; // text to display in file selector's title
+    InitialPath:    PAnsiChar;                  // initial path
     { use with #kVstFileLoad and #kVstDirectorySelect.
       null: Host allocates memory, plug-in must call #closeOpenFileSelector!}
-    ReturnPath:     PChar;
+    ReturnPath:     PAnsiChar;
     SizeReturnPath: Int32; // size of allocated memory for return paths
     { use with kVstMultipleFilesLoad. Host allocates memory,
       plug-in must call #closeOpenFileSelector!}
-    ReturnMultiplePaths: PPChar;
+    ReturnMultiplePaths: PPAnsiChar;
     NbReturnPath:   Int32;     // number of selected paths
-    Reserved:       VstIntPtr; // reserved for Host application
+    Reserved:       IntPtr; // reserved for Host application
     Future:         array[0..115] of byte; // reserved for future use
   end;
 
@@ -1208,15 +1204,15 @@ type
   end;
 
 { Cast pointer to #VstIntPtr.}
-function FromVstPtr(const arg: VstIntPtr): Pointer; inline;
+function FromIntPtr(const arg: IntPtr): Pointer; inline;
 { Cast #VstIntPtr to pointer.}
-function ToVstPtr(const ptr: Pointer): VstIntPtr; inline;
+function ToIntPtr(const ptr: Pointer): IntPtr; inline;
 { Four Character Constant (for TAEffect->uniqueID)}
-function CCONST(const a, b, c, d: char): Int32; inline;
+function CCONST(const a, b, c, d: AnsiChar): Int32; inline;
 { String copy taking care of null terminator.}
-function VstStrncpy(Dest: PChar; Source: PChar; MaxLen: longword): PChar; inline;
+function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar; inline;
 { String concatenation taking care of null terminator.}
-function VstStrncat(Dest: PChar; Source: PChar; MaxLen: longword): PChar; inline;
+function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar; inline;
 
 { FxStore }
 const
@@ -1243,13 +1239,13 @@ type
     FxID:       Int32; // fx unique ID
     FxVersion:  Int32; // fx version
     NumParams:  Int32; // number of parameters
-    PrgName:    array[0..27] of char; // program name (null-terminated ASCII string)
+    PrgName:    array[0..27] of AnsiChar; // program name (null-terminated ASCII string)
     Content: record                   // program content depending on fxMagic
            case longint of
         0: (Params: array[0..0] of single); // variable sized array with parameter values
         1: (Data: record // program chunk data
             Size: Int32; // size of program data
-            Chunk: array[0..0] of char; // variable sized array with opaque program data
+            Chunk: array[0..0] of AnsiChar; // variable sized array with opaque program data
           end);
     end;
   end;
@@ -1272,7 +1268,7 @@ type
         0: (Programs: array[0..0] of TfxProgram); // variable number of programs
         1: (Data: record // bank chunk data
             Size: Int32; // size of bank data
-            Chunk: array[0..0] of char; // variable sized array with opaque bank data
+            Chunk: array[0..0] of AnsiChar; // variable sized array with opaque bank data
           end);
     end;
   end;
@@ -1282,29 +1278,29 @@ implementation
 uses
   SysUtils;
 
-function FromVstPtr(const arg: VstIntPtr): Pointer;
+function FromIntPtr(const arg: IntPtr): Pointer;
 begin
   Result := PPointer(@arg)^;
 end;
 
-function ToVstPtr(const ptr: Pointer): VstIntPtr;
+function ToIntPtr(const ptr: Pointer): IntPtr;
 begin
-  Result := PVstIntPtr(@ptr)^;
+  Result := PIntPtr(@ptr)^;
 end;
 
-function CCONST(const a, b, c, d: char): Int32;
+function CCONST(const a, b, c, d: AnsiChar): Int32;
 begin
   Result := Ord(a) shl 24 or Ord(b) shl 16 or Ord(c) shl 8 or Ord(d);
 end;
 
-function VstStrncpy(Dest: PChar; Source: PChar; MaxLen: longword): PChar;
+function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
 begin
   Move(Source^, Dest^, maxlen);
   Dest[maxlen] := #0;
   Result := Dest;
 end;
 
-function VstStrncat(Dest: PChar; Source: PChar; MaxLen: longword): PChar;
+function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
 var
   Len: longword;
 begin
@@ -1316,7 +1312,7 @@ end;
 
 { TVstFileType }
 
-procedure TVstFileType.Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PChar);
+procedure TVstFileType.Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
 begin
   FillChar(self, sizeof(self), 0);
   if Assigned(_Name) then

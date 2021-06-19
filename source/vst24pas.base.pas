@@ -29,7 +29,7 @@ type
     FCurProgram:  Int32;            // Current program
     FCEffect:     TAEffect;         // #TAEffect object
     class function DispatchEffectClass(e: PAEffect; opcode: TAEffectOpcodes; index: Int32;
-      Value: VstIntPtr; ptr: Pointer; opt: single): VstIntPtr; cdecl; static;
+      Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl; static;
     class function GetParameterClass(e: PAEffect; index: Int32): single; cdecl; static;
     class procedure SetParameterClass(e: PAEffect; index: Int32; Value: single); cdecl; static;
     class procedure ProcessClass(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32);
@@ -47,8 +47,8 @@ type
     constructor Create(VstHost: TVstHostCallback; NumPrograms, NumParams: Int32); virtual;
     destructor Destroy; override;
 
-    function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: VstIntPtr; ptr: Pointer;
-      opt: single): VstIntPtr; virtual;
+    function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
+      opt: single): IntPtr; virtual;
 
     { Called when plug-in is initialized}
     procedure Open; virtual;
@@ -92,16 +92,16 @@ type
     { Set the current program to program}
     procedure SetProgram(_Program: Int32); virtual;
     { Stuff the name field of the current program with name. Limited to #kVstMaxProgNameLen.}
-    procedure SetProgramName(Name: PChar); virtual;
+    procedure SetProgramName(Name: PAnsiChar); virtual;
     { Stuff name with the name of the current program. Limited to #kVstMaxProgNameLen.}
-    procedure GetProgramName(Name: PChar); virtual;
+    procedure GetProgramName(Name: PAnsiChar); virtual;
     { Stuff label with the units in which parameter index is displayed (i.e. "sec", "dB", "type", etc...). Limited to #kVstMaxParamStrLen.}
-    procedure GetParameterLabel(index: Int32; _Label: PChar); virtual;
+    procedure GetParameterLabel(index: Int32; _Label: PAnsiChar); virtual;
     { Stuff text with a string representation ("0.5", "-3", "PLATE", etc...)
       of the value of parameter  index. Limited to #kVstMaxParamStrLen.}
-    procedure GetParameterDisplay(index: Int32; Text: PChar); virtual;
+    procedure GetParameterDisplay(index: Int32; Text: PAnsiChar); virtual;
     { Stuff text with the name ("Time", "Gain", "RoomType", etc...) of parameter index. Limited to #kVstMaxParamStrLen.}
-    procedure GetParameterName(index: Int32; Text: PChar); virtual;
+    procedure GetParameterName(index: Int32; Text: PAnsiChar); virtual;
     { Host stores plug-in state. Returns the size in bytes of the chunk (plug-in allocates the data array)}
     function GetChunk(Data: PPointer; IsPreset: boolean = False): Int32; virtual;
     { Host restores plug-in state}
@@ -149,15 +149,15 @@ type
     procedure MasterIdle; virtual;
 
     { Stuffs text with an amplitude on the [0.0, 1.0] scale converted to its value in decibels.}
-    procedure dB2String(Value: single; Text: PChar; MaxLen: Int32); virtual;
+    procedure dB2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
     { Stuffs text with the frequency in Hertz that has a period of samples.}
-    procedure Hz2String(samples: single; Text: PChar; MaxLen: Int32); virtual;
+    procedure Hz2String(samples: single; Text: PAnsiChar; MaxLen: Int32); virtual;
     { Stuffs text with the duration in milliseconds of samples frames.}
-    procedure Ms2String(samples: single; Text: PChar; MaxLen: Int32); virtual;
+    procedure Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32); virtual;
     { Stuffs text with a string representation on the floating point value.}
-    procedure Float2String(Value: single; Text: PChar; MaxLen: Int32); virtual;
+    procedure Float2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
     { Stuffs text with a string representation on the integer value.}
-    procedure Int2String(Value: single; Text: PChar; MaxLen: Int32); virtual;
+    procedure Int2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
 
     { same as processReplace but is deprecated }
   {$ifdef FPC}
@@ -179,7 +179,7 @@ type
     { Indicates if a parameter can be automated}
     function CanParameterBeAutomated(index: Int32): boolean; virtual;
     { Convert a string representation to a parameter value}
-    function String2parameter(index: Int32; Text: PChar): boolean; virtual;
+    function String2parameter(index: Int32; Text: PAnsiChar): boolean; virtual;
     { Return parameter properties}
     function GetParameterProperties(index: Int32; p: PVstParameterProperties): boolean; virtual;
 
@@ -191,7 +191,7 @@ type
   {$endif VST_2_1_EXTENSIONS}
 
     { Fill text with name of program index (category deprecated in VST 2.4)}
-    function GetProgramNameIndexed(category, index: Int32; Text: PChar): boolean; virtual;
+    function GetProgramNameIndexed(category, index: Int32; Text: PAnsiChar): boolean; virtual;
 
   {$ifdef VST_2_1_EXTENSIONS}
     { Called before a program is loaded}
@@ -273,15 +273,15 @@ type
   {$endif VST_2_3_EXTENSIONS}
 
     { Fills text with a string identifying the vendor limit 64}
-    function GetHostVendorString(Text: PChar): boolean; virtual;
+    function GetHostVendorString(Text: PAnsiChar): boolean; virtual;
     { Fills text with a string with product name limit 64}
-    function GetHostProductString(Text: PChar): boolean; virtual;
+    function GetHostProductString(Text: PAnsiChar): boolean; virtual;
     { Returns vendor-specific version (for example 3200 for Nuendo 3.2)}
     function GetHostVendorVersion: Int32; virtual;
     { No specific definition}
-    function HostVendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): VstIntPtr; virtual;
+    function HostVendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): IntPtr; virtual;
     { Reports what the Host is able to do (#hostCanDos)}
-    function CanHostDo(Text: PChar): Int32; virtual;
+    function CanHostDo(Text: PAnsiChar): Int32; virtual;
     { Returns the Host's language (#TVstHostLanguage)}
     function GetHostLanguage: Int32; virtual;
 
@@ -294,17 +294,17 @@ type
     { Returns the plug-in's directory}
     function GetDirectory: Pointer; virtual;
     { Fill text with a string identifying the effect limit 32}
-    function GetEffectName(Name: PChar): boolean; virtual;
+    function GetEffectName(Name: PAnsiChar): boolean; virtual;
     { Fill text with a string identifying the vendor limit 64}
-    function GetVendorString(Text: PChar): boolean; virtual;
+    function GetVendorString(Text: PAnsiChar): boolean; virtual;
     { Fill text with a string identifying the product name limit 64}
-    function GetProductString(Text: PChar): boolean; virtual;
+    function GetProductString(Text: PAnsiChar): boolean; virtual;
     { Return vendor-specific version}
     function GetVendorVersion: Int32; virtual;
     { No definition, vendor specific handling}
-    function VendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): VstIntPtr; virtual;
+    function VendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): IntPtr; virtual;
     { Reports what the plug-in is able to do (#plugCanDos)}
-    function CanDo(Text: PChar): Int32; virtual;
+    function CanDo(Text: PAnsiChar): Int32; virtual;
     { Returns the current VST Version (#kVstVersion)}
     function GetVstVersion: Int32; virtual;
     { Specify a category that fits the plug (#TVstPlugCategory)}
@@ -340,7 +340,7 @@ type
 
   {$ifdef VST_2_3_EXTENSIONS}
     { This opcode is only called, if the plug-in is of type #kPlugCategShell, in order to extract all included sub-plugin´s names.}
-    function GetNextShellPlugin(Name: PChar): Int32; virtual;
+    function GetNextShellPlugin(Name: PAnsiChar): Int32; virtual;
   {$endif VST_2_3_EXTENSIONS}
 
   {$ifdef VST_2_3_EXTENSIONS}
@@ -390,7 +390,7 @@ type
     function OpenWindow(window: PVstWindow): Pointer; virtual; deprecated;
     function CloseWindow(window: PVstWindow): boolean; virtual; deprecated;
     procedure SetBlockSizeAndSampleRate(BS: Int32; SR: single); virtual; deprecated;
-    function GetErrorText(Text: PChar): boolean; virtual; deprecated;
+    function GetErrorText(Text: PAnsiChar): boolean; virtual; deprecated;
     function GetIcon: Pointer; virtual; deprecated;
     function SetViewPosition(x, y: Int32): boolean; virtual; deprecated;
     function FxIdle: Int32; virtual; deprecated;
@@ -516,7 +516,7 @@ end;
 { TVstPlugin }
 
 class function TVstPlugin.DispatchEffectClass(e: PAEffect; opcode: TAEffectOpcodes; index: Int32;
-  Value: VstIntPtr; ptr: Pointer; opt: single): VstIntPtr; cdecl;
+  Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
 var
   v: TVstPlugin;
 begin
@@ -669,8 +669,8 @@ begin
   inherited Destroy;
 end;
 
-function TVstPlugin.Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: VstIntPtr;
-  ptr: Pointer; opt: single): VstIntPtr;
+function TVstPlugin.Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr;
+  ptr: Pointer; opt: single): IntPtr;
 {$ifdef VST_2_1_EXTENSIONS}
 var
   KeyCode: TVstKeyCode;
@@ -705,10 +705,10 @@ begin
     //---Editor------------
     effEditGetRect:
       if Assigned(FEditor) then
-        Result := VstIntPtr(FEditor.GetRect(ptr));
+        Result := IntPtr(FEditor.GetRect(ptr));
     effEditOpen:
       if Assigned(FEditor) then
-        Result := VstIntPtr(FEditor.Open(ptr));
+        Result := IntPtr(FEditor.Open(ptr));
     effEditClose:
       if Assigned(FEditor) then
         FEditor.Close;
@@ -732,10 +732,10 @@ begin
     effProcessEvents: Result := processEvents(ptr);
 
     //---Parameters and Programs----------------------
-    effCanBeAutomated: Result := VstIntPtr(canParameterBeAutomated(index));
-    effString2Parameter: Result := VstIntPtr(string2parameter(index, ptr));
+    effCanBeAutomated: Result := IntPtr(canParameterBeAutomated(index));
+    effString2Parameter: Result := IntPtr(string2parameter(index, ptr));
 
-    effGetProgramNameIndexed: Result := VstIntPtr(getProgramNameIndexed(Int32(Value), index, ptr));
+    effGetProgramNameIndexed: Result := IntPtr(getProgramNameIndexed(Int32(Value), index, ptr));
   {$ifndef VST_FORCE_DEPRECATED}
     effGetNumProgramCategories: Result := getNumCategories; // deprecated
     effCopyProgram: Result := Int32(copyProgram(index)); // deprecated
@@ -753,9 +753,9 @@ begin
     end;
   {$endif VST_FORCE_DEPRECATED}
 
-    effGetInputProperties: Result := VstIntPtr(GetInputProperties(index, ptr));
-    effGetOutputProperties: Result := VstIntPtr(GetOutputProperties(index, ptr));
-    effGetPlugCategory: Result := VstIntPtr(GetPlugCategory);
+    effGetInputProperties: Result := IntPtr(GetInputProperties(index, ptr));
+    effGetOutputProperties: Result := IntPtr(GetOutputProperties(index, ptr));
+    effGetPlugCategory: Result := IntPtr(GetPlugCategory);
 
   {$ifndef VST_FORCE_DEPRECATED}
     //---Realtime----------------------
@@ -765,13 +765,13 @@ begin
   {$endif VST_FORCE_DEPRECATED}
 
     //---Offline----------------------
-    effOfflineNotify: Result := VstIntPtr(offlineNotify(ptr, Value, index <> 0));
-    effOfflinePrepare: Result := VstIntPtr(offlinePrepare(ptr, Value));
-    effOfflineRun: Result := VstIntPtr(offlineRun(ptr, Value));
+    effOfflineNotify: Result := IntPtr(offlineNotify(ptr, Value, index <> 0));
+    effOfflinePrepare: Result := IntPtr(offlinePrepare(ptr, Value));
+    effOfflineRun: Result := IntPtr(offlineRun(ptr, Value));
 
     //---Others----------------------
-    effSetSpeakerArrangement: Result := VstIntPtr(setSpeakerArrangement(FromVstPtr(Value), ptr));
-    effProcessVarIo: Result := VstIntPtr(processVariableIo(ptr));
+    effSetSpeakerArrangement: Result := IntPtr(setSpeakerArrangement(FromIntPtr(Value), ptr));
+    effProcessVarIo: Result := IntPtr(processVariableIo(ptr));
   {$ifndef VST_FORCE_DEPRECATED}
     effSetBlockSizeAndSampleRate: // deprecated
     begin
@@ -779,10 +779,10 @@ begin
       Result := 1;
     end;
   {$endif VST_FORCE_DEPRECATED}
-    effSetBypass: Result := VstIntPtr(setBypass(Value <> 0));
-    effGetEffectName: Result := VstIntPtr(getEffectName(ptr));
-    effGetVendorString: Result := VstIntPtr(getVendorString(ptr));
-    effGetProductString: Result := VstIntPtr(getProductString(ptr));
+    effSetBypass: Result := IntPtr(setBypass(Value <> 0));
+    effGetEffectName: Result := IntPtr(getEffectName(ptr));
+    effGetVendorString: Result := IntPtr(getVendorString(ptr));
+    effGetProductString: Result := IntPtr(getProductString(ptr));
     effGetVendorVersion: Result := GetVendorVersion;
     effVendorSpecific: Result := VendorSpecific(index, Value, ptr, opt);
     effCanDo: Result := CanDo(ptr);
@@ -801,7 +801,7 @@ begin
     effKeysRequired: Result := VstIntPtr(keysRequired); // deprecated
   {$endif VST_FORCE_DEPRECATED}
 
-    effGetParameterProperties: Result := VstIntPtr(GetParameterProperties(index, ptr));
+    effGetParameterProperties: Result := IntPtr(GetParameterProperties(index, ptr));
 
     effGetVstVersion: Result := GetVstVersion;
 
@@ -813,7 +813,7 @@ begin
         KeyCode.character := index;
         KeyCode.modifier := byte(Value);
         KeyCode.virt := byte(Trunc(opt));
-        Result := VstIntPtr(FEditor.onKeyDown(KeyCode));
+        Result := IntPtr(FEditor.onKeyDown(KeyCode));
       end;
 
     effEditKeyUp:
@@ -822,24 +822,24 @@ begin
         KeyCode.character := index;
         KeyCode.modifier := byte(Value);
         KeyCode.virt := byte(Trunc(opt));
-        Result := VstIntPtr(FEditor.onKeyUp(KeyCode));
+        Result := IntPtr(FEditor.onKeyUp(KeyCode));
       end;
 
     effSetEditKnobMode:
       if Assigned(FEditor) then
-        Result := VstIntPtr(FEditor.setKnobMode(Value));
+        Result := IntPtr(FEditor.setKnobMode(Value));
 
     effGetMidiProgramName: Result := GetMidiProgramName(index, ptr);
     effGetCurrentMidiProgram: Result := GetCurrentMidiProgram(index, ptr);
     effGetMidiProgramCategory: Result := GetMidiProgramCategory(index, ptr);
-    effHasMidiProgramsChanged: Result := VstIntPtr(HasMidiProgramsChanged(index));
-    effGetMidiKeyName: Result := VstIntPtr(GetMidiKeyName(index, ptr));
-    effBeginSetProgram: Result := VstIntPtr(BeginSetProgram);
-    effEndSetProgram: Result := VstIntPtr(EndSetProgram);
+    effHasMidiProgramsChanged: Result := IntPtr(HasMidiProgramsChanged(index));
+    effGetMidiKeyName: Result := IntPtr(GetMidiKeyName(index, ptr));
+    effBeginSetProgram: Result := IntPtr(BeginSetProgram);
+    effEndSetProgram: Result := IntPtr(EndSetProgram);
   {$endif VST_2_1_EXTENSIONS}
 
   {$ifdef VST_2_3_EXTENSIONS}
-    effGetSpeakerArrangement: Result := VstIntPtr(GetSpeakerArrangement(FromVstPtr(Value), ptr));
+    effGetSpeakerArrangement: Result := IntPtr(GetSpeakerArrangement(FromIntPtr(Value), ptr));
 
     effSetTotalSampleToProcess: Result := SetTotalSampleToProcess(Value);
 
@@ -848,14 +848,14 @@ begin
     effStartProcess: Result := StartProcess;
     effStopProcess: Result  := StopProcess;
 
-    effSetPanLaw: Result := VstIntPtr(SetPanLaw(Value, opt));
+    effSetPanLaw: Result := IntPtr(SetPanLaw(Value, opt));
 
     effBeginLoadBank: Result := BeginLoadBank(ptr);
     effBeginLoadProgram: Result := BeginLoadProgram(ptr);
   {$endif VST_2_3_EXTENSIONS}
 
   {$ifdef VST_2_4_EXTENSIONS}
-    effSetProcessPrecision: Result := VstIntPtr(SetProcessPrecision(Value));
+    effSetProcessPrecision: Result := IntPtr(SetProcessPrecision(Value));
 
     effGetNumMidiInputChannels: Result := GetNumMidiInputChannels;
 
@@ -936,26 +936,26 @@ begin
   FCurProgram := _program;
 end;
 
-procedure TVstPlugin.SetProgramName(Name: PChar);
+procedure TVstPlugin.SetProgramName(Name: PAnsiChar);
 begin
 end;
 
-procedure TVstPlugin.GetProgramName(Name: PChar);
+procedure TVstPlugin.GetProgramName(Name: PAnsiChar);
 begin
   Name^ := #0;
 end;
 
-procedure TVstPlugin.GetParameterLabel(index: Int32; _Label: PChar);
+procedure TVstPlugin.GetParameterLabel(index: Int32; _Label: PAnsiChar);
 begin
   _Label^ := #0;
 end;
 
-procedure TVstPlugin.GetParameterDisplay(index: Int32; Text: PChar);
+procedure TVstPlugin.GetParameterDisplay(index: Int32; Text: PAnsiChar);
 begin
   Text^ := #0;
 end;
 
-procedure TVstPlugin.GetParameterName(index: Int32; Text: PChar);
+procedure TVstPlugin.GetParameterName(index: Int32; Text: PAnsiChar);
 begin
   Text^ := #0;
 end;
@@ -1058,7 +1058,7 @@ begin
     FVSTHost(@FCEffect, amIdle, 0, 0, nil, 0);
 end;
 
-procedure TVstPlugin.dB2String(Value: single; Text: PChar; MaxLen: Int32);
+procedure TVstPlugin.dB2String(Value: single; Text: PAnsiChar; MaxLen: Int32);
 begin
   if Value <= 0 then
     vststrncpy(Text, '-Inf', maxlen)
@@ -1066,7 +1066,7 @@ begin
     float2string(20 * Log10(Value), Text, maxlen);
 end;
 
-procedure TVstPlugin.Hz2String(samples: single; Text: PChar; MaxLen: Int32);
+procedure TVstPlugin.Hz2String(samples: single; Text: PAnsiChar; MaxLen: Int32);
 begin
   if samples <> 0 then
     float2string(0, Text, maxlen)
@@ -1074,16 +1074,16 @@ begin
     float2string(GetSampleRate / samples, Text, maxlen);
 end;
 
-procedure TVstPlugin.Ms2String(samples: single; Text: PChar; MaxLen: Int32);
+procedure TVstPlugin.Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32);
 begin
   float2string(samples * 1000 / GetSampleRate, Text, maxlen);
 end;
 
-procedure TVstPlugin.Float2String(Value: single; Text: PChar; MaxLen: Int32);
+procedure TVstPlugin.Float2String(Value: single; Text: PAnsiChar; MaxLen: Int32);
 var
   c, neg: Int32;
-  str: array[0..31] of char;
-  s: PChar;
+  str: array[0..31] of AnsiChar;
+  s: PAnsiChar;
   v, integ, i10, mantissa, m10, ten: double;
 begin
   // there's no better way
@@ -1109,7 +1109,7 @@ begin
     exit;
   end;
 
-  s  := PChar(@str) + 31;
+  s  := PAnsiChar(@str) + 31;
   s^ := #0;
   Dec(s);
   s^ := '.';
@@ -1118,14 +1118,14 @@ begin
 
   integ := Floor(v);
   i10 := FMod(integ, ten);
-  s^  := char(Trunc(i10) + Ord('0'));
+  s^  := AnsiChar(Trunc(i10) + Ord('0'));
   Dec(s);
   integ := integ / ten;
   c  := c + 1;
   while (integ >= 1) and (c < 8) do
   begin
     i10 := fmod(integ, ten);
-    s^  := char(Trunc(i10) + Ord('0'));
+    s^  := AnsiChar(Trunc(i10) + Ord('0'));
     Dec(s);
     integ := integ / ten;
     c := c + 1;
@@ -1139,7 +1139,7 @@ begin
   if c >= 8 then
     exit;
 
-  s  := PChar(@str) + 31;
+  s  := PAnsiChar(@str) + 31;
   s^ := #0;
   Dec(s);
   mantissa := fmod(v, 1);
@@ -1153,7 +1153,7 @@ begin
     end else
     begin
       m10 := FMod(mantissa, ten);
-      s^  := char(Trunc(m10) + Ord('0'));
+      s^  := AnsiChar(Trunc(m10) + Ord('0'));
       Dec(s);
       mantissa := mantissa / 10;
     end;
@@ -1162,14 +1162,14 @@ begin
   vststrncat(Text, s + 1, maxlen);
 end;
 
-procedure TVstPlugin.Int2String(Value: single; Text: PChar; MaxLen: Int32);
+procedure TVstPlugin.Int2String(Value: single; Text: PAnsiChar; MaxLen: Int32);
 begin
   if (Value >= 100000000) or (Value <= -10000000) then
   begin
     vststrncpy(Text, 'Huge!', maxlen);
     exit;
   end;
-  vstStrncpy(Text, PChar(IntToStr(Trunc(Value))), MaxLen);
+  vstStrncpy(Text, PAnsiChar(IntToStr(Trunc(Value))), MaxLen);
 end;
 
 
@@ -1242,7 +1242,7 @@ begin
   Result := True;
 end;
 
-function TVstPlugin.String2parameter(index: Int32; Text: PChar): boolean;
+function TVstPlugin.String2parameter(index: Int32; Text: PAnsiChar): boolean;
 begin
   Result := False;
 end;
@@ -1269,7 +1269,7 @@ end;
 
 {$endif VST_2_1_EXTENSIONS}
 
-function TVstPlugin.GetProgramNameIndexed(category, index: Int32; Text: PChar): boolean;
+function TVstPlugin.GetProgramNameIndexed(category, index: Int32; Text: PAnsiChar): boolean;
 begin
   Result := False;
 end;
@@ -1309,7 +1309,7 @@ end;
 
 function TVstPlugin.UpdateSampleRate: double;
 var
-  res: VstIntPtr;
+  res: IntPtr;
 begin
   if Assigned(FVSTHost) then
   begin
@@ -1322,7 +1322,7 @@ end;
 
 function TVstPlugin.UpdateBlockSize: Int32;
 var
-  res: VstIntPtr;
+  res: IntPtr;
 begin
   if Assigned(FVSTHost) then
   begin
@@ -1402,13 +1402,13 @@ end;
 
 function TVstPlugin.GetTimeInfo(filter: Int32): PVstTimeInfo;
 var
-  ret: VstIntPtr;
+  ret: IntPtr;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
   begin
     ret := FVSTHost(@FCEffect, amGetTime, 0, filter, nil, 0);
-    Result := FromVstPtr(ret);
+    Result := FromIntPtr(ret);
   end;
 end;
 
@@ -1464,14 +1464,14 @@ end;
 
 {$endif VST_2_3_EXTENSIONS}
 
-function TVstPlugin.GetHostVendorString(Text: PChar): boolean;
+function TVstPlugin.GetHostVendorString(Text: PAnsiChar): boolean;
 begin
   Result := False;
   if Assigned(FVSTHost) then
     Result := FVSTHost(@FCEffect, amGetVendorString, 0, 0, Text, 0) <> 0;
 end;
 
-function TVstPlugin.GetHostProductString(Text: PChar): boolean;
+function TVstPlugin.GetHostProductString(Text: PAnsiChar): boolean;
 begin
   Result := False;
   if Assigned(FVSTHost) then
@@ -1485,14 +1485,14 @@ begin
     Result := FVSTHost(@FCEffect, amGetVendorVersion, 0, 0, nil, 0);
 end;
 
-function TVstPlugin.HostVendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): VstIntPtr;
+function TVstPlugin.HostVendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): IntPtr;
 begin
   Result := 0;
   if Assigned(FVSTHost) then
     Result := FVSTHost(@FCEffect, amVendorSpecific, lArg1, lArg2, ptrArg, floatArg);
 end;
 
-function TVstPlugin.CanHostDo(Text: PChar): Int32;
+function TVstPlugin.CanHostDo(Text: PAnsiChar): Int32;
 begin
   Result := 0;
   if Assigned(FVSTHost) then
@@ -1525,20 +1525,20 @@ function TVstPlugin.GetDirectory: Pointer;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
-    Result := FromVstPtr(FVSTHost(@FCEffect, amGetDirectory, 0, 0, nil, 0));
+    Result := FromIntPtr(FVSTHost(@FCEffect, amGetDirectory, 0, 0, nil, 0));
 end;
 
-function TVstPlugin.GetEffectName(Name: PChar): boolean;
+function TVstPlugin.GetEffectName(Name: PAnsiChar): boolean;
 begin
   Result := False;
 end;
 
-function TVstPlugin.GetVendorString(Text: PChar): boolean;
+function TVstPlugin.GetVendorString(Text: PAnsiChar): boolean;
 begin
   Result := False;
 end;
 
-function TVstPlugin.GetProductString(Text: PChar): boolean;
+function TVstPlugin.GetProductString(Text: PAnsiChar): boolean;
 begin
   Result := False;
 end;
@@ -1548,12 +1548,12 @@ begin
   Result := 0;
 end;
 
-function TVstPlugin.VendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): VstIntPtr;
+function TVstPlugin.VendorSpecific(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single): IntPtr;
 begin
   Result := 0;
 end;
 
-function TVstPlugin.CanDo(Text: PChar): Int32;
+function TVstPlugin.CanDo(Text: PAnsiChar): Int32;
 begin
   Result := 0;
 end;
@@ -1633,7 +1633,7 @@ end;
 {$endif VST_2_2_EXTENSIONS}
 
 {$ifdef VST_2_3_EXTENSIONS}
-function TVstPlugin.GetNextShellPlugin(Name: PChar): Int32;
+function TVstPlugin.GetNextShellPlugin(Name: PAnsiChar): Int32;
 begin
   Result := 0;
 end;
@@ -1812,14 +1812,14 @@ function TVstPlugin.GetPreviousPlug(input: Int32): PAEffect;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
-    Result := FromVstPtr(FVSTHost(@FCEffect, amGetPreviousPlug, 0, 0, nil, 0));
+    Result := FromIntPtr(FVSTHost(@FCEffect, amGetPreviousPlug, 0, 0, nil, 0));
 end;
 
 function TVstPlugin.GetNextPlug(input: Int32): PAEffect;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
-    Result := FromVstPtr(FVSTHost(@FCEffect, amGetNextPlug, 0, 0, nil, 0));
+    Result := FromIntPtr(FVSTHost(@FCEffect, amGetNextPlug, 0, 0, nil, 0));
 end;
 
 procedure TVstPlugin.InputConnected(index: Int32; state: boolean);
@@ -1867,21 +1867,21 @@ function TVstPlugin.GetInputSpeakerArrangement: PVstSpeakerArrangement;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
-    Result := FromVstPtr(FVSTHost(@FCEffect, amGetInputSpeakerArrangement, 0, 0, nil, 0));
+    Result := FromIntPtr(FVSTHost(@FCEffect, amGetInputSpeakerArrangement, 0, 0, nil, 0));
 end;
 
 function TVstPlugin.GetOutputSpeakerArrangement: PVstSpeakerArrangement;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
-    Result := FromVstPtr(FVSTHost(@FCEffect, amGetOutputSpeakerArrangement, 0, 0, nil, 0));
+    Result := FromIntPtr(FVSTHost(@FCEffect, amGetOutputSpeakerArrangement, 0, 0, nil, 0));
 end;
 
 function TVstPlugin.OpenWindow(window: PVstWindow): Pointer;
 begin
   Result := nil;
   if Assigned(FVSTHost) then
-    Result := FromVstPtr(FVSTHost(@FCEffect, amOpenWindow, 0, 0, window, 0));
+    Result := FromIntPtr(FVSTHost(@FCEffect, amOpenWindow, 0, 0, window, 0));
 end;
 
 function TVstPlugin.CloseWindow(window: PVstWindow): boolean;
@@ -1897,7 +1897,7 @@ begin
   FSampleRate := SR;
 end;
 
-function TVstPlugin.GetErrorText(Text: PChar): boolean;
+function TVstPlugin.GetErrorText(Text: PAnsiChar): boolean;
 begin
   Result := False;
 end;
