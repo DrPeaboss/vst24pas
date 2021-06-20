@@ -28,7 +28,7 @@ const
   kEffectMagic = $56737450; // Vst Magic, same as CCONST('V','s','t','P')
 
 type
-{$ifdef DCC}
+{$ifndef FPC}
   PInt32  = ^Int32;
   PIntPtr = ^IntPtr;
   { Array for process }
@@ -118,7 +118,7 @@ type
     effFlagsHasClip,   // 1<<1 deprecated
     effFlagsHasVu,     // 1<<2 deprecated
     effFlagsCanMono,   // 1<<3 deprecated
-    effFlagsCanReplacing, // 1<<4 supports replacing process mode (which should the default mode in VST 2.4)
+    effFlagsCanReplacing,  // 1<<4 supports replacing process mode (which should the default mode in VST 2.4)
     effFlagsProgramChunks, // 1<<5 program data is handled in formatless chunks
     effFlagsUnknown64,     // 1<<6 undefined
     effFlagsUnknown128,    // 1<<7 undefined
@@ -399,7 +399,7 @@ type
   TAEffect = record
     Magic:         Int32; // must be kEffectMagic
     Dispatcher:    TAEDispatcher; // Host to Plug-in dispatcher @see TVSTPlugin::dispatcher
-    Process:       TAEProcess; // deprecated unused member
+    Process:       TAEProcess;    // deprecated unused member
     SetParameter:  TAESetParameter; // Set new value of automatable parameter @see TVSTPlugin::setParameter
     GetParameter:  TAEGetParameter; // Returns current value of automatable parameter @see TVSTPlugin::getParameter
     NumPrograms:   Int32;  // number of programs
@@ -434,7 +434,6 @@ type
   { Structure used for #effEditGetRect.}
   PPERect = ^PERect;
   PERect  = ^TERect;
-
   TERect = record
     Top:    int16; // top coordinate, usually 0
     Left:   int16; // left coordinate, usually 0
@@ -453,7 +452,6 @@ type
 
   { A generic timestamped event.}
   PVstEvent = ^TVstEvent;
-
   TVstEvent = record
     _Type:       Int32;             // @see TVstEventTypes
     ByteSize:    Int32;             // size of this event, excl. type and byteSize
@@ -464,7 +462,6 @@ type
 
   { A block of events for the current processed audio block.}
   PVstEvents = ^TVstEvents;
-
   TVstEvents = record
     NumEvents: Int32;  // number of Events in array
     Reserved:  IntPtr; // zero (Reserved for future use)
@@ -481,7 +478,6 @@ type
 
   { MIDI Event (to be casted from VstEvent).}
   PVstMidiEvent = ^TVstMidiEvent;
-
   TVstMidiEvent = record
     _Type:           Int32; // #kVstMidiType
     ByteSize:        Int32; // sizeof (TVstMidiEvent)
@@ -498,7 +494,6 @@ type
 
   { MIDI Sysex Event (to be casted from #VstEvent).}
   PVstMidiSysexEvent = ^TVstMidiSysexEvent;
-
   TVstMidiSysexEvent = record
     _Type:       Int32;     // #kVstSysexType
     ByteSize:    Int32;     // sizeof (TVstMidiSysexEvent)
@@ -724,7 +719,6 @@ type
      or positive when referencing the following (future) MIDI clock.
   -----------------------------------------------------------------------------}
   PVstTimeInfo = ^TVstTimeInfo;
-
   TVstTimeInfo = record
     SamplePos:      double;    // current Position in audio samples (always valid)
     SampleRate:     double;    // current Sample Rate in Herz (always valid)
@@ -748,7 +742,6 @@ type
 
   { Variable IO for Offline Processing.}
   PVstVariableIO = ^TVstVariableIO;
-
   TVstVariableIO = record
     Inputs:           PPSingle; // input audio buffers
     Outputs:          PPSingle; // output audio buffers
@@ -771,7 +764,6 @@ type
 
   { Parameter Properties used in #effGetParameterProperties.}
   PVstParameterProperties = ^TVstParameterProperties;
-
   TVstParameterProperties = record
     StepFloat:      single; // float step
     SmallStepFloat: single; // small float step
@@ -817,7 +809,6 @@ type
 
   { Pin Properties used in #effGetInputProperties and #effGetOutputProperties.}
   PVstPinProperties = ^TVstPinProperties;
-
   TVstPinProperties = record
     _Label:          TArrStrLabel;               // pin name, limit 64
     Flags:           TVstPinPropertiesFlags;     // @see TVstPinPropertiesFlags
@@ -835,7 +826,6 @@ type
 
   { MIDI Program Description.}
   PMidiProgramName = ^TMidiProgramName;
-
   TMidiProgramName = record
     ThisProgramIndex: Int32;    // 0 or greater: fill struct for this program index
     Name:        TArrStrName;   // program name, limit 64
@@ -849,7 +839,6 @@ type
 
   { MIDI Program Category.}
   PMidiProgramCategory = ^TMidiProgramCategory;
-
   TMidiProgramCategory = record
     ThisCategoryIndex: Int32;   // 0 or greater:  fill struct for this category index.
     Name:  TArrStrName;         // name, limit 64
@@ -859,7 +848,6 @@ type
 
   { MIDI Key Description.}
   PMidiKeyName = ^TMidiKeyName;
-
   TMidiKeyName = record
     ThisProgramIndex: Int32; // 0 or greater:  fill struct for this program index.
     ThisKeyNumber: Int32;    // 0 - 127. fill struct for this key number.
@@ -879,7 +867,6 @@ type
     For user interface representation, grads are more likely to be used, and the
     origins will obviously 'shift' accordingly.}
   PVstSpeakerProperties = ^TVstSpeakerProperties;
-
   TVstSpeakerProperties = record
     Azimuth:   single; // unit: rad, range: -PI...PI, exception: 10.f for LFE channel
     Elevation: single; // unit: rad, range: -PI/2...PI/2, exception: 10.f for LFE channel
@@ -893,7 +880,6 @@ type
   { Speaker Arrangement.}
   PPVstSpeakerArrangement = ^PVstSpeakerArrangement;
   PVstSpeakerArrangement  = ^TVstSpeakerArrangement;
-
   TVstSpeakerArrangement = record
     _Type:       Int32; // e.g. #kSpeakerArr51 for 5.1  @see TVstSpeakerArrangementType
     NumChannels: Int32; // number of channels in this speaker arrangement
@@ -928,9 +914,7 @@ type
 
   { Offline Task Description.}
   PVstOfflineTask = ^TVstOfflineTask;
-
   TVstOfflineTask = record
-
     ProcessName: array[0..95] of AnsiChar;    // set by plug-in
 
     { audio access}
@@ -1011,7 +995,6 @@ type
 
   { Structure passed to #offlineNotify and #offlineStart}
   PVstAudioFile = ^TVstAudioFile;
-
   TVstAudioFile = record
     Flags:          TVstAudioFileFlags;   // see TVstAudioFileFlags
     HostOwned:      Pointer;              // any data private to Host
@@ -1039,7 +1022,6 @@ type
 
   { Audio file marker.}
   PVstAudioFileMarker = ^TVstAudioFileMarker;
-
   TVstAudioFileMarker = record
     Position: double;               // marker position
     Name:     array[0..31] of AnsiChar; // marker name
@@ -1052,7 +1034,6 @@ type
 
   { deprecated Structure used for #openWindow and #closeWindow (deprecated in VST 2.4).}
   PVstWindow = ^TVstWindow;
-  { no arguments }
   TVstWindow = record
     Title:      array[0..127] of AnsiChar;
     XPos:       int16;
@@ -1138,7 +1119,6 @@ type
 
   { Structure used for keyUp/keyDown.}
   PVstKeyCode = ^TVstKeyCode;
-
   TVstKeyCode = record
     Character: Int32;    // ASCII character
     Virt:      byte;     // @see TVstVirtualKey
@@ -1171,7 +1151,6 @@ type
 
   { File Selector Description used in #amOpenFileSelector.}
   PVstFileSelect = ^TVstFileSelect;
-
   TVstFileSelect = record
     Command:        Int32;                  // @see TVstFileSelectCommand
     _Type:          Int32;                  // @see TVstFileSelectType
@@ -1194,7 +1173,6 @@ type
 
   { Structure used for #effBeginLoadBank/#effBeginLoadProgram.}
   PVstPatchChunkInfo = ^TVstPatchChunkInfo;
-
   TVstPatchChunkInfo = record
     Version:        Int32; // Format Version (should be 1)
     PluginUniqueID: Int32; // UniqueID of the plug-in
@@ -1230,7 +1208,6 @@ const
 type
   { Program (fxp) structure.}
   PFxProgram = ^TFxProgram;
-
   TFxProgram = record
     ChunkMagic: Int32; // 'CcnK'
     ByteSize:   Int32; // size of this chunk, excl. magic + byteSize
@@ -1252,7 +1229,6 @@ type
 
   { Bank (fxb) structure.}
   PFxBank = ^TFxBank;
-
   TFxBank = record
     ChunkMagic:     Int32; // 'CcnK'
     ByteSize:       Int32; // size of this chunk, excl. magic + byteSize

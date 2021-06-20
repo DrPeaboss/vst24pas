@@ -42,13 +42,12 @@ type
   {$endif VST_2_4_EXTENSIONS}
 
     { Make it easy to set AEffect flags }
-    procedure SwitchVstAEffectFlags(Flag: TVstAEffectFlag; switch: boolean);
+    procedure SwitchVstAEffectFlags(Flag: TVstAEffectFlag; switch: boolean); inline;
   public
     constructor Create(VstHost: TVstHostCallback; NumPrograms, NumParams: Int32); virtual;
     destructor Destroy; override;
 
-    function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
-      opt: single): IntPtr; virtual;
+    function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer; opt: single): IntPtr; virtual;
 
     { Called when plug-in is initialized}
     procedure Open; virtual;
@@ -71,14 +70,14 @@ type
     procedure ProcessReplacing(Inputs, Outputs: TArrPSingle; SampleFrames: Int32); virtual; abstract;
   {$endif}
 
-  {$ifdef VST_2_4_EXTENSIONS}
+{$ifdef VST_2_4_EXTENSIONS}
   {$ifdef FPC}
     { Process 64 bit (double precision) floats (always in a resume state) processReplacing}
     procedure ProcessDoubleReplacing(Inputs, Outputs: PPDouble; SampleFrames: Int32); virtual;
   {$else}
     procedure ProcessDoubleReplacing(Inputs, Outputs: TArrPDouble; SampleFrames: Int32); virtual;
   {$endif}
-  {$endif VST_2_4_EXTENSIONS}
+{$endif VST_2_4_EXTENSIONS}
 
     { Called when a parameter changed}
     procedure SetParameter(index: Int32; Value: single); virtual;
@@ -354,8 +353,7 @@ type
     function MatchArrangement(_to: PPVstSpeakerArrangement; from: PVstSpeakerArrangement): boolean; virtual;
   {$endif VST_2_3_EXTENSIONS}
 
-    function OfflineRead(offline: PVstOfflineTask; option: TVstOfflineOption; readSource: boolean = True): boolean;
-      virtual;
+    function OfflineRead(offline: PVstOfflineTask; option: TVstOfflineOption; readSource: boolean = True): boolean; virtual;
     function OfflineWrite(offline: PVstOfflineTask; option: TVstOfflineOption): boolean; virtual;
     function OfflineStart(audioFiles: PVstAudioFile; NumAudioFiles, NumNewAudioFiles: Int32): boolean; virtual;
     function OfflineGetCurrentPass: Int32; virtual;
@@ -389,7 +387,7 @@ type
     function GetOutputSpeakerArrangement: PVstSpeakerArrangement; virtual; deprecated;
     function OpenWindow(window: PVstWindow): Pointer; virtual; deprecated;
     function CloseWindow(window: PVstWindow): boolean; virtual; deprecated;
-    procedure SetBlockSizeAndSampleRate(BS: Int32; SR: single); virtual; deprecated;
+    procedure SetBlockSizeAndSampleRate(BlockSize: Int32; SampleRate: single); virtual; deprecated;
     function GetErrorText(Text: PAnsiChar): boolean; virtual; deprecated;
     function GetIcon: Pointer; virtual; deprecated;
     function SetViewPosition(x, y: Int32): boolean; virtual; deprecated;
@@ -510,7 +508,6 @@ function TVstEditor.SetKnobMode(val: Int32): boolean;
 begin
   Result := False;
 end;
-
 {$endif VST_2_1_EXTENSIONS}
 
 { TVstPlugin }
@@ -541,16 +538,15 @@ begin
 end;
 
 class procedure TVstPlugin.ProcessClass(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32); cdecl;
-{$ifdef DCC}
+{$ifdef FPC}
+begin
+  TVstPlugin(e^._object).Process(inputs, outputs, sampleFrames);
+end;
+{$else}
 var
   i: integer;
   InputsArr, OutputsArr: TArrPSingle;
-{$endif}
 begin
-{$ifdef FPC}
-  TVstPlugin(e^._object).Process(inputs, outputs, sampleFrames);
-{$endif}
-{$ifdef DCC}
   SetLength(InputsArr, e^.NumInputs);
   SetLength(OutputsArr, e^.NumOutputs);
   for i := 0 to e^.NumInputs - 1 do
@@ -564,20 +560,20 @@ begin
     Inc(outputs);
   end;
   TVstPlugin(e^._Object).Process(InputsArr, OutputsArr, SampleFrames);
-{$endif}
 end;
+{$endif}
+
 
 class procedure TVstPlugin.ProcessClassReplacing(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32); cdecl;
-{$ifdef DCC}
+{$ifdef FPC}
+begin
+  TVstPlugin(e^._object).processReplacing(inputs, outputs, sampleFrames);
+end;
+{$else}
 var
   i: integer;
   InputsArr, OutputsArr: TArrPSingle;
-{$endif}
 begin
-{$ifdef FPC}
-  TVstPlugin(e^._object).processReplacing(inputs, outputs, sampleFrames);
-{$endif}
-{$ifdef DCC}
   SetLength(InputsArr, e^.NumInputs);
   SetLength(OutputsArr, e^.NumOutputs);
   for i := 0 to e^.NumInputs - 1 do
@@ -591,22 +587,20 @@ begin
     Inc(outputs);
   end;
   TVstPlugin(e^._Object).ProcessReplacing(InputsArr, OutputsArr, SampleFrames);
-{$endif}
 end;
+{$endif}
 
 {$ifdef VST_2_4_EXTENSIONS}
-class procedure TVstPlugin.ProcessClassDoubleReplacing(e: PAEffect; Inputs, Outputs: PPDouble;
-  SampleFrames: Int32); cdecl;
-{$ifdef DCC}
+class procedure TVstPlugin.ProcessClassDoubleReplacing(e: PAEffect; Inputs, Outputs: PPDouble; SampleFrames: Int32); cdecl;
+{$ifdef FPC}
+begin
+  TVstPlugin(e^._object).processDoubleReplacing(inputs, outputs, sampleFrames);
+end;
+{$else}
 var
   i: integer;
   InputsArr, OutputsArr: TArrPDouble;
-{$endif}
 begin
-{$ifdef FPC}
-  TVstPlugin(e^._object).processDoubleReplacing(inputs, outputs, sampleFrames);
-{$endif}
-{$ifdef DCC}
   SetLength(InputsArr, e^.NumInputs);
   SetLength(OutputsArr, e^.NumOutputs);
   for i := 0 to e^.NumInputs - 1 do
@@ -620,9 +614,8 @@ begin
     Inc(outputs);
   end;
   TVstPlugin(e^._Object).processDoubleReplacing(InputsArr, OutputsArr, SampleFrames);
-{$endif}
 end;
-
+{$endif}
 {$endif VST_2_4_EXTENSIONS}
 
 procedure TVstPlugin.SwitchVstAEffectFlags(Flag: TVstAEffectFlag; switch: boolean);
@@ -761,7 +754,7 @@ begin
     //---Realtime----------------------
     effGetCurrentPosition: Result := reportCurrentPosition; // deprecated
 
-    effGetDestinationBuffer: Result := ToVstPtr(reportDestinationBuffer); // deprecated
+    effGetDestinationBuffer: Result := ToIntPtr(reportDestinationBuffer); // deprecated
   {$endif VST_FORCE_DEPRECATED}
 
     //---Offline----------------------
@@ -790,15 +783,15 @@ begin
     effGetTailSize: Result := GetGetTailSize;
 
   {$ifndef VST_FORCE_DEPRECATED}
-    effGetErrorText: Result := VstIntPtr(getErrorText(ptr)); // deprecated
+    effGetErrorText: Result := IntPtr(getErrorText(ptr)); // deprecated
 
-    effGetIcon: Result := ToVstPtr(getIcon); // deprecated
+    effGetIcon: Result := ToIntPtr(getIcon); // deprecated
 
-    effSetViewPosition: Result := VstIntPtr(setViewPosition(index, Value)); // deprecated
+    effSetViewPosition: Result := IntPtr(setViewPosition(index, Value)); // deprecated
 
     effIdle: Result := fxIdle; // deprecated
 
-    effKeysRequired: Result := VstIntPtr(keysRequired); // deprecated
+    effKeysRequired: Result := IntPtr(keysRequired); // deprecated
   {$endif VST_FORCE_DEPRECATED}
 
     effGetParameterProperties: Result := IntPtr(GetParameterProperties(index, ptr));
@@ -881,7 +874,8 @@ end;
 
 procedure TVstPlugin.Resume;
 begin
-  { if this effect is a synth or can receive midi events, we call the deprecated wantEvents() as some host rely on it.}
+  { If this effect is a synth or can receive midi events,
+    we call the deprecated wantEvents() as some host rely on it.}
   if (canDo(CanDoReceiveVstMidiEvent) = 1) or (effFlagsIsSynth in FCEffect.flags) then
     wantEvents;
 end;
@@ -899,15 +893,11 @@ end;
 {$ifdef VST_2_4_EXTENSIONS}
 {$ifdef FPC}
 procedure TVstPlugin.ProcessDoubleReplacing(Inputs, Outputs: PPDouble; SampleFrames: Int32);
-begin
-end;
-
 {$else}
 procedure TVstPlugin.ProcessDoubleReplacing(Inputs, Outputs: TArrPDouble; SampleFrames: Int32);
+{$endif}
 begin
 end;
-
-{$endif}
 {$endif VST_2_4_EXTENSIONS}
 
 procedure TVstPlugin.SetParameter(index: Int32; Value: single);
@@ -995,7 +985,6 @@ procedure TVstPlugin.CanDoubleReplacing(state: boolean);
 begin
   SwitchVstAEffectFlags(effFlagsCanDoubleReplacing, state);
 end;
-
 {$endif VST_2_4_EXTENSIONS}
 
 procedure TVstPlugin.ProgramsAreChunks(state: boolean);
@@ -1175,15 +1164,11 @@ end;
 
 {$ifdef FPC}
 procedure TVstPlugin.Process(Inputs, Outputs: PPSingle; sampleFrames: Int32);
-begin
-end;
-
 {$else}
 procedure TVstPlugin.Process(Inputs, Outputs: TArrPSingle; sampleFrames: Int32);
+{$endif}
 begin
 end;
-
-{$endif}
 
 function TVstPlugin.GetVu: single;
 begin
@@ -1266,7 +1251,6 @@ begin
   if Assigned(FVSTHost) then
     Result := FVSTHost(@FCEffect, amEndEdit, index, 0, nil, 0) <> 0;
 end;
-
 {$endif VST_2_1_EXTENSIONS}
 
 function TVstPlugin.GetProgramNameIndexed(category, index: Int32; Text: PAnsiChar): boolean;
@@ -1284,7 +1268,6 @@ function TVstPlugin.EndSetProgram: boolean;
 begin
   Result := False;
 end;
-
 {$endif VST_2_1_EXTENSIONS}
 
 {$ifdef VST_2_3_EXTENSIONS}
@@ -1297,7 +1280,6 @@ function TVstPlugin.BeginLoadProgram(ptr: PVstPatchChunkInfo): Int32;
 begin
   Result := 0;
 end;
-
 {$endif VST_2_3_EXTENSIONS}
 
 function TVstPlugin.IOChanged: boolean;
@@ -1379,7 +1361,6 @@ function TVstPlugin.SetPanLaw(_type: Int32; val: single): boolean;
 begin
   Result := False;
 end;
-
 {$endif VST_2_3_EXTENSIONS}
 
 {$ifdef VST_2_4_EXTENSIONS}
@@ -1397,7 +1378,6 @@ function TVstPlugin.GetNumMidiOutputChannels: Int32;
 begin
   Result := 0;
 end;
-
 {$endif VST_2_4_EXTENSIONS}
 
 function TVstPlugin.GetTimeInfo(filter: Int32): PVstTimeInfo;
@@ -1448,7 +1428,6 @@ function TVstPlugin.StopProcess: Int32;
 begin
   Result := 0;
 end;
-
 {$endif VST_2_3_EXTENSIONS}
 
 function TVstPlugin.ProcessVariableIo(VarIO: PVstVariableIO): boolean;
@@ -1461,7 +1440,6 @@ function TVstPlugin.SetTotalSampleToProcess(Value: Int32): Int32;
 begin
   Result := Value;
 end;
-
 {$endif VST_2_3_EXTENSIONS}
 
 function TVstPlugin.GetHostVendorString(Text: PAnsiChar): boolean;
@@ -1595,7 +1573,6 @@ function TVstPlugin.GetMidiKeyName(channel: Int32; keyName: PMidiKeyName): boole
 begin
   Result := False;
 end;
-
 {$endif VST_2_1_EXTENSIONS}
 
 function TVstPlugin.UpdateDisplay: boolean;
@@ -1619,7 +1596,6 @@ begin
   if Assigned(FVSTHost) and Assigned(ptr) then
     Result := FVSTHost(@FCEffect, amOpenFileSelector, 0, 0, ptr, 0) <> 0;
 end;
-
 {$endif VST_2_1_EXTENSIONS}
 
 {$ifdef VST_2_2_EXTENSIONS}
@@ -1629,7 +1605,6 @@ begin
   if Assigned(FVSTHost) and Assigned(ptr) then
     Result := FVSTHost(@FCEffect, amCloseFileSelector, 0, 0, ptr, 0) <> 0;
 end;
-
 {$endif VST_2_2_EXTENSIONS}
 
 {$ifdef VST_2_3_EXTENSIONS}
@@ -1699,7 +1674,6 @@ begin
 
   Result := True;
 end;
-
 {$endif VST_2_3_EXTENSIONS}
 
 function TVstPlugin.OfflineRead(offline: PVstOfflineTask; option: TVstOfflineOption; readSource: boolean): boolean;
@@ -1891,10 +1865,10 @@ begin
     Result := FVSTHost(@FCEffect, amCloseWindow, 0, 0, window, 0) <> 0;
 end;
 
-procedure TVstPlugin.SetBlockSizeAndSampleRate(BS: Int32; SR: single);
+procedure TVstPlugin.SetBlockSizeAndSampleRate(BlockSize: Int32; SampleRate: single);
 begin
-  FBlockSize  := BS;
-  FSampleRate := SR;
+  FBlockSize  := BlockSize;
+  FSampleRate := SampleRate;
 end;
 
 function TVstPlugin.GetErrorText(Text: PAnsiChar): boolean;
@@ -1929,7 +1903,6 @@ begin
   if Assigned(FVSTHost) and Assigned(nativePath) then
     Result := FVSTHost(@FCEffect, amGetChunkFile, 0, 0, nativePath, 0) <> 0;
 end;
-
 {$endif VST_2_2_EXTENSIONS}
 
 end.
