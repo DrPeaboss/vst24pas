@@ -1,4 +1,4 @@
-﻿{-------------------------------------------------------------------------------
+{-------------------------------------------------------------------------------
 // This unit is part of vst24pas
 // Unit name   : vst24pas.base
 // Description : Vst plugin and editor class
@@ -37,8 +37,7 @@ type
     class procedure ProcessClassReplacing(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32); cdecl; static;
 
   {$ifdef VST_2_4_EXTENSIONS}
-    class procedure ProcessClassDoubleReplacing(e: PAEffect; Inputs, Outputs: PPDouble; SampleFrames: Int32);
-      cdecl; static;
+    class procedure ProcessClassDoubleReplacing(e: PAEffect; Inputs, Outputs: PPDouble; SampleFrames: Int32); cdecl; static;
   {$endif VST_2_4_EXTENSIONS}
 
     { Make it easy to set AEffect flags }
