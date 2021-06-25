@@ -54,7 +54,9 @@ end;
 
 function VstdB2Amp(dB: double): double;
 begin
-  Result := Power(10, dB * 0.05);
+  // Result := Power(10, dB * 0.05);
+  // Power(10,db*0.05)=exp(db*0.05*ln(10))=below
+  Result:=exp(db*0.1151292546497{0228420089957273422});
 end;
 
 end.
