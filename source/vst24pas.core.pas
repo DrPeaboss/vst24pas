@@ -28,6 +28,10 @@ const
   kEffectMagic = $56737450; // Vst Magic, same as CCONST('V','s','t','P')
 
 type
+
+  PPSingle   = ^PSingle;
+  PPDouble   = ^PDouble;
+
 {$ifndef FPC}
   PInt32  = ^Int32;
   PIntPtr = ^IntPtr;
@@ -38,10 +42,12 @@ type
   PArrDouble  = ^TArrDouble;
   TArrPSingle = array of PArrSingle;
   TArrPDouble = array of PArrDouble;
+  TBuffer32 = TArrPSingle;
+  TBuffer64 = TArrPDouble;
+{$else}
+  TBuffer32 = PPSingle;
+  TBuffer64 = PPDouble;
 {$endif}
-
-  PPSingle   = ^PSingle;
-  PPDouble   = ^PDouble;
 
 const
   { hostCanDos strings Plug-in }

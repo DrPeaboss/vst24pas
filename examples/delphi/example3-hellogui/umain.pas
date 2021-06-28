@@ -11,7 +11,7 @@ type
     FGain: single;
   public
     constructor Create(VstHost: TVSTHostCallback; NumPrograms, NumParams: Int32); override;
-    procedure ProcessReplacing(inputs, outputs: TArrPSingle; SampleFrames: Int32); override;
+    procedure ProcessReplacing(const inputs, outputs: TBuffer32; SampleFrames: Int32); override;
     procedure SetParameter(index: Int32; Value: single); override;
     function GetParameter(index: Int32): single; override;
     procedure GetParameterName(index: Int32; Text: PAnsiChar); override;
@@ -92,7 +92,7 @@ begin
   Result := True;
 end;
 
-procedure TMyPlugin.ProcessReplacing(inputs, outputs: TArrPSingle; SampleFrames: Int32);
+procedure TMyPlugin.ProcessReplacing(const inputs, outputs: TBuffer32; SampleFrames: Int32);
 var
   i: integer;
   Gain: single;

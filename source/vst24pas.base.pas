@@ -32,8 +32,7 @@ type
       Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl; static;
     class function GetParameterClass(e: PAEffect; index: Int32): single; cdecl; static;
     class procedure SetParameterClass(e: PAEffect; index: Int32; Value: single); cdecl; static;
-    class procedure ProcessClass(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32);
-      cdecl; static; deprecated;
+    class procedure ProcessClass(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32); cdecl; static; deprecated;
     class procedure ProcessClassReplacing(e: PAEffect; Inputs, Outputs: PPSingle; SampleFrames: Int32); cdecl; static;
 
   {$ifdef VST_2_4_EXTENSIONS}
@@ -62,21 +61,13 @@ type
     { Called when the Maximun block size changes (always in a suspend state).
       Note that the sampleFrames in Process Calls could be smaller than this block size, but NOT bigger.}
     procedure SetBlockSize(BlockSize: Int32); virtual;
-  {$ifdef FPC}
     { Process 32 bit (single precision) floats (always in a resume state)}
-    procedure ProcessReplacing(Inputs, Outputs: PPSingle; SampleFrames: Int32); virtual; abstract;
-  {$else}
-    procedure ProcessReplacing(Inputs, Outputs: TArrPSingle; SampleFrames: Int32); virtual; abstract;
-  {$endif}
+    procedure ProcessReplacing(const Inputs, Outputs: TBuffer32; SampleFrames: Int32); virtual; abstract;
 
-{$ifdef VST_2_4_EXTENSIONS}
-  {$ifdef FPC}
+  {$ifdef VST_2_4_EXTENSIONS}
     { Process 64 bit (double precision) floats (always in a resume state) processReplacing}
-    procedure ProcessDoubleReplacing(Inputs, Outputs: PPDouble; SampleFrames: Int32); virtual;
-  {$else}
-    procedure ProcessDoubleReplacing(Inputs, Outputs: TArrPDouble; SampleFrames: Int32); virtual;
-  {$endif}
-{$endif VST_2_4_EXTENSIONS}
+    procedure ProcessDoubleReplacing(const Inputs, Outputs: TBuffer64; SampleFrames: Int32); virtual;
+  {$endif VST_2_4_EXTENSIONS}
 
     { Called when a parameter changed}
     procedure SetParameter(index: Int32; Value: single); virtual;
@@ -158,11 +149,7 @@ type
     procedure Int2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
 
     { same as processReplace but is deprecated }
-  {$ifdef FPC}
-    procedure Process(Inputs, Outputs: PPSingle; sampleFrames: Int32); virtual; deprecated;
-  {$else}
-    procedure Process(Inputs, Outputs: TArrPSingle; sampleFrames: Int32); virtual; deprecated;
-  {$endif}
+    procedure Process(const Inputs, Outputs: TBuffer32; sampleFrames: Int32); virtual; deprecated;
     function GetVu: single; virtual; deprecated;
     procedure HasVu(state: boolean = True); virtual; deprecated;
     procedure HasClip(state: boolean = True); virtual; deprecated;
@@ -890,11 +877,7 @@ begin
 end;
 
 {$ifdef VST_2_4_EXTENSIONS}
-{$ifdef FPC}
-procedure TVstPlugin.ProcessDoubleReplacing(Inputs, Outputs: PPDouble; SampleFrames: Int32);
-{$else}
-procedure TVstPlugin.ProcessDoubleReplacing(Inputs, Outputs: TArrPDouble; SampleFrames: Int32);
-{$endif}
+procedure TVstPlugin.ProcessDoubleReplacing(const Inputs, Outputs: TBuffer64; SampleFrames: Int32);
 begin
 end;
 {$endif VST_2_4_EXTENSIONS}
@@ -1160,12 +1143,7 @@ begin
   vstStrncpy(Text, PAnsiChar(IntToStr(Trunc(Value))), MaxLen);
 end;
 
-
-{$ifdef FPC}
-procedure TVstPlugin.Process(Inputs, Outputs: PPSingle; sampleFrames: Int32);
-{$else}
-procedure TVstPlugin.Process(Inputs, Outputs: TArrPSingle; sampleFrames: Int32);
-{$endif}
+procedure TVstPlugin.Process(const Inputs, Outputs: TBuffer32; sampleFrames: Int32);
 begin
 end;
 

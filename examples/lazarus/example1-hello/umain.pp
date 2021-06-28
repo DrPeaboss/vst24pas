@@ -14,7 +14,7 @@ type
   TMyPlugin = class(TVstPlugin)
   public
     constructor Create(VstHost: TVstHostCallback; NumPrograms, NumParams: Int32); override;
-    procedure ProcessReplacing(inputs, outputs: PPSingle; SampleFrames: Int32); override;
+    procedure ProcessReplacing(const inputs, outputs: TBuffer32; SampleFrames: Int32); override;
   end;
 
 implementation
@@ -27,7 +27,7 @@ begin
   SetUniqueID(CCONST('P', 'Z', 'e', '1')); // As unique as you can
 end;
 
-procedure TMyPlugin.ProcessReplacing(inputs, outputs: PPSingle; SampleFrames: Int32);
+procedure TMyPlugin.ProcessReplacing(const inputs, outputs: TBuffer32; SampleFrames: Int32);
 var
   i: integer;
 begin

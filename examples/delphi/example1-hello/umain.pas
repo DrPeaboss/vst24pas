@@ -9,7 +9,7 @@ type
   TMyPlugin = class(TVstPlugin)
   public
     constructor Create(VstHost: TVstHostCallback; NumPrograms, NumParams: Int32); override;
-    procedure ProcessReplacing(Inputs, Outputs: TArrPSingle; SampleFrames: Int32); override;
+    procedure ProcessReplacing(const Inputs, Outputs: TBuffer32; SampleFrames: Int32); override;
   end;
 
 implementation
@@ -22,7 +22,7 @@ begin
   SetUniqueID(CCONST('P', 'Z', 'D', '1'));
 end;
 
-procedure TMyPlugin.ProcessReplacing(Inputs, Outputs: TArrPSingle; SampleFrames: Int32);
+procedure TMyPlugin.ProcessReplacing(const Inputs, Outputs: TBuffer32; SampleFrames: Int32);
 var
   i: integer;
 begin
