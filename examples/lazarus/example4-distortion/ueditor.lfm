@@ -1,0 +1,69 @@
+object FormMain: TFormMain
+  Left = 394
+  Height = 220
+  Top = 250
+  Width = 400
+  Caption = 'FormMain'
+  ClientHeight = 220
+  ClientWidth = 400
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  OnHide = FormHide
+  OnShow = FormShow
+  object TrackBarThreshold: TTrackBar
+    Left = 56
+    Height = 42
+    Top = 88
+    Width = 334
+    Frequency = 500
+    Max = 5000
+    Min = 5
+    OnChange = TrackBarThresholdChange
+    Position = 4500
+    ShowSelRange = False
+    TabOrder = 0
+  end
+  object LabelShow: TLabel
+    Left = 16
+    Height = 20
+    Top = 40
+    Width = 79
+    Caption = 'LabelShow'
+    ParentColor = False
+  end
+  object TrackBarThresholddB: TTrackBar
+    Left = 56
+    Height = 42
+    Top = 144
+    Width = 334
+    Frequency = 600
+    Max = 6000
+    OnChange = TrackBarThresholddBChange
+    Position = 900
+    ShowSelRange = False
+    TabOrder = 1
+  end
+  object LabelAmp: TLabel
+    Left = 16
+    Height = 20
+    Top = 88
+    Width = 35
+    Caption = 'Amp'
+    ParentColor = False
+  end
+  object LabeldB: TLabel
+    Left = 16
+    Height = 20
+    Top = 144
+    Width = 19
+    Caption = 'dB'
+    ParentColor = False
+  end
+  object Timer: TTimer
+    Enabled = False
+    Interval = 40
+    OnTimer = TimerTimer
+    Left = 184
+    Top = 24
+  end
+end
