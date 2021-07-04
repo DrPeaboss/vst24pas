@@ -1,0 +1,109 @@
+object FormFilter: TFormFilter
+  Left = 333
+  Height = 296
+  Top = 250
+  Width = 400
+  Caption = 'FormFilter'
+  ClientHeight = 296
+  ClientWidth = 400
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  OnHide = FormHide
+  OnShow = FormShow
+  object TrackBarCutoff: TTrackBar
+    Left = 16
+    Height = 33
+    Top = 184
+    Width = 367
+    Frequency = 1000
+    Max = 9999
+    OnChange = TrackBarCutoffChange
+    Position = 9900
+    ShowSelRange = False
+    TabOrder = 0
+  end
+  object RadioGroupFilterMode: TRadioGroup
+    Left = 16
+    Height = 72
+    Top = 8
+    Width = 367
+    AutoFill = True
+    Caption = 'FilterMode'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 3
+    ClientHeight = 47
+    ClientWidth = 363
+    Columns = 3
+    ItemIndex = 0
+    Items.Strings = (
+      'LowPass'
+      'HighPass'
+      'BandPass'
+    )
+    OnClick = RadioGroupFilterModeClick
+    TabOrder = 1
+  end
+  object TrackBarResonance: TTrackBar
+    Left = 16
+    Height = 33
+    Top = 248
+    Width = 367
+    Frequency = 1000
+    Max = 10000
+    OnChange = TrackBarResonanceChange
+    Position = 100
+    ShowSelRange = False
+    TabOrder = 2
+  end
+  object RadioGroupAttenuationMode: TRadioGroup
+    Left = 16
+    Height = 60
+    Top = 88
+    Width = 367
+    AutoFill = True
+    Caption = 'AttenuationMode'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 2
+    ClientHeight = 35
+    ClientWidth = 363
+    Columns = 2
+    ItemIndex = 0
+    Items.Strings = (
+      '-12dB'
+      '-24dB'
+    )
+    OnClick = RadioGroupAttenuationModeClick
+    TabOrder = 3
+  end
+  object LabelCutoff: TLabel
+    Left = 16
+    Height = 20
+    Top = 160
+    Width = 45
+    Caption = 'Cutoff'
+    ParentColor = False
+  end
+  object LabelResonance: TLabel
+    Left = 16
+    Height = 20
+    Top = 224
+    Width = 79
+    Caption = 'Resonance'
+    ParentColor = False
+  end
+  object Timer: TTimer
+    OnTimer = TimerTimer
+    Left = 336
+    Top = 32
+  end
+end
