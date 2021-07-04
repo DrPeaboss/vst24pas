@@ -14,6 +14,8 @@ uses
   Forms, vst24pas.Core, vst24pas.Base;
 
 type
+  TVstGUI = TForm;           // For vst24pas.utils.VstPluginit
+  TVstGUIClass = TFormClass; // For vst24pas.utils.VstPluginit
 
   { TGuiEditor }
 
@@ -74,7 +76,7 @@ end;
 procedure TGuiEditor.Close;
 begin
   FGui.Hide;
-  inherited Close;
+  FParentWindow := nil;
 end;
 
 end.

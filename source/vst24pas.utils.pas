@@ -12,7 +12,7 @@ unit vst24pas.utils;
 interface
 
 uses
-  vst24pas.Core, vst24pas.Base;
+  vst24pas.Core, vst24pas.Base, vst24pas.gui;
 
 type
   { VSTPluginMain function for Windows OS}
@@ -30,8 +30,17 @@ end;
 function DoVSTPluginMain(PluginClass: TVSTPluginClass; VstHost: TVstHostCallback;
   NumPrograms, NumParams: Int32): PAEffect;
 
+// Convert amplitude to decibel, usually amplitude is in range [0,1]
 function VstAmp2dB(Amp: double): double; inline;
+// Convert decibel to amplitude, usually decibel is in range (-∞,0]
 function VstdB2Amp(dB: double): double; inline;
+
+// Used for VstPluginClass to quickly init in constructor
+function VstPluginit(Plugin:TVstPlugin;UniqueID:Int32):boolean;inline;overload;
+function VstPluginit(Plugin:TVstPlugin;UniqueID:Int32;GUIClass:TVstGUIClass):boolean;inline;overload;
+
+var
+  gPlugin:TVstPlugin; // Plugin global variable for GUI, must call VstPluginit first
 
 implementation
 
@@ -57,6 +66,24 @@ begin
   // Result := Power(10, dB * 0.05);
   // Power(10,db*0.05)=exp(db*0.05*ln(10))=below
   Result:=exp(db*0.1151292546497{0228420089957273422});
+end;
+
+function VstPluginit(Plugin: TVstPlugin; UniqueID: Int32): boolean;
+begin
+  if not Assigned(Plugin) then exit(False);
+  gPlugin:=Plugin;
+  Plugin.SetUniqueID(UniqueID);
+  Result:=True;
+end;
+
+function VstPluginit(Plugin: TVstPlugin; UniqueID: Int32; GUIClass: TVstGUIClass): boolean;
+var
+  Gui:TVstGUI;
+begin
+  if not VstPluginit(Plugin,UniqueID) then exit(False);
+  Gui:=GUIClass.Create(nil);
+  Plugin.SetEditor(TGuiEditor.Create(Gui,Plugin));
+  Result:=true;
 end;
 
 end.

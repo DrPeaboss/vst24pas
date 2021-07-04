@@ -20,9 +20,9 @@
     </CompilerOptions>
     <Description Value="vst24pas
 The pascal implementation of VST 2.4"/>
-    <License Value="&lt;MIT LICENSE>
+    <License Value="MIT LICENSE
 
-Copyright (c) &lt;2021> &lt;PeaZomboss>
+Copyright (c) 2021 PeaZomboss
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the &quot;Software&quot;), to
@@ -42,7 +42,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
-    <Version Release="1" Build="1"/>
+    <Version Release="2"/>
     <Files Count="5">
       <Item1>
         <Filename Value="..\source\vst24pas.base.pas"/>
