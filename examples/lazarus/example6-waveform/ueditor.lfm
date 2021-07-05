@@ -1,0 +1,52 @@
+object FormMain: TFormMain
+  Left = 0
+  Height = 509
+  Top = 0
+  Width = 624
+  Caption = 'FormMain'
+  ClientHeight = 509
+  ClientWidth = 624
+  DesignTimePPI = 120
+  object ToggleBoxPause: TToggleBox
+    Left = 16
+    Height = 31
+    Top = 8
+    Width = 94
+    Caption = 'Pause'
+    OnChange = ToggleBoxPauseChange
+    TabOrder = 0
+  end
+  object PaintBox: TPaintBox
+    Left = 16
+    Height = 448
+    Top = 48
+    Width = 594
+    OnPaint = PaintBoxPaint
+  end
+  object TrackBarAccuracy: TTrackBar
+    Left = 240
+    Height = 31
+    Top = 8
+    Width = 370
+    Min = 1
+    OnChange = TrackBarAccuracyChange
+    PageSize = 1
+    Position = 3
+    ShowSelRange = False
+    TabOrder = 1
+  end
+  object LabelDelay: TLabel
+    Left = 146
+    Height = 20
+    Top = 12
+    Width = 91
+    Caption = 'Adjust Dealy'
+    ParentColor = False
+  end
+  object Timer: TTimer
+    Interval = 16
+    OnTimer = TimerTimer
+    Left = 304
+    Top = 64
+  end
+end
