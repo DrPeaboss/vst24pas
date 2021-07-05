@@ -1,0 +1,28 @@
+object FormMain: TFormMain
+  Left = 333
+  Height = 300
+  Top = 250
+  Width = 400
+  Caption = 'FormMain'
+  ClientHeight = 300
+  ClientWidth = 400
+  DesignTimePPI = 120
+  object TrackBarGain: TTrackBar
+    Left = 15
+    Height = 44
+    Top = 111
+    Width = 360
+    Frequency = 100
+    Max = 2000
+    OnChange = TrackBarGainChange
+    Position = 1000
+    ShowSelRange = False
+    TabOrder = 0
+  end
+  object Timer: TTimer
+    Interval = 20
+    OnTimer = TimerTimer
+    Left = 171
+    Top = 23
+  end
+end
