@@ -4,7 +4,6 @@
 // Description : Some utils
 // Created by  : PeaZomboss, 2021/5
 -------------------------------------------------------------------------------}
-
 unit vst24pas.utils;
 
 {$I vst24pas.inc}
@@ -19,6 +18,9 @@ type
   TVSTPluginMainDll = function(VstHost: TVstHostCallback): PAEffect; cdecl;
 
   TVSTPluginClass = class of TVstPlugin;
+
+  PAEffect = ^TAEffect; // Redefine for VSTPluginMain
+  TVstHostCallback = AudioMasterCallback; // Redefine for VSTPluginMain
 
 { Used for VSTPluginMain, here is an example:
 --------------------------------------------------------------------------------
@@ -35,6 +37,8 @@ function VstAmp2dB(Amp: double): double; inline;
 // Convert decibel to amplitude, usually decibel is in range (-∞,0]
 function VstdB2Amp(dB: double): double; inline;
 
+// Use 4 charactors to make a unique ID
+function MakeUniqueID(a,b,c,d:AnsiChar):Int32;inline;
 // Used for VstPluginClass to quickly init in constructor
 function VstPluginit(Plugin:TVstPlugin;UniqueID:Int32):boolean;inline;overload;
 function VstPluginit(Plugin:TVstPlugin;UniqueID:Int32;GUIClass:TVstGUIClass):boolean;inline;overload;
@@ -66,6 +70,11 @@ begin
   // Result := Power(10, dB * 0.05);
   // Power(10,db*0.05)=exp(db*0.05*ln(10))=below
   Result:=exp(db*0.1151292546497{0228420089957273422});
+end;
+
+function MakeUniqueID(a, b, c, d: AnsiChar): Int32;
+begin
+  Result:=CCONST(a,b,c,d);
 end;
 
 function VstPluginit(Plugin: TVstPlugin; UniqueID: Int32): boolean;

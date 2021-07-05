@@ -4,7 +4,6 @@
 // Description : Basic structures
 // Created by  : PeaZomboss, 2021/5
 -------------------------------------------------------------------------------}
-
 unit vst24pas.core;
 
 {$I vst24pas.inc}
@@ -28,7 +27,6 @@ const
   kEffectMagic = $56737450; // Vst Magic, same as CCONST('V','s','t','P')
 
 type
-
   PPSingle   = ^PSingle;
   PPDouble   = ^PDouble;
 

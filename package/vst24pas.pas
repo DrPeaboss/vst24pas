@@ -8,7 +8,7 @@ unit vst24pas;
 interface
 
 uses
-  vst24pas.base, vst24pas.core, vst24pas.utils, vst24pas.gui;
+  vst24pas.base, vst24pas.core, vst24pas.utils, vst24pas.gui, vst24pas.new;
 
 implementation
 

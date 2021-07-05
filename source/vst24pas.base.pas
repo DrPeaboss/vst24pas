@@ -4,7 +4,6 @@
 // Description : Vst plugin and editor class
 // Created by  : PeaZomboss, 2021/5
 -------------------------------------------------------------------------------}
-
 unit vst24pas.base;
 
 {$I vst24pas.inc}
@@ -1039,7 +1038,7 @@ end;
 
 procedure TVstPlugin.Hz2String(samples: single; Text: PAnsiChar; MaxLen: Int32);
 begin
-  if samples <> 0 then
+  if samples = 0 then
     float2string(0, Text, maxlen)
   else
     float2string(GetSampleRate / samples, Text, maxlen);
