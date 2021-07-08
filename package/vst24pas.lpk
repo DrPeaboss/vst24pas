@@ -42,8 +42,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
-    <Version Minor="1" Release="1"/>
-    <Files Count="6">
+    <Version Minor="2"/>
+    <Files Count="9">
       <Item1>
         <Filename Value="..\source\vst24pas.inc"/>
         <Type Value="Include"/>
@@ -68,6 +68,18 @@ IN THE SOFTWARE.
         <Filename Value="..\source\vst24pas.new.pas"/>
         <UnitName Value="vst24pas.new"/>
       </Item6>
+      <Item7>
+        <Filename Value="..\source\vcompiler.inc"/>
+        <Type Value="Include"/>
+      </Item7>
+      <Item8>
+        <Filename Value="..\source\vst2interfaces.pas"/>
+        <UnitName Value="vst2interfaces"/>
+      </Item8>
+      <Item9>
+        <Filename Value="..\source\vst2pluginbase.pas"/>
+        <UnitName Value="vst2pluginbase"/>
+      </Item9>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>
