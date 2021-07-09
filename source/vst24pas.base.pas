@@ -137,15 +137,15 @@ type
     procedure MasterIdle; virtual;
 
     { Stuffs text with an amplitude on the [0.0, 1.0] scale converted to its value in decibels.}
-    procedure dB2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
+    procedure dB2String(Value: single; Text: PAnsiChar; MaxLen: Int32=7); virtual;
     { Stuffs text with the frequency in Hertz that has a period of samples.}
-    procedure Hz2String(samples: single; Text: PAnsiChar; MaxLen: Int32); virtual;
+    procedure Hz2String(samples: single; Text: PAnsiChar; MaxLen: Int32=7); virtual;
     { Stuffs text with the duration in milliseconds of samples frames.}
-    procedure Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32); virtual;
+    procedure Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32=7); virtual;
     { Stuffs text with a string representation on the floating point value.}
-    procedure Float2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
+    procedure Float2String(Value: single; Text: PAnsiChar; MaxLen: Int32=7); virtual;
     { Stuffs text with a string representation on the integer value.}
-    procedure Int2String(Value: single; Text: PAnsiChar; MaxLen: Int32); virtual;
+    procedure Int2String(Value: single; Text: PAnsiChar; MaxLen: Int32=7); virtual;
 
     { same as processReplace but is deprecated }
     procedure Process(const Inputs, Outputs: TBuffer32; sampleFrames: Int32); virtual; deprecated;
@@ -1041,7 +1041,7 @@ begin
   if samples = 0 then
     float2string(0, Text, maxlen)
   else
-    float2string(GetSampleRate / samples, Text, maxlen);
+    float2string(0.5 * GetSampleRate / samples, Text, maxlen);
 end;
 
 procedure TVstPlugin.Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32);

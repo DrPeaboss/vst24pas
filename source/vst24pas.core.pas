@@ -10,6 +10,8 @@ unit vst24pas.core;
 
 interface
 
+{$push}{$A8}{$Z1} // {$Z1} is very important
+
 const
   { Current VST Version }
 {$if defined (VST_2_4_EXTENSIONS)}
@@ -178,7 +180,7 @@ type
     effGetChunk, // [ptr]: PPointer for chunk data address [index]: 0 for bank, 1 for program @see TVSTPlugin::getChunk
     effSetChunk, // [ptr]: chunk data [value]: byte size [index]: 0 for bank, 1 for program @see TVSTPlugin::setChunk
 
-    //effNumOpcodes, // unknown
+    //effNumOpcodes, // Number of vst1.0 opcodes
 
     { vst 2.x extensions }
 
@@ -1252,6 +1254,8 @@ type
           end);
     end;
   end;
+
+{$pop}
 
 implementation
 

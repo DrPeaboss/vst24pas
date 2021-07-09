@@ -13,7 +13,7 @@
    If you use {$mode objfpc}, the hosts or the plugin itself will crash.
    The reason is from switch {$Z4} which {$mode objfpc} use it by default.
    But in delphi, neither {$Z1} nor {$Z4}, the hosts or plugin will not crash.
-   Tested hosts:
+   Tested hosts (native load, 32 bit host load 32 bit plugin, 64 bit too):
      FL Studio:
        FL will crash and flashback to desktop as soon as you load the plugin
        if you use {$mode delphi} and {$Z4}, but if you use {$mode objfpc},
@@ -43,5 +43,5 @@
 {$endif}
 
 { In FPC must above and close to interface, and directives can't be combined }
-{.$A8,$H+,$I-,$J-,$R-,$Z1} // Invalid
-{$A8}{$H+}{$I-}{$J-}{$R-}{$Z1} // The {$Z1} is important
+{.$H+,$I-,$J-,$R-} // Invalid
+{$H+}{$I-}{$J-}{$R-} // Ok

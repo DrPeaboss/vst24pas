@@ -10,7 +10,7 @@ uses
 
   function main(vsthost:TVstHostCallback):PAEffect;cdecl;export;
   begin
-    Result:=DoVSTPluginMain(TNewGain,vsthost,0,1);
+    Result:=DoVSTPluginMain(TNewGain,vsthost,3,1);
   end;
 
 exports

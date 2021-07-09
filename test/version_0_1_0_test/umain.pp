@@ -21,16 +21,19 @@ type
 implementation
 
 uses
-  ueditor,sysutils;
+  ueditor,sysutils,vst24pas.utils;
 
 { TNewGain }
 
 constructor TNewGain.Create(VstHost: TVstHostCallback; NumPrograms, NumParams: Int32);
 begin
   inherited Create(VstHost, NumPrograms, NumParams);
-  PlugInitBasicInfo('P','Z','n','1',TFormMain);
-  PlugInitEffectInfo('v010testPlugin','PeaZomboss','Test');
+  PlugInitBasicInfo('P','Z','n','1',TFormMain,10);
+  PlugInitEffectInfo('v010testPlugin','PeaZomboss','Test',10);
   PlugInitParamInfo(0,0.5,'Gain','dB',dmCustom);
+  PlugInitProgramInfo(0,'Program 0: original',[0.5]);
+  PlugInitProgramInfo(1,'Program 0: silent',[0]);
+  PlugInitProgramInfo(2,'Program 2: double',[1]);
   OnCustomDisplay := @CustomDisplay;
 end;
 
@@ -50,7 +53,7 @@ end;
 function TNewGain.CustomDisplay(index: int32): string;
 begin
   if index=0 then
-    Result := Format('%.3f',[2*ParamInfos[0].Value]);
+    Result := Format('%.3f',[VstdB2Amp(2*ParamInfos[0].Value)]);
 end;
 
 end.
