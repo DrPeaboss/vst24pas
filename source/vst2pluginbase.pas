@@ -76,9 +76,9 @@ type
   // Plugin base class that disable reference count
   TPluginBase = class(TObject,IUnknown)
   protected
-    function QueryInterface(constref iid: tguid; out obj): longint; stdcall;
-    function _AddRef: longint; stdcall;
-    function _Release: longint; stdcall;
+    function QueryInterface(constref iid: tguid; out obj): longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+    function _AddRef: longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+    function _Release: longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
   end;
 
   TPluginEditor = class;
@@ -385,7 +385,7 @@ end;
 
 { TPluginBase }
 
-function TPluginBase.QueryInterface(constref iid: tguid; out obj): longint; stdcall;
+function TPluginBase.QueryInterface(constref iid: tguid; out obj): longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 begin
   if GetInterface(iid,obj) then
     Result:=S_OK
@@ -393,12 +393,12 @@ begin
     Result:=E_NOINTERFACE;
 end;
 
-function TPluginBase._AddRef: longint; stdcall;
+function TPluginBase._AddRef: longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 begin
   Result:=-1;
 end;
 
-function TPluginBase._Release: longint; stdcall;
+function TPluginBase._Release: longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 begin
   Result:=-1;
 end;
