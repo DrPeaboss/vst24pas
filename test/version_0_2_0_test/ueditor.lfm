@@ -1,14 +1,13 @@
 object FormMain: TFormMain
   Left = 394
-  Height = 488
+  Height = 489
   Top = 250
   Width = 1003
   Caption = 'FormMain'
-  ClientHeight = 488
+  ClientHeight = 489
   ClientWidth = 1003
   DesignTimePPI = 120
   OnShow = FormShow
-  LCLVersion = '2.0.12.0'
   object TrackBarGain: TTrackBar
     Left = 8
     Height = 36
@@ -62,8 +61,8 @@ object FormMain: TFormMain
     Top = 8
   end
   object PopupMenuMemo: TPopupMenu
-    Left = 192
-    Top = 16
+    Left = 136
+    Top = 104
     object MenuItemClear: TMenuItem
       Caption = 'ClearLogNow'
       OnClick = MenuItemClearClick

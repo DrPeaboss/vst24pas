@@ -5,7 +5,7 @@ library v020test;
 uses
   forms,interfaces,vst2interfaces,vst2pluginbase, umain;
 
-  function main(vsthost:TVstHostCallback):PAEffect;cdecl;export;
+  function main(vsthost:THostCallback):PAEffect;cdecl;export;
   begin
     Result:=DoVSTPluginMain(vsthost,TMyPlugin);
   end;

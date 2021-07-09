@@ -13,7 +13,7 @@ type
 
   TMyPlugin = class(TVSTPlugin)
   public
-    constructor Create(VstHost: TVstHostCallback); override;
+    constructor Create(VstHost: THostCallback); override;
     procedure Process32(const inputs, outputs: TBuffer32; sampleframes: integer); override;
     function GetParamDisplay(index: integer): string; override;
     function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
@@ -30,10 +30,10 @@ uses
 
 { TMyPlugin }
 
-constructor TMyPlugin.Create(VstHost: TVstHostCallback);
+constructor TMyPlugin.Create(VstHost: THostCallback);
 begin
   inherited Create(VstHost);
-  PlugInitEffectInfo('v020testplugin', 'PeaZomboss', 'test', 20);
+  PlugInitEffectInfo('v020testplugin', 'PeaZomboss', 'test', 20, kPlugCategEffect);
   PlugInitParamInfo(0, 0.5, 'Gain', 'dB', pdmCustom);
   PlugInitPreset(0, 'Preset 0', [0.5]);
   PlugInitPreset(1, 'Preset 1', [1.0]);

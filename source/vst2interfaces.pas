@@ -10,7 +10,7 @@ unit vst2interfaces;
 
 interface
 
-{$push}{$A8}
+{$push}{$A8}{$Z1}
 
 const
 // VST version
@@ -39,18 +39,18 @@ type
     CanDoReceiveVstEvents = 'receiveVstEvents'; // Host can receive Vst events from plug-in
     CanDoReceiveVstMidiEvent = 'receiveVstMidiEvent'; // Host can receive MIDI events from plug-in
     // Host will indicates the plug-in when something change in plug-in's
-    // routing/connections with #suspend/#resume/#setSpeakerArrangement
+    // routing/connections with suspend/resume/setSpeakerArrangement
     CanDoReportConnectionChanges = 'reportConnectionChanges';
-    CanDoAcceptIOChanges = 'acceptIOChanges'; // Host supports #ioChanged ()
+    CanDoAcceptIOChanges = 'acceptIOChanges'; // Host supports ioChanged ()
     CanDoSizeWindow = 'sizeWindow'; // used by VSTGUI
     CanDoOffline = 'offline'; // Host supports offline feature
-    CanDoOpenFileSelector = 'openFileSelector'; // Host supports function #openFileSelector ()
-    CanDoCloseFileSelector = 'closeFileSelector'; // Host supports function #closeFileSelector ()
-    CanDoStartStopProcess = 'startStopProcess'; // Host supports functions #startProcess () and #stopProcess ()
+    CanDoOpenFileSelector = 'openFileSelector'; // Host supports function openFileSelector ()
+    CanDoCloseFileSelector = 'closeFileSelector'; // Host supports function closeFileSelector ()
+    CanDoStartStopProcess = 'startStopProcess'; // Host supports functions startProcess () and stopProcess ()
     // 'shell' handling via uniqueID.
-    // If supported by the Host and the Plug-in has the category #kPlugCategShell
+    // If supported by the Host and the Plug-in has the category kPlugCategShell
     CanDoShellCategory = 'shellCategory';
-    CanDoSendVstMidiEventFlagIsRealtime = 'sendVstMidiEventFlagIsRealtime'; // Host supports flags for #VstMidiEvent
+    CanDoSendVstMidiEventFlagIsRealtime = 'sendVstMidiEventFlagIsRealtime'; // Host supports flags for TVstMidiEvent
   end;
 
   // plugCanDos strings Host
@@ -61,9 +61,9 @@ type
     CanDoReceiveVstEvents = 'receiveVstEvents'; // plug-in can receive MIDI events from Host
     CanDoReceiveVstMidiEvent = 'receiveVstMidiEvent'; // plug-in can receive MIDI events from Host
     CanDoReceiveVstTimeInfo = 'receiveVstTimeInfo'; // plug-in can receive Time info from Host
-    CanDoOffline = 'offline'; // plug-in supports offline functions (#offlineNotify, #offlinePrepare, #offlineRun)
-    CanDoBypass = 'bypass'; // plug-in supports function #setBypass ()
-    CanDoMidiProgramNames = 'midiProgramNames'; // plug-in supports function #getMidiProgramName ()
+    CanDoOffline = 'offline'; // plug-in supports offline functions (offlineNotify, offlinePrepare, offlineRun)
+    CanDoBypass = 'bypass'; // plug-in supports function setBypass ()
+    CanDoMidiProgramNames = 'midiProgramNames'; // plug-in supports function getMidiProgramName ()
     // Found in FL Studio 20
     CanDoSupportsViewDpiScaling = 'supportsViewDpiScaling'; // plug-in's editor support DPI scaling
   end;
@@ -92,215 +92,233 @@ type
 
   // Basic dispatcher Opcodes (Host to Plug-in)
   TAEffectOpcodes = (
-    effOpen,       // open the plugin  @see TVSTPlugin::open
-    effClose,      // close the plugin  @see TVSTPlugin::close
-    effSetProgram, // [value]: new program number  @see TVSTPlugin::setProgram
-    effGetProgram, // [return value]: current program number  @see TVSTPlugin::getProgram
-    {[ptr]: char* with new program name, limited to #kVstMaxProgNameLen @see TVSTPlugin::setProgramName}
+    effOpen,       // open the plugin, usually be called after loaded the plugin
+    effClose,      // close the plugin, usually be called before unloaded the plugin
+    effSetProgram, // [value]: new program number, set preset by number
+    effGetProgram, // [return value]: current program number, the index of preset which used
+    {[ptr]: sz with new program name, limited to 24. Set new name for current preset }
     effSetProgramName,
-    {[ptr]: char buffer for current program name, limited to #kVstMaxProgNameLen @see TVSTPlugin::getProgramName}
+    {[ptr]: sz buf for current program name, limited to 24. Fill buf with current preset's name }
     effGetProgramName,
-    {[ptr]: char buffer for parameter label, limited to #kVstMaxParamStrLen @see TVSTPlugin::getParameterLabel}
+    {[ptr]: sz for parameter label, limited to 8 [index]: index of parameter.
+     Get param's label to show, e.g. dB, % ... }
     effGetParamLabel,
-    {[ptr]: char buffer for parameter display, limited to #kVstMaxParamStrLen @see TVSTPlugin::getParameterDisplay}
+    {[ptr]: sz for parameter display, limited to 8 [index]: index of parameter. Show the param }
     effGetParamDisplay,
-    {[ptr]: char buffer for parameter name, limited to #kVstMaxParamStrLen @see TVSTPlugin::getParameterName}
+    {[ptr]: sz for parameter name, limited to 8 [index]: index of parameter.
+     Get param's name to show, e.g. Gain, Frequency ... }
     effGetParamName,
-    effGetVu, // deprecated in VST 2.4
-    effSetSampleRate, // [opt]: new sample rate for audio processing @see TVSTPlugin::setSampleRate
-    effSetBlockSize, // [value]: new maximum block size for audio processing @see TVSTPlugin::setBlockSize
-    effMainsChanged, // [value]: 0 means "turn off", 1 means "turn on" @see TVSTPlugin::suspend  @see TVSTPlugin::resume
-    effEditGetRect, // [ptr]: #PPERect receiving pointer to editor size @see TERect  @see TVSTEditor::getRect
-    effEditOpen, // [ptr]: system dependent Window pointer, e.g. HWND on Windows @see TVSTEditor::open
-    effEditClose, // close the editor @see TVSTEditor::close
-    effEditDraw,  // deprecated in VST 2.4
-    effEditMouse, // deprecated in VST 2.4
-    effEditKey,   // deprecated in VST 2.4
-    effEditIdle,  // editor idle @see TVSTEditor::idle
-    effEditTop,   // deprecated in VST 2.4
-    effEditSleep, // deprecated in VST 2.4
-    effIdentify,  // deprecated in VST 2.4
-    effGetChunk, // [ptr]: PPointer for chunk data address [index]: 0 for bank, 1 for program @see TVSTPlugin::getChunk
-    effSetChunk, // [ptr]: chunk data [value]: byte size [index]: 0 for bank, 1 for program @see TVSTPlugin::setChunk
-    //effNumOpcodes, // unknown
+    effGetVu, // deprecated in VST 2.4. unknown
+    effSetSampleRate, // [opt]: new sample rate for audio processing
+    effSetBlockSize, // [value]: new maximum block size for audio processing
+    effMainsChanged, // [value]: 0 means "turn off", 1 means "turn on". Tell the plugin on or off
+    //<If value=1 and the plugin can recerve midi, should call amWantMidi because as some host rely on it
+    effEditGetRect, // [ptr]: PPERect receiving pointer to editor size. Get editor's rect, see TERect
+    effEditOpen, // [ptr]: system dependent Window pointer, e.g. HWND on Windows. Open(show) the editor
+    effEditClose, // close the editor. Usually simply hide the editor.
+    effEditDraw,  // deprecated in VST 2.4. unknown
+    effEditMouse, // deprecated in VST 2.4. unknown
+    effEditKey,   // deprecated in VST 2.4. unknown
+    effEditIdle,  // editor idle. Tell the plugin do something it like
+    effEditTop,   // deprecated in VST 2.4. unknown
+    effEditSleep, // deprecated in VST 2.4. unknown
+    effIdentify,  // deprecated in VST 2.4. unknown
+    effGetChunk, // [ptr]: PPointer for chunk data address [index]: 0 for bank, 1 for program.
+                 //<[return value] size in bytes of the chunk (plug-in allocates the data array).
+                 //<Host stores plug-in state.
+    effSetChunk, // [ptr]: chunk data [value]: byte size [index]: 0 for bank, 1 for program
+                 //<Host restores plug-in state.
+    //effNumOpcodes, // Number of VST 1.0 opcodes
 
-    // vst 2.x extensions
+    // VST 2.x extensions
 
-    effProcessEvents = Ord(effSetChunk) + 1, // [ptr]: #PVstEvents  @see TVSTPlugin::processEvents
-    {[index]: parameter index [return value]: 1=true, 0=false @see TVSTPlugin::canParameterBeAutomated}
+    effProcessEvents = Ord(effSetChunk) + 1, // [ptr]: PVstEvents. Called when new MIDI events come in
+    {[index]: parameter index [return value]: 1=true, 0=false. Whether the parameter can be automated }
     effCanBeAutomated,
-    {[index]: parameter index [ptr]: parameter string [return value]: true for success @see TVSTPlugin::string2parameter}
+    {[index]: parameter index [ptr]: parameter string [return value]: true for success.
+     Not used most of the time, try string value to parameter value(float) }
     effString2Parameter,
-    effGetNumProgramCategories, // deprecated
-    {[index]: program index [ptr]: buffer for program name, limited to #kVstMaxProgNameLen
-     [return value]: true for success @see TVSTPlugin::getProgramNameIndexed}
+    effGetNumProgramCategories, // deprecated. unknown
+    {[index]: program index [value]: category, deprecated, set -1
+     [ptr]: buf for program name, limited to 24 [return value]: 1 for success.
+     Get the name of preset by index }
     effGetProgramNameIndexed,
-    effCopyProgram,   // deprecated
-    effConnectInput,  // deprecated
-    effConnectOutput, // deprecated
-    {[index]: input index [ptr]: #PVstPinProperties [return value]: 1 if supported @see TVSTPlugin::getInputProperties}
+    effCopyProgram,   // deprecated. unknown
+    effConnectInput,  // deprecated. unknown
+    effConnectOutput, // deprecated. unknown
+    {[index]: input index [ptr]: PVstPinProperties [return value]: 1 if supported. unknown }
     effGetInputProperties,
-    {[index]: output index [ptr]: #PVstPinProperties [return value]: 1 if supported @see TVSTPlugin::getOutputProperties}
+    {[index]: output index [ptr]: PVstPinProperties [return value]: 1 if supported. unknown }
     effGetOutputProperties,
-    {[return value]: category @see TVstPlugCategory @see TVSTPlugin::getPlugCategory}
-    effGetPlugCategory,
-    effGetCurrentPosition,   // deprecated
-    effGetDestinationBuffer, // deprecated
-    {[ptr]: #TVstAudioFile array [value]: count [index]: start flag  @see TVSTPlugin::offlineNotify}
+    effGetPlugCategory, // [return value]: category in TVstPlugCategory
+    effGetCurrentPosition,   // deprecated. unknown
+    effGetDestinationBuffer, // deprecated. unknown
+    {[ptr]: TVstAudioFile array [value]: count [index]: start flag in TVstAudioFileFlags. unknown }
     effOfflineNotify,
-    {[ptr]: #TVstOfflineTask array [value]: count  @see TVSTPlugin::offlinePrepare}
+    {[ptr]: TVstOfflineTask array [value]: count. unknown }
     effOfflinePrepare,
-    {[ptr]: #TVstOfflineTask array [value]: count  @see TVSTPlugin::offlineRun}
+    {[ptr]: TVstOfflineTask array [value]: count. unknown }
     effOfflineRun,
-    effProcessVarIO, // [ptr]: #PVstVariableIO  @see TVSTPlugin::processVariableIO
-    {[value]: input #PVstSpeakerArrangement [ptr]: output #PVstSpeakerArrangement @see TVSTPlugin::setSpeakerArrangement}
+    effProcessVarIO, // [ptr]: PVstVariableIO. Used for variable I/O processing (offline processing like timestreching), unknown
+    {[value]: input PVstSpeakerArrangement [ptr]: output PVstSpeakerArrangement.
+     Set the plug-in's speaker arrangements, unknown }
     effSetSpeakerArrangement,
-    effSetBlockSizeAndSampleRate, // deprecated
-    effSetBypass, // [value]: 1 = bypass, 0 = no bypass  @see TVSTPlugin::setBypass
-    effGetEffectName, // [ptr]: buffer for effect name, limited to #kVstMaxEffectNameLen @see TVSTPlugin::getEffectName
-    effGetErrorText, // deprecated
-    {[ptr]: buffer for effect vendor string, limited to #kVstMaxVendorStrLen @see TVSTPlugin::getVendorString}
-    effGetVendorString,
-    {[ptr]: buffer for effect vendor string, limited to #kVstMaxProductStrLen @see TVSTPlugin::getProductString}
-    effGetProductString,
-    effGetVendorVersion, // [return value]: vendor-specific version @see TVSTPlugin::getVendorVersion
-    effVendorSpecific, // no definition, vendor specific handling @see TVSTPlugin::vendorSpecific
-    effCanDo, // [ptr]: "can do" string [return value]: 0: "don't know" -1: "no" 1: "yes" @see TVSTPlugin::canDo
+    effSetBlockSizeAndSampleRate, // deprecated [value]: blocksize [opt]: samplerate. Set both blocksize and samplerate
+    effSetBypass, // [value]: 1 = bypass, 0 = no bypass. unknown
+                  //<For 'soft-bypass' (this could be automated (in Audio Thread) that why you
+                  //<could NOT call iochanged (if needed) in this function, do it in fxidle).
+    effGetEffectName, // [ptr]: buffer for effect name, limited to 32. Get plugin's name
+    effGetErrorText, // deprecated. unknown
+    effGetVendorString, // [ptr]: buffer for effect vendor string, limited to 64. Get vendor name
+    effGetProductString, // [ptr]: buffer for effect vendor string, limited to 64. Get product name
+    effGetVendorVersion, // [return value]: vendor-specific version.
+    effVendorSpecific, // no definition, vendor specific handling. 4 params are defined by vendor
+    effCanDo, // [ptr]: "can do" string [return value]: 0: "don't know" -1: "no" 1: "yes". See THostCanDos & TPlugCanDos
     {[return value]: tail size (for example the reverb time of a reverb plug-in); 0 is default (return 1 for 'no tail')}
     effGetTailSize,
-    effIdle,            // deprecated
-    effGetIcon,         // deprecated
-    effSetViewPosition, // deprecated
-    {[index]: parameter index [ptr]: #PVstParameterProperties [return value]: 1 if supported @see TVSTPlugin::getParameterProperties}
+    effIdle,            // deprecated. unknown
+    effGetIcon,         // deprecated. unknown
+    effSetViewPosition, // deprecated. unknown
+    {[index]: parameter index [ptr]: PVstParameterProperties [return value]: 1 if supported }
     effGetParameterProperties,
-    effKeysRequired,    // deprecated
-    effGetVstVersion // [return value]: VST version  @see TVSTPlugin::getVstVersion
+    effKeysRequired,    // deprecated. unknown
+    effGetVstVersion // [return value]: VST version. Simply return kVstVersion
 {$ifdef VST_2_1_EXTENSIONS}
     , effEditKeyDown {
       [index]: ASCII character [value]: virtual key [opt]: modifiers
-      [return value]: 1 if key used  @see TVSTEditor::onKeyDown}
+      [return value]: 1 if key used. }
     , effEditKeyUp {
       [index]: ASCII character [value]: virtual key [opt]: modifiers
-      [return value]: 1 if key used  @see TVSTEditor::onKeyUp}
+      [return value]: 1 if key used. }
     , effSetEditKnobMode {
-      [value]: knob mode 0: circular, 1: circular relativ,
-      2: linear (CKnobMode in VSTGUI)  @see TVSTEditor::setKnobMode}
+      [value]: knob mode 0: circular, 1: circular relativ, 2: linear (CKnobMode in VSTGUI). }
     , effGetMidiProgramName {
-      [index]: MIDI channel [ptr]: #PMidiProgramName
-      [return value]: number of used programs, 0 if unsupported
-      @see TVSTPlugin::getMidiProgramName}
+      [index]: MIDI channel [ptr]: PMidiProgramName
+      [return value]: number of used programs, 0 if unsupported.
+      Fill midiProgramName with information for 'thisProgramIndex' }
     , effGetCurrentMidiProgram {
-      [index]: MIDI channel [ptr]: #PMidiProgramName
-      [return value]: index of current program
-      @see TVSTPlugin::getCurrentMidiProgram}
+      [index]: MIDI channel [ptr]: PMidiProgramName
+      [return value]: index of current program.
+      Fill currentProgram with information for the current MIDI program }
     , effGetMidiProgramCategory {
-      [index]: MIDI channel [ptr]: #PMidiProgramCategory
-      [return value]: number of used categories, 0 if unsupported
-      @see TVSTPlugin::getMidiProgramCategory}
+      [index]: MIDI channel [ptr]: PMidiProgramCategory
+      [return value]: number of used categories, 0 if unsupported.
+      Fill category with information for 'thisCategoryIndex' }
     , effHasMidiProgramsChanged {
       [index]: MIDI channel
-      [return value]: 1 if the #TMidiProgramName(s) or #TMidiKeyName(s) have changed
-      @see TVSTPlugin::hasMidiProgramsChanged}
+      [return value]: 1 if the TMidiProgramName(s) or TMidiKeyName(s) have changed.
+      Return 1 if the MidiProgramNames, MidiKeyNames or MidiControllerNames had changed on this MIDI channel }
     , effGetMidiKeyName {
-      [index]: MIDI channel [ptr]: #PMidiKeyName [return value]: true if supported, false otherwise
-      @see TVSTPlugin::getMidiKeyName}
-    , effBeginSetProgram // no arguments  @see TVSTPlugin::beginSetProgram
-    , effEndSetProgram   // no arguments  @see TVSTPlugin::endSetProgram
+      [index]: MIDI channel [ptr]: PMidiKeyName [return value]: 1 if supported, false otherwise.
+      Fill keyName with information for 'thisProgramIndex' and 'thisKeyNumber' }
+    , effBeginSetProgram // Called before a program is loaded
+    , effEndSetProgram   // Called after a program was loaded
 {$endif VST_2_1_EXTENSIONS}
 
 {$ifdef VST_2_3_EXTENSIONS}
     , effGetSpeakerArrangement {
-      [value]: input #PVstSpeakerArrangement [ptr]: output #PVstSpeakerArrangement
-      @see TVSTPlugin::getSpeakerArrangement}
+      [value]: input PVstSpeakerArrangement [ptr]: output PVstSpeakerArrangement.
+      Return the plug-in's speaker arrangements, unknown }
     , effShellGetNextPlugin {
-      [ptr]: buffer for plug-in name, limited to #kVstMaxProductStrLen
-      [return value]: next plugin's uniqueID  @see TVSTPlugin::getNextShellPlugin}
-    , effStartProcess // no arguments  @see TVSTPlugin::startProcess
-    , effStopProcess  // no arguments  @see TVSTPlugin::stopProcess
-    , effSetTotalSampleToProcess {
-      [value]: number of samples to process, offline only!
-      @see TVSTPlugin::setTotalSampleToProcess}
-    , effSetPanLaw // [value]: pan law [opt]: gain  @see VstPanLawType @see TVSTPlugin::setPanLaw
+      [ptr]: buffer for plug-in name, limited to 64 [return value]: next plugin's uniqueID.
+      This opcode is only called, if the plug-in is of type kPlugCategShell,
+      in order to extract all included sub-plugin's names}
+    , effStartProcess { unknown
+      Called one time before the start of process call. This indicates that the process call will be interrupted
+      (due to Host reconfiguration or bypass state when the plug-in doesn't support softBypass) }
+    , effStopProcess  // Called after the stop of process call, unknown
+    , effSetTotalSampleToProcess // [value]: number of samples to process, offline only!  unknown
+    , effSetPanLaw // [value]: pan law [opt]: gain. Set the Panning Law used by the Host, see TVstPanLawType
     , effBeginLoadBank {
-      [ptr]: #PVstPatchChunkInfo [return value]: -1: bank can't be loaded,
-      1: bank can be loaded, 0: unsupported @see TVSTPlugin::beginLoadBank}
+      [ptr]: PVstPatchChunkInfo
+      [return value]: -1: bank can't be loaded, 1: bank can be loaded, 0: unsupported.
+      Called before a Bank is loaded. }
     , effBeginLoadProgram {
-      [ptr]: #PVstPatchChunkInfo [return value]: -1: prog can't be loaded,
-      1: prog can be loaded, 0: unsupported @see TVSTPlugin::beginLoadProgram}
+      [ptr]: PVstPatchChunkInfo
+      [return value]: -1: prog can't be loaded, 1: prog can be loaded, 0: unsupported.
+      Called before a Program is loaded. (called before effBeginSetProgram) }
 {$endif VST_2_3_EXTENSIONS}
 
 {$ifdef VST_2_4_EXTENSIONS}
-    , effSetProcessPrecision // [value]: @see TVstProcessPrecision @see TVSTPlugin::setProcessPrecision
-    , effGetNumMidiInputChannels {
-      [return value]: number of used MIDI input channels (1-15)
-      @see TVSTPlugin::getNumMidiInputChannels}
-    , effGetNumMidiOutputChannels {
-      [return value]: number of used MIDI output channels (1-15)
-      @see TVSTPlugin::getNumMidiOutputChannels}
+    , effSetProcessPrecision // [value]: TVstProcessPrecision.
+                             //<Set floating-point precision used for processing (32 or 64 bit)
+    , effGetNumMidiInputChannels  // [return value]: number of used MIDI input channels (1-15)
+    , effGetNumMidiOutputChannels // [return value]: number of used MIDI output channels (1-15)
 {$endif VST_2_4_EXTENSIONS} );
 
   // Basic dispatcher Opcodes (Plug-in to Host)
   TAudioMasterOpcodes = (
-    amAutomate, // [index]: parameter index [opt]: parameter value  @see TVSTPlugin::setParameterAutomated
-    amVersion,  // [return value]: Host VST version (for example 2400 for VST 2.4) @see TVSTPlugin::getMasterVersion
-    amCurrentId, // [return value]: current unique identifier on shell plug-in @see TVSTPlugin::getCurrentUniqueId
-    amIdle,         // no arguments  @see TVSTPlugin::masterIdle
-    amPinConnected, // deprecated in VST 2.4 r2
-    //amUnknown,      // undefined
+    amAutomate, // [index]: parameter index [opt]: parameter value. Tell host the indexed param should be audomated
+    amVersion,  // [return value]: Host VST version (for example 2400 for VST 2.4)
+    amCurrentId, // [return value]: current unique identifier on shell plug-in. unknown
+    amIdle, // Give idle time to Host application
+    amPinConnected, // deprecated in VST 2.4 r2.
+    //<[index] input [value] 0 [return value] 0 if connected
+    //<[index] output [value] 1 [return value] 0 if connected
 
     // VST 2.x dispatcher Opcodes (Plug-in to Host)
 
-    amWantMidi = Ord(amPinConnected) + 2, // deprecated
-
-    {[return value]: #PVstTimeInfo or null if not supported
-     [value]: request mask  @see TVstTimeInfoFlags @see TVSTPlugin::getTimeInfo}
+    amWantMidi = Ord(amPinConnected) + 2, // deprecated. Tell host want to receive midi
+    {[return value]: PVstTimeInfo or null if not supported
+     [value]: request mask see TVstTimeInfoFlags.
+     Get time information from Host }
     amGetTime,
-    amProcessEvents, // [ptr]: pointer to #TVstEvents  @see TVstEvents @see TVSTPlugin::sendVstEventsToHost
-    amSetTime,                     // deprecated
-    amTempoAt,                     // deprecated
-    amGetNumAutomatableParameters, // deprecated
-    amGetParameterQuantization,    // deprecated
-    amIOChanged, // [return value]: 1 if supported  @see TVSTPlugin::ioChanged
-    amNeedIdle,                    // deprecated
-    amSizeWindow, // [index]: new width [value]: new height [return value]: 1 if supported  @see TVSTPlugin::sizeWindow
-    amGetSampleRate, // [return value]: current sample rate  @see TVSTPlugin::updateSampleRate
-    amGetBlockSize,  // [return value]: current block size  @see TVSTPlugin::updateBlockSize
-    amGetInputLatency, // [return value]: input latency in audio samples  @see TVSTPlugin::getInputLatency
-    amGetOutputLatency, // [return value]: output latency in audio samples  @see TVSTPlugin::getOutputLatency
-    amGetPreviousPlug,         // deprecated
-    amGetNextPlug,             // deprecated
-    amWillReplaceOrAccumulate, // deprecated
-    amGetCurrentProcessLevel, // [return value]: current process level  @see TVstProcessLevels
-    amGetAutomationState, // [return value]: current automation state  @see TVstAutomationStates
-    amOfflineStart, // [index]: numNewAudioFiles [value]: numAudioFiles [ptr]: #PVstAudioFile  @see TVSTPlugin::offlineStart
-    {[index]: bool readSource [value]: #TVstOfflineOption* @see TVstOfflineOption
-     [ptr]: #PVstOfflineTask  @see TVstOfflineTask @see TVSTPlugin::offlineRead}
+    amProcessEvents, // [ptr]: PVstEvents. Send MIDI events back to Host application. See TVstEvents
+    amSetTime, // deprecated. unknown for any
+    amTempoAt, // deprecated. [index]: position [return value]: maybe tempo
+    amGetNumAutomatableParameters, // deprecated. [return value]: maybe number of automatable parameters
+    amGetParameterQuantization,    // deprecated. [return value]: maybe quantization
+    amIOChanged, // [return value]: 1 if supported.
+    //<Tell Host numInputs and/or numOutputs and/or initialDelay (and/or numParameters: to be avoid) have changed
+    amNeedIdle, // deprecated. [return value]: maybe 1 if success. Tell host need idle time
+    amSizeWindow, // [index]: new width [value]: new height [return value]: 1 if supported.
+                  //<Requests to resize the editor window
+    amGetSampleRate, // [return value]: current sample rate. Get sample rate from host
+    amGetBlockSize,  // [return value]: current block size. Get block size from host
+    amGetInputLatency, // [return value]: input latency in audio samples. Get audio input latency values
+    amGetOutputLatency, // [return value]: output latency in audio samples. Get audio output latency values
+    amGetPreviousPlug, // deprecated. [return value]: PAEffect of previous plugin
+    amGetNextPlug,     // deprecated. [return value]: PAEffect of next plugin
+    amWillReplaceOrAccumulate, // deprecated. [return value]: unknown
+    amGetCurrentProcessLevel, // [return value]: current process level. See TVstProcessLevels
+    amGetAutomationState, // [return value]: current automation state. See TVstAutomationStates
+    amOfflineStart, // [index]: numNewAudioFiles [value]: numAudioFiles [ptr]: PVstAudioFile
+                    // [return value]: maybe 1 if success. unknown
+    {[index]: bool readSource [value]: PVstOfflineOption, see TVstOfflineOption
+     [ptr]: PVstOfflineTask, see TVstOfflineTask [return value]: maybe 1 if success. unknown}
     amOfflineRead,
-    amOfflineWrite, // @see amOfflineRead @see TVSTPlugin::offlineRead
-    amOfflineGetCurrentPass, // @see TVSTPlugin::offlineGetCurrentPass
-    amOfflineGetCurrentMetaPass, // @see TVSTPlugin::offlineGetCurrentMetaPass
-    amSetOutputSampleRate,         // deprecated
-    amGetOutputSpeakerArrangement, // deprecated
-    {[ptr]: char buffer for vendor string, limited to #kVstMaxVendorStrLen @see TVSTPlugin::getHostVendorString}
-    amGetVendorString,
-    {[ptr]: char buffer for vendor string, limited to #kVstMaxProductStrLen @see TVSTPlugin::getHostProductString}
-    amGetProductString,
-    amGetVendorVersion, // [return value]: vendor-specific version  @see TVSTPlugin::getHostVendorVersion
-    amVendorSpecific, // no definition, vendor specific handling  @see TVSTPlugin::hostVendorSpecific
-    amSetIcon,     // deprecated
-    amCanDo,       // [ptr]: "can do" string [return value]: 1 for supported
-    amGetLanguage, // [return value]: language code  @see TVstHostLanguage
-    amOpenWindow,  // deprecated
-    amCloseWindow, // deprecated
-    amGetDirectory, // [return value]: FSSpec on MAC, else char*  @see TVSTPlugin::getDirectory
-    amUpdateDisplay, // no arguments
-    amBeginEdit,     // [index]: parameter index  @see TVSTPlugin::beginEdit
-    amEndEdit,       // [index]: parameter index  @see TVSTPlugin::endEdit
-    amOpenFileSelector, // [ptr]: PVstFileSelect [return value]: 1 if supported  @see TVSTPlugin::openFileSelector
-    amCloseFileSelector, // [ptr]: PVstFileSelect  @see TVSTPlugin::closeFileSelector
-    amEditFile,                    // deprecated
-    amGetChunkFile,                // deprecated
-    amGetInputSpeakerArrangement   // deprecated
+    amOfflineWrite, // [return value]: maybe 1 if success. See amOfflineRead, unknown
+    amOfflineGetCurrentPass, // [return value]: maybe 1 if success. unknown
+    amOfflineGetCurrentMetaPass, // [return value]: maybe 1 if success. unknown
+    amSetOutputSampleRate, // deprecated. [opt]: sample rate.
+    amGetOutputSpeakerArrangement, // deprecated. [return value] PVstSpeakerArrangement.
+    amGetVendorString, // [ptr]: sz for vendor string, limited to 64 [return value] maybe 1 if success
+    amGetProductString, // [ptr]: sz for vendor string, limited to 64 [return value] maybe 1 if success
+    amGetVendorVersion, // [return value]: vendor-specific version
+    amVendorSpecific, // no definition, vendor specific handling, see effVendorSpecific
+    amSetIcon, // deprecated. unknown for any
+    amCanDo, // [ptr]: "can do" string [return value]: 1 for supported. Get host CanDos, See THostCanDos
+    amGetLanguage, // [return value]: language code, see TVstHostLanguage
+    amOpenWindow,  // deprecated. [ptr]: PVstWindow [return value]: maybe pointer to the window
+    amCloseWindow, // deprecated. [ptr]: PVstWindow [return value]: maybe 1 for success
+    amGetDirectory, // [return value]: FSSpec on MAC, else PAnsiChar. Returns the plug-in's directory
+    amUpdateDisplay, // Something has changed in plug-in, request an update display like
+                     //<program (MIDI too) and parameters list in Host
+                     //<[return value] maybe 1 for success
+    amBeginEdit, // [index]: parameter index. [return value]: maybe 1 for success.
+                 //<To be called before amAutomate (on Mouse Down).
+                 //<This will be used by the Host for specific Automation Recording
+    amEndEdit, // [index]: parameter index. [return value]: maybe 1 for success.
+               //<To be called after amAutomate (on Mouse Up)
+    amOpenFileSelector, // [ptr]: PVstFileSelect [return value]: 1 if supported. Open a Host File selector
+    amCloseFileSelector, // [ptr]: PVstFileSelect [return value]: maybe 1 if success.
+                         //<Close the Host File selector which was opened by amOpenFileSelector
+    amEditFile, // deprecated. unknown for any
+    // Returns in platform format the path of the current chunk (could be called in effSetChunk)
+    // (FSSpec on MAC else PChar)
+    // [ptr]: char[2048] or sizeof(FSSpec) [return value]: 1 if supported
+    amGetChunkFile, // deprecated
+    amGetInputSpeakerArrangement // deprecated. [return value]: PVstSpeakerArrangement
   );
 
   TVstAEffectFlag  = (
@@ -322,8 +340,10 @@ type
 
   PAEffect = ^TAEffect; // forward
 
+  // Implemented by host, called by plugin, use opcodes in TAudioMasterOpcodes
   AudioMasterCallback = function(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32;
     Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
+  // Implemented by plugin, called by host, use opcodes in TAEffectOpcodes
   AEffectDispatcherProc = function(effect: PAEffect; opcode: TAEffectOpcodes; index: Int32;
     Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
   AEffectProcessProc = procedure(effect: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
@@ -333,64 +353,65 @@ type
 
   { set some alias }
 
-  TVstHostCallback = AudioMasterCallback;
-  TAEDispatcher    = AEffectDispatcherProc;
-  TAEProcess       = AEffectProcessProc;
-  TAEProcessDouble = AEffectProcessDoubleProc;
-  TAESetParameter  = AEffectSetParameterProc;
-  TAEGetParameter  = AEffectGetParameterProc;
+  THostCallback   = AudioMasterCallback;
+  TAEDispatcherCb = AEffectDispatcherProc;
+  TAEProcess32Cb    = AEffectProcessProc;
+  TAEProcess64Cb  = AEffectProcessDoubleProc;
+  TAESetParamCb   = AEffectSetParameterProc;
+  TAEGetParamCb   = AEffectGetParameterProc;
 
-  // main structure define
+  // Audio effect structure define
   TAEffect = record
     Magic:         Int32;  // must be kEffectMagic
-    Dispatcher:    TAEDispatcher; // Host to Plug-in dispatcher @see TVSTPlugin::dispatcher
-    Process:       TAEProcess;    // deprecated unused member
-    SetParameter:  TAESetParameter; // Set new value of automatable parameter @see TVSTPlugin::setParameter
-    GetParameter:  TAEGetParameter; // Returns current value of automatable parameter @see TVSTPlugin::getParameter
-    NumPrograms:   Int32;  // number of programs
-    NumParams:     Int32;  // all programs are assumed to have numParams parameters
+    Dispatcher:    TAEDispatcherCb; // Host to Plug-in dispatcher
+    Process:       TAEProcess32Cb; // deprecated, default process callback function before 2.4
+    SetParameter:  TAESetParamCb; // Set new value of automatable parameter
+    GetParameter:  TAEGetParamCb; // Returns current value of automatable parameter
+    NumPrograms:   Int32;  // number of programs, or we can say presets
+    NumParams:     Int32;  // number of parameters, all parameter are included in preset
     NumInputs:     Int32;  // number of audio inputs
     NumOutputs:    Int32;  // number of audio outputs
-    Flags:         TVstAEffectFlags; // @see TVstAEffectFlags
+    Flags:         TVstAEffectFlags; // See TVstAEffectFlags
     Resvd1:        IntPtr; // reserved for Host, must be 0
     Resvd2:        IntPtr; // reserved for Host, must be 0
-    { for algorithms which need input in the first place(Group delay or latency in Samples).
+    { For algorithms which need input in the first place(Group delay or latency in Samples).
       This value should be initialized in a resume state. }
     InitialDelay:  Int32;
     RealQualities: Int32;   // deprecated unused member
     OffQualities:  Int32;   // deprecated unused member
     IORatio:       single;  // deprecated unused member
-    pObject:       Pointer; // #TVSTPlugin class pointer
+    pObject:       Pointer; // The plugin class pointer, see vst2pluginbase unit
     User:          Pointer; // user-defined pointer
-    { registered unique identifier(register it at Steinberg 3rd party support Web).
+    { Registered unique identifier(register it at Steinberg 3rd party support Web).
       This is used to identify a plug-in during save+load of preset and project. }
     UniqueID:      Int32;
-    Version:       Int32;   // plug-in version (example 1100 for version 1.1.0.0)
-    ProcessReplacing: TAEProcess; // Process audio samples in replacing mode @see TVSTPlugin::processReplacing
+    Version:       Int32; // plug-in version (example 1100 for version 1.1.0.0)
+    ProcessReplacing: TAEProcess32Cb; // Process audio samples in replacing mode, default in 2.4
 {$ifdef VST_2_4_EXTENSIONS}
-    { Process double-precision audio samples in replacing mode @see TVSTPlugin::processDoubleReplacing}
-    ProcessDoubleReplacing: TAEProcessDouble;
-    Future:        array[0..55] of byte; // reserved for future use (please zero)
+    // Process double-precision audio samples in replacing mode, optional in 2.4
+    ProcessDoubleReplacing: TAEProcess64Cb;
+    Future: array[0..55] of byte; // reserved for future use (please zero)
 {$else}
-    Future:        array[0..59] of byte; // reserved for future use (please zero)
+    Future: array[0..59] of byte; // reserved for future use (please zero)
 {$endif}
   end;
 
 const
   { VST String length limits (in characters excl. 0 byte)
-    Maybe useless because many hosts have bigger length than this }
+    Maybe useless because many hosts have bigger buffer than the limits
+    But it is better to set it smaller than 32, even 16 for shorter ones }
 
-  kVstMaxParamStrLen   = 8;  // used for #effGetParamLabel, #effGetParamDisplay, #effGetParamName
-  kVstMaxProgNameLen   = 24; // used for #effGetProgramName, #effSetProgramName, #effGetProgramNameIndexed
-  kVstMaxEffectNameLen = 32; // used for #effGetEffectName
-  kVstMaxVendorStrLen  = 64; // used for #effGetVendorString, #audioMasterGetVendorString
-  kVstMaxProductStrLen = 64; // used for #effGetProductString, #audioMasterGetProductString
+  kVstMaxParamStrLen   = 8;  // used for effGetParamLabel, effGetParamDisplay, effGetParamName
+  kVstMaxProgNameLen   = 24; // used for effGetProgramName, effSetProgramName, effGetProgramNameIndexed
+  kVstMaxEffectNameLen = 32; // used for effGetEffectName
+  kVstMaxVendorStrLen  = 64; // used for effGetVendorString, amGetVendorString
+  kVstMaxProductStrLen = 64; // used for effGetProductString, amGetProductString
 
 // Make a unique ID from 4 charactors
 function MakeUniqueID(a,b,c,d:AnsiChar):Int32; inline;
-// Cast pointer to #VstIntPtr.
+// Cast pointer to IntPtr.
 function FromIntPtr(const arg: IntPtr): Pointer; inline;
-// Cast #VstIntPtr to pointer.
+// Cast IntPtr to pointer.
 function ToIntPtr(const ptr: Pointer): IntPtr; inline;
 // String copy taking care of null terminator.
 function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
@@ -400,7 +421,7 @@ function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsi
 type
   PPERect = ^PERect;
   PERect  = ^TERect;
-  // Structure used for #effEditGetRect.
+  // Structure used for effEditGetRect.
   TERect = record
     Top:    int16; // top coordinate, usually 0
     Left:   int16; // left coordinate, usually 0
@@ -411,26 +432,26 @@ type
 const
   { String length limits (in characters excl. 0 byte). }
 
-  kVstMaxShortLabelLen = 8;   // used for #VstParameterProperties->shortLabel, #VstPinProperties->shortLabel
-  kVstMaxCategLabelLen = 24;  // used for #VstParameterProperties->label
-  kVstMaxNameLen       = 64;  // used for #MidiProgramName, #MidiProgramCategory, #MidiKeyName, #VstSpeakerProperties, #VstPinProperties
-  kVstMaxLabelLen      = 64;  // used for #VstParameterProperties->label, #VstPinProperties->label
-  kVstMaxFileNameLen   = 100; // used for #VstAudioFile->name
+  kVstMaxShortLabelLen = 8;   // used for TVstParameterProperties.shortLabel, TVstPinProperties.shortLabel
+  kVstMaxCategLabelLen = 24;  // used for TVstParameterProperties.label
+  kVstMaxNameLen       = 64;  // used for TMidiProgramName, TMidiProgramCategory, TMidiKeyName, TVstSpeakerProperties, TVstPinProperties
+  kVstMaxLabelLen      = 64;  // used for TVstParameterProperties.label, TVstPinProperties.label
+  kVstMaxFileNameLen   = 100; // used for TVstAudioFile.name
 
 type
-  // VstEvent Types used by #TVstEvent.
+  // VstEvent Types used by TVstEvent.
   TVstEventTypes = (
-    kVstMidiType = 1,  // MIDI event  @see TVstMidiEvent
+    kVstMidiType = 1,  // MIDI event, see TVstMidiEvent
     kVstAudioType,     // deprecated
     kVstVideoType,     // deprecated
     kVstParameterType, // deprecated
     kVstTriggerType,   // deprecated
-    kVstSysExType      // MIDI system exclusive  @see TVstMidiSysexEvent
+    kVstSysExType      // MIDI system exclusive, see TVstMidiSysexEvent
   );
   PVstEvent = ^TVstEvent;
   // A generic timestamped event.
   TVstEvent = record
-    eType:       TVstEventTypes;    // @see TVstEventTypes
+    eType:       TVstEventTypes;    // see TVstEventTypes
     ByteSize:    Int32;             // size of this event, excl. type and byteSize
     DeltaFrames: Int32; // sample frames related to the current block start sample position
     Flags:       Int32;             // generic flags, none defined yet
@@ -448,22 +469,22 @@ type
   TVstMidiEventFlag  = (
   { means that this event is played life (not in playback from a sequencer track).
     This allows the Plug-In to handle these flagged events with higher priority,
-    especially when the Plug-In has a big latency (TAEffect::initialDelay) }
+    especially when the Plug-In has a big latency (TAEffect.InitialDelay) }
     kVstMidiEventIsRealtime  // 1<<0
   );
-  // Flags used in #TVstMidiEvent.
+  // Flags used in TVstMidiEvent.
   TVstMidiEventFlags = set of TVstMidiEventFlag;
 
   PVstMidiEvent = ^TVstMidiEvent;
   // MIDI Event (to be casted from VstEvent).
   TVstMidiEvent = record
-    eType:           TVstEventTypes; // #kVstMidiType
+    eType:           TVstEventTypes; // kVstMidiType
     ByteSize:        Int32; // sizeof (TVstMidiEvent)
     DeltaFrames:     Int32; // sample frames related to the current block start sample position
-    Flags:           TVstMidiEventFlags; // @see TVstMidiEventFlags
+    Flags:           TVstMidiEventFlags; // see TVstMidiEventFlags
     NoteLength:      Int32; // (in sample frames) of entire note, if available, else 0
     NoteOffset:      Int32; // offset (in sample frames) into note from note start if available, else 0
-    MidiData:        array[0..3] of AnsiChar; // 1 to 3 MIDI bytes; midiData[3] is reserved (zero)
+    MidiData:        array[0..3] of Byte; // 1 to 3 MIDI bytes; midiData[3] is reserved (zero)
     Detune:          Int8; // -64 to +63 cents; for scales other than 'well-tempered' ('microtuning')
     NoteOffVelocity: Int8; // Note Off Velocity [0, 127]
     Reserved1:       Int8; // zero (Reserved for future use)
@@ -471,9 +492,9 @@ type
   end;
 
   PVstMidiSysexEvent = ^TVstMidiSysexEvent;
-  // MIDI Sysex Event (to be casted from #VstEvent).
+  // MIDI Sysex Event (to be casted from TVstEvent).
   TVstMidiSysexEvent = record
-    eType:       TVstEventTypes; // #kVstSysexType
+    eType:       TVstEventTypes; // kVstSysexType
     ByteSize:    Int32;     // sizeof (TVstMidiSysexEvent)
     DeltaFrames: Int32;     // sample frames related to the current block start sample position
     Flags:       Int32;     // none defined yet (should be zero)
@@ -508,39 +529,39 @@ type
     kVstTransportRecording,   // 1<<3  set if Host sequencer is in record mode
     kVstAutomationWriting=6,  // 1<<6  set if automation write mode active(record parameter changes)
     kVstAutomationReading,    // 1<<7  set if automation read mode active(play parameter changes)
-    kVstNanosValid,           // 1<<8  TVstTimeInfo::nanoSeconds valid
-    kVstPpqPosValid,          // 1<<9  TVstTimeInfo::ppqPos valid
-    kVstTempoValid,           // 1<<10 TVstTimeInfo::tempo valid
-    kVstBarsValid,            // 1<<11 TVstTimeInfo::barStartPos valid
-    kVstCyclePosValid,        // 1<<12 TVstTimeInfo::cycleStartPos and TVstTimeInfo::cycleEndPos valid
-    kVstTimeSigValid,         // 1<<13 TVstTimeInfo::timeSigNumerator and TVstTimeInfo::timeSigDenominator valid
-    kVstSmpteValid,           // 1<<14 TVstTimeInfo::smpteOffset and TVstTimeInfo::smpteFrameRate valid
-    kVstClockValid            // 1<<15 TVstTimeInfo::samplesToNextClock valid
+    kVstNanosValid,           // 1<<8  TVstTimeInfo.NanoSeconds valid
+    kVstPpqPosValid,          // 1<<9  TVstTimeInfo.PPQPos valid
+    kVstTempoValid,           // 1<<10 TVstTimeInfo.Tempo valid
+    kVstBarsValid,            // 1<<11 TVstTimeInfo.BarStartPos valid
+    kVstCyclePosValid,        // 1<<12 TVstTimeInfo.CycleStartPos and TVstTimeInfo.CycleEndPos valid
+    kVstTimeSigValid,         // 1<<13 TVstTimeInfo.TimeSigNumerator and TVstTimeInfo.TimeSigDenominator valid
+    kVstSmpteValid,           // 1<<14 TVstTimeInfo.SmpteOffset and TVstTimeInfo.SmpteFrameRate valid
+    kVstClockValid            // 1<<15 TVstTimeInfo.SamplesToNextClock valid
   );
-  // Flags used in #TVstTimeInfo.
+  // Flags used in TVstTimeInfo.
   TVstTimeInfoFlags = set of TVstTimeInfoFlag;
 
   PVstTimeInfo = ^TVstTimeInfo;
-  { TVstTimeInfo requested via #amGetTime.  @see TVSTPlugin::getTimeInfo }
+  { TVstTimeInfo requested via amGetTime. }
   {-----------------------------------------------------------------------------
-   TVstTimeInfo::samplePos :
+   TVstTimeInfo.SamplePos :
      Current Position. It must always be valid,
      and should not cost a lot to ask for.
      The sample position is ahead of the time displayed to the user.
      In sequencer stop mode, its value does not change.
      A 32 bit integer is too small for sample positions,
      and it's a double to make it easier to convert between ppq and samples.
-   TVstTimeInfo::ppqPos :
+   TVstTimeInfo.PPQPos :
      At tempo 120, 1 quarter makes 1/2 second,
      so 2.0 ppq translates to 48000 samples at 48kHz sample rate.
      0.25 ppq is one sixteenth note then. if you need something like 480ppq,
      you simply multiply ppq by that scaler.
-   TVstTimeInfo::barStartPos :
+   TVstTimeInfo.BarStartPos :
      Say we're at bars/beats readout 3.3.3. That's 2 bars + 2 q + 2 sixteenth,
      makes 2 * 4 + 2 + 0.25 = 10.25 ppq. at tempo 120,
      that's 10.25 * 0.5 = 5.125 seconds, times 48000 = 246000 samples
      (if my calculator servers me well :-).
-   TVstTimeInfo::samplesToNextClock :
+   TVstTimeInfo.SamplesToNextClock :
      MIDI Clock Resolution (24 per Quarter Note),
      can be negative the distance to the next midi clock
      (24 ppq, pulses per quarter) in samples.
@@ -560,12 +581,12 @@ type
     TimeSigNumerator: Int32;   // Time Signature Numerator (e.g. 3 for 3/4)
     TimeSigDenominator: Int32; // Time Signature Denominator (e.g. 4 for 3/4)
     { SMPTE offset (in SMPTE subframes (bits; 1/80 of a frame)).
-      The current SMPTE position can be calculated using #samplePos,
-      #sampleRate, and #smpteFrameRate.}
+      The current SMPTE position can be calculated using SamplePos,
+      SampleRate, and SmpteFrameRate.}
     SmpteOffset:    Int32;
-    SmpteFrameRate: TVstSmpteFrameRate; // @see TVstSmpteFrameRate
+    SmpteFrameRate: TVstSmpteFrameRate; // see TVstSmpteFrameRate
     SamplesToNextClock: Int32; // MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest clock)
-    Flags:          TVstTimeInfoFlags;  // @see TVstTimeInfoFlags
+    Flags:          TVstTimeInfoFlags;  // see TVstTimeInfoFlags
   end;
 
   PVstVariableIO = ^TVstVariableIO;
@@ -605,17 +626,17 @@ type
     kVstParameterSupportsDisplayCategory, // 1<<5 category, etc. valid
     kVstParameterCanRamp                  // 1<<6 set if parameter value can ramp up/down
   );
-  // Flags used in #TVstParameterProperties.
+  // Flags used in TVstParameterProperties.
   TVstParameterFlags = set of TVstParameterFlag;
 
   PVstParameterProperties = ^TVstParameterProperties;
-  // Parameter Properties used in #effGetParameterProperties.
+  // Parameter Properties used in effGetParameterProperties.
   TVstParameterProperties = record
     StepFloat:      single; // float step
     SmallStepFloat: single; // small float step
     LargeStepFloat: single; // large float step
     sLabel: array[0..63] of AnsiChar;   // parameter label, limit 64
-    Flags:          TVstParameterFlags; // @see TVstParameterFlags
+    Flags:          TVstParameterFlags; // see TVstParameterFlags
     MinInteger:     Int32;  // integer minimum
     MaxInteger:     Int32;  // integer maximum
     StepInteger:    Int32;  // integer step
@@ -634,7 +655,7 @@ type
     // Osc 1
     // Wave  Detune  Octave  Mod
     // ---------------------------
-    // ...if the plug-in supports it (flag #kVstParameterSupportsDisplayCategory)
+    // ...if the plug-in supports it (flag kVstParameterSupportsDisplayCategory)
 
     Category:      int16; // 0: no category, else group index + 1
     NumParametersInCategory: int16; // number of parameters in category
@@ -682,17 +703,17 @@ type
   TVstPinPropertiesFlag  = (
     kVstPinIsActive,  // 1<<0 pin is active, ignored by Host
     kVstPinIsStereo,  // 1<<1 pin is first of a stereo pair
-    kVstPinUseSpeaker // 1<<2 #TVstPinProperties::arrangementType is valid and can be used to get the wanted arrangement
+    kVstPinUseSpeaker // 1<<2 TVstPinProperties.ArrangementType is valid and can be used to get the wanted arrangement
   );
-  // Flags used in #TVstPinProperties.
+  // Flags used in TVstPinProperties.
   TVstPinPropertiesFlags = set of TVstPinPropertiesFlag;
 
   PVstPinProperties = ^TVstPinProperties;
-  // Pin Properties used in #effGetInputProperties and #effGetOutputProperties.
+  // Pin Properties used in effGetInputProperties and effGetOutputProperties.
   TVstPinProperties = record
     sLabel: array[0..63] of AnsiChar;            // pin name, limit 64
-    Flags:           TVstPinPropertiesFlags;     // @see TVstPinPropertiesFlags
-    ArrangementType: TVstSpeakerArrangementType; // @see TVstSpeakerArrangementType
+    Flags:           TVstPinPropertiesFlags;     // see TVstPinPropertiesFlags
+    ArrangementType: TVstSpeakerArrangementType; // see TVstSpeakerArrangementType
     ShortLabel: array[0..7] of AnsiChar; // short name (recommended: 6 + delimiter), limit 8
     Future:          array[0..47] of byte;       // reserved for future use
   end;
@@ -709,7 +730,7 @@ type
     kPlugSurroundFx,          // Dedicated surround processor
     kPlugCategRestoration,    // Denoiser, ...
     kPlugCategOfflineProcess, // Offline Process
-    kPlugCategShell, // Plug-in is container of other plug-ins  @see effShellGetNextPlugin
+    kPlugCategShell, // Plug-in is container of other plug-ins, see effShellGetNextPlugin
     kPlugCategGenerator,      // ToneGenerator, ...
     kPlugCategMaxCount        // Marker to count the categories
   );
@@ -731,7 +752,7 @@ type
     MidiBankLsb: Int8;          // -1:off, 0-127
     Reserved:    Int8;          // zero
     ParentCategoryIndex: Int32; // -1:no parent category
-    Flags: TVstMidiProgramNameFlags; // omni etc. @see TVstMidiProgramNameFlags
+    Flags: TVstMidiProgramNameFlags; // omni etc. see TVstMidiProgramNameFlags
   end;
 
   PMidiProgramCategory = ^TMidiProgramCategory;
@@ -795,7 +816,7 @@ type
     Radius:    single; // unit: meter, exception: 0.f for LFE channel
     Reserved:  single; // zero (reserved for future use)
     Name: array[0..63] of AnsiChar; // for new setups, new names should be given (L/R/C... won't do), limit 64
-    eType:     TVstSpeakerType;      // @see TVstSpeakerType
+    eType:     TVstSpeakerType;      // see TVstSpeakerType
     Future:    array[0..27] of byte; // reserved for future use
   end;
 
@@ -803,14 +824,14 @@ type
   PVstSpeakerArrangement  = ^TVstSpeakerArrangement;
   // Speaker Arrangement.
   TVstSpeakerArrangement = record
-    eType: TVstSpeakerArrangementType; // e.g. #kSpeakerArr51 for 5.1  @see TVstSpeakerArrangementType
+    eType: TVstSpeakerArrangementType; // e.g. kSpeakerArr51 for 5.1, see TVstSpeakerArrangementType
     NumChannels: Int32; // number of channels in this speaker arrangement
     Speakers: array[0..7] of TVstSpeakerProperties; // variable sized speaker array
   end;
 
   // User-defined speaker types, to be extended in the negative range.
   // Will be handled as their corresponding speaker types with abs values:
-  // e.g abs(#kSpeakerU1) == #kSpeakerL, abs(#kSpeakerU2) == #kSpeakerR)
+  // e.g abs(ord(kSpeakerU1)) = ord(kSpeakerL), abs(ord(kSpeakerU2)) = ord(kSpeakerR)
   TVstUserSpeakerType = (
     kSpeakerU32 = -32,
     kSpeakerU31,
@@ -824,26 +845,26 @@ type
     kSpeakerU23,
     kSpeakerU22,
     kSpeakerU21,
-    kSpeakerU20,      // == #kSpeakerLfe2
-    kSpeakerU19,      // == #kSpeakerTrr
-    kSpeakerU18,      // == #kSpeakerTrc
-    kSpeakerU17,      // == #kSpeakerTrl
-    kSpeakerU16,      // == #kSpeakerTfr
-    kSpeakerU15,      // == #kSpeakerTfc
-    kSpeakerU14,      // == #kSpeakerTfl
-    kSpeakerU13,      // == #kSpeakerTm
-    kSpeakerU12,      // == #kSpeakerSr
-    kSpeakerU11,      // == #kSpeakerSl
-    kSpeakerU10,      // == #kSpeakerCs
-    kSpeakerU9,       // == #kSpeakerS
-    kSpeakerU8,       // == #kSpeakerRc
-    kSpeakerU7,       // == #kSpeakerLc
-    kSpeakerU6,       // == #kSpeakerRs
-    kSpeakerU5,       // == #kSpeakerLs
-    kSpeakerU4,       // == #kSpeakerLfe
-    kSpeakerU3,       // == #kSpeakerC
-    kSpeakerU2,       // == #kSpeakerR
-    kSpeakerU1        // == #kSpeakerL
+    kSpeakerU20,      // = kSpeakerLfe2
+    kSpeakerU19,      // = kSpeakerTrr
+    kSpeakerU18,      // = kSpeakerTrc
+    kSpeakerU17,      // = kSpeakerTrl
+    kSpeakerU16,      // = kSpeakerTfr
+    kSpeakerU15,      // = kSpeakerTfc
+    kSpeakerU14,      // = kSpeakerTfl
+    kSpeakerU13,      // = kSpeakerTm
+    kSpeakerU12,      // = kSpeakerSr
+    kSpeakerU11,      // = kSpeakerSl
+    kSpeakerU10,      // = kSpeakerCs
+    kSpeakerU9,       // = kSpeakerS
+    kSpeakerU8,       // = kSpeakerRc
+    kSpeakerU7,       // = kSpeakerLc
+    kSpeakerU6,       // = kSpeakerRs
+    kSpeakerU5,       // = kSpeakerLs
+    kSpeakerU4,       // = kSpeakerLfe
+    kSpeakerU3,       // = kSpeakerC
+    kSpeakerU2,       // = kSpeakerR
+    kSpeakerU1        // = kSpeakerL
   );
 
   { Offline Processing }
@@ -859,7 +880,7 @@ type
     kVstOfflineStretch,          // 1<<15 set by plug-in
     kVstOfflineNoThread          // 1<<16 set by plug-in
   );
-  // Flags used in #TVstOfflineTask.
+  // Flags used in TVstOfflineTask.
   TVstOfflineTaskFlags = set of TVstOfflineTaskFlag;
 
   PVstOfflineTask = ^TVstOfflineTask;
@@ -903,14 +924,14 @@ type
     Progress:     double;                 // set by plug-in
     ProgressMode: Int32;                  // Reserved for future use
     ProgressText: array[0..99] of AnsiChar; // set by plug-in
-    Flags:        TVstOfflineTaskFlags;   // set by Host and plug-in; see #TVstOfflineTaskFlags
+    Flags:        TVstOfflineTaskFlags;   // set by Host and plug-in; see TVstOfflineTaskFlags
     ReturnValue:  Int32;                  // Reserved for future use
     HostOwned:    Pointer;                // set by Host
     PlugOwned:    Pointer;                // set by plug-in
     Future:       array[0..1023] of byte; // Reserved for future use
   end;
 
-  // Option passed to #offlineRead/#offlineWrite.
+  // Option passed to amOfflineRead/amOfflineWrite.
   TVstOfflineOption = (
     kVstOfflineAudio,       // reading/writing audio samples
     kVstOfflinePeaks,       // reading graphic representation
@@ -918,26 +939,26 @@ type
     kVstOfflineMarker,      // reading/writing marker
     kVstOfflineCursor,      // reading/moving edit cursor
     kVstOfflineSelection,   // reading/changing selection
-    kVstOfflineQueryFiles   // to request the Host to call asynchronously #offlineNotify
+    kVstOfflineQueryFiles   // to request the Host to call asynchronously effOfflineNotify
   );
 
   TVstAudioFileFlag  = (
-    kVstOfflineReadOnly,            // 1<<0  set by Host (in call #offlineNotify)
-    kVstOfflineNoRateConversion,    // 1<<1  set by Host (in call #offlineNotify)
-    kVstOfflineNoChannelChange,     // 1<<2  set by Host (in call #offlineNotify)
-    kVstOfflineCanProcessSelection=10, // 1<<10  set by plug-in (in call #offlineStart)
-    kVstOfflineNoCrossfade,         // 1<<11  set by plug-in (in call #offlineStart)
-    kVstOfflineWantRead,            // 1<<12  set by plug-in (in call #offlineStart)
-    kVstOfflineWantWrite,           // 1<<13  set by plug-in (in call #offlineStart)
-    kVstOfflineWantWriteMarker,     // 1<<14  set by plug-in (in call #offlineStart)
-    kVstOfflineWantMoveCursor,      // 1<<15  set by plug-in (in call #offlineStart)
-    kVstOfflineWantSelect           // 1<<16  set by plug-in (in call #offlineStart)
+    kVstOfflineReadOnly,            // 1<<0  set by Host (in call effOfflineNotify)
+    kVstOfflineNoRateConversion,    // 1<<1  set by Host (in call effOfflineNotify)
+    kVstOfflineNoChannelChange,     // 1<<2  set by Host (in call effOfflineNotify)
+    kVstOfflineCanProcessSelection=10, // 1<<10  set by plug-in (in call amOfflineStart)
+    kVstOfflineNoCrossfade,         // 1<<11  set by plug-in (in call amOfflineStart)
+    kVstOfflineWantRead,            // 1<<12  set by plug-in (in call amOfflineStart)
+    kVstOfflineWantWrite,           // 1<<13  set by plug-in (in call amOfflineStart)
+    kVstOfflineWantWriteMarker,     // 1<<14  set by plug-in (in call amOfflineStart)
+    kVstOfflineWantMoveCursor,      // 1<<15  set by plug-in (in call amOfflineStart)
+    kVstOfflineWantSelect           // 1<<16  set by plug-in (in call amOfflineStart)
   );
-  // Flags used in #TVstAudioFile.
+  // Flags used in TVstAudioFile.
   TVstAudioFileFlags = set of TVstAudioFileFlag;
 
   PVstAudioFile = ^TVstAudioFile;
-  // Structure passed to #offlineNotify and #offlineStart
+  // Structure passed to effOfflineNotify and amOfflineStart
   TVstAudioFile = record
     Flags:          TVstAudioFileFlags;   // see TVstAudioFileFlags
     HostOwned:      Pointer;              // any data private to Host
@@ -959,7 +980,7 @@ type
     TimeSigNumerator: Int32;              // time signature numerator
     TimeSigDenominator: Int32;            // time signature denominator
     TicksPerBlackNote: Int32;             // resolution
-    SmpteFrameRate: Int32;                // SMPTE rate (set as in #TVstTimeInfo)
+    SmpteFrameRate: Int32;                // SMPTE rate (set as in TVstTimeInfo)
     Future:         array[0..63] of byte; // Reserved for future use
   end;
 
@@ -976,7 +997,7 @@ type
   { Others }
 
   PVstWindow = ^TVstWindow;
-  // deprecated Structure used for #openWindow and #closeWindow (deprecated in VST 2.4).
+  // deprecated Structure used for amOpenWindow and amCloseWindow (deprecated in VST 2.4).
   TVstWindow = record
     Title:      array[0..127] of AnsiChar;
     XPos:       int16;
@@ -990,7 +1011,7 @@ type
     Future:     array [0..103] of byte;
   end;
 
-  // Platform-independent definition of Virtual Keys (used in #TVstKeyCode).
+  // Platform-independent definition of Virtual Keys (used in TVstKeyCode).
   TVstVirtualKey = (
     VKEY_UNKNOWN = 0,
     VKEY_BACK = 1,
@@ -1051,72 +1072,75 @@ type
     VKEY_ALT,
     VKEY_EQUALS
   );
+
   TVstModifierKey  = (
     MODIFIER_SHIFT,     // 1<<0 Shift
     MODIFIER_ALTERNATE, // 1<<1 Alt
     MODIFIER_COMMAND,   // 1<<2 Control on Mac
-    MODIFIER_CONTROL,   // 1<<3 Ctrl on PC, Apple on Mac
-    MODIFIER_UNKNOWN={$ifdef CPUX86}31{$else}63{$endif}
+    MODIFIER_CONTROL    // 1<<3 Ctrl on PC, Apple on Mac
   );
-  // Modifier flags used in #TVstKeyCode.
+// effEditKeyUp and effEditKeyDown are using variable Value to pass the param TVstModifierKeys
+// Due to the type of variable Value is IntPtr, we must pack set to make it equal IntPtr
+{$push}{$ifdef CPUX86}{$PackSet 4}{$else}{$PackSet 8}{$endif}
+  // Modifier flags used in TVstKeyCode.
   TVstModifierKeys = set of TVstModifierKey;
-
+{$pop}
   PVstKeyCode = ^TVstKeyCode;
-  // Structure used for keyUp/keyDown.
+  // Structure used for effEditKeyUp/effEditKeyDown.
   TVstKeyCode = record
     Character: Int32;    // ASCII character
-    Virt:      TVstVirtualKey;   // @see TVstVirtualKey
-    Modifier:  TVstModifierKeys; // @see TVstModifierKey
+    Virt:      TVstVirtualKey;   // see TVstVirtualKey
+    Modifier:  TVstModifierKeys; // see TVstModifierKey
   end;
 
   PVstFileType = ^TVstFileType;
   { TVstFileType }
-  // File filter used in #TVstFileSelect.
+  // File filter used in TVstFileSelect.
   TVstFileType = record
-    Name:      array[0..127] of AnsiChar; // display name
+    Name:      array[0..127] of AnsiChar; // Display name
     MacType:   array[0..7] of AnsiChar;   // MacOS type
     DosType:   array[0..7] of AnsiChar;   // Windows file extension
     UnixType:  array[0..7] of AnsiChar;   // Unix file extension
     MimeType1: array[0..127] of AnsiChar; // MIME type
-    MimeType2: array[0..127] of AnsiChar; // additional MIME type
+    MimeType2: array[0..127] of AnsiChar; // Additional MIME type
     procedure Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
   end;
 
-  // Command constants used in #TVstFileSelect structure.
+  // Command constants used in TVstFileSelect structure.
   TVstFileSelectCommand = (
     kVstFileLoad,          // for loading a file
     kVstFileSave,          // for saving a file
     kVstMultipleFilesLoad, // for loading multiple files
     kVstDirectorySelect    // for selecting a directory/folder
   );
-  { Types used in #TVstFileSelect structure.}
+  { Types used in TVstFileSelect structure.}
   TVstFileSelectType = (
     kVstFileType = 0 // regular file selector
   );
   PVstFileSelect = ^TVstFileSelect;
-  { File Selector Description used in #amOpenFileSelector.}
+  { File Selector Description used in amOpenFileSelector.}
   TVstFileSelect = record
-    Command:        TVstFileSelectCommand;  // @see TVstFileSelectCommand
-    eType:          TVstFileSelectType;     // @see TVstFileSelectType
+    Command:        TVstFileSelectCommand;  // see TVstFileSelectCommand
+    eType:          TVstFileSelectType;     // see TVstFileSelectType
     MacCreator:     Int32;                  // optional: 0 = no creator
     NumFileTypes:   Int32;                  // number of fileTypes
-    FileTypes:      PVstFileType;           // list of fileTypes  @see TVstFileType
+    FileTypes:      PVstFileType;           // list of fileTypes  see TVstFileType
     Title:          array[0..1023] of AnsiChar; // text to display in file selector's title
-    InitialPath:    PAnsiChar;                  // initial path
-    { use with #kVstFileLoad and #kVstDirectorySelect.
-      null: Host allocates memory, plug-in must call #closeOpenFileSelector! }
+    InitialPath:    PAnsiChar; // initial path
+    { use with kVstFileLoad and kVstDirectorySelect.
+      null: Host allocates memory, plug-in must call amCloseFileSelector! }
     ReturnPath:     PAnsiChar;
     SizeReturnPath: Int32; // size of allocated memory for return paths
     { use with kVstMultipleFilesLoad. Host allocates memory,
-      plug-in must call #closeOpenFileSelector! }
+      plug-in must call amCloseFileSelector! }
     ReturnMultiplePaths: PPAnsiChar;
-    NbReturnPath:   Int32;     // number of selected paths
+    NbReturnPath:   Int32;  // number of selected paths
     Reserved:       IntPtr; // reserved for Host application
     Future:         array[0..115] of byte; // reserved for future use
   end;
 
   PVstPatchChunkInfo = ^TVstPatchChunkInfo;
-  // Structure used for #effBeginLoadBank/#effBeginLoadProgram.
+  // Structure used for effBeginLoadBank/effBeginLoadProgram.
   TVstPatchChunkInfo = record
     Version:        Int32; // Format Version (should be 1)
     PluginUniqueID: Int32; // UniqueID of the plug-in
@@ -1131,7 +1155,7 @@ type
     kEqualPowerPanLaw   // L = pow (pan, 0.5) * M; R = pow ((1 - pan), 0.5) * M;
   );
 
-  // Process Levels returned by #amGetCurrentProcessLevel.
+  // Process Levels returned by amGetCurrentProcessLevel.
   TVstProcessLevels = (
     kVstProcessLevelUnknown,  // not supported by Host
     kVstProcessLevelUser,     // 1: currently in user thread (GUI)
@@ -1140,7 +1164,7 @@ type
     kVstProcessLevelOffline   // 4: currently offline processing and thus in user thread
   );
 
-  // Automation States returned by #amGetAutomationState.
+  // Automation States returned by amGetAutomationState.
   TVstAutomationStates = (
     kVstAutomationUnsupported, // not supported by Host
     kVstAutomationOff,         // off

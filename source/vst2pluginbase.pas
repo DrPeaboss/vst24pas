@@ -30,7 +30,7 @@ type
   // Parameter informations
   TParamInfo = record
     Value:single; // The parameter value in range [0,1]
-    Name:string; // e.g. Gain, Delay, Ratio ...
+    Name:string; // e.g. Gain, Frequency ...
     Lbl:string; // e.g. dB, % ...
     DisplayMode:TParamDisplayMode; // Set pdmCustom then do it yourself or do nothing
     CanBeAutomated:boolean; // Whether the value can be automated by host
@@ -88,7 +88,7 @@ type
   // Plugin component without process
   TPluginComponent = class(TPluginBase, IPluginComponent)
   private
-    FHost:TVstHostCallback;
+    FHost:THostCallback;
     FEffect:TAEffect;
     FEditor:TPluginEditor;
     FSampleRate:single;
@@ -132,14 +132,14 @@ type
     // Used for effGetParamDisplay, override it if you set pdmCustom
     function GetParamDisplay(index:integer):string;virtual;
   public
-    constructor Create(VstHost: TVstHostCallback); virtual;
+    constructor Create(VstHost: THostCallback); virtual;
     destructor Destroy; override;
-    // Change to a preset prepared first
-    procedure SetProgram(index:int32);
     // Carefully using it, see SetParameter to get more information
     property Parameters[index:integer]:single read GetParameter write SetParameter;
     property Editor:IPluginEditor read GetEditor;
     property AEffect:PAEffect read GetAEffect;
+    // Can call host directly for advanced usage
+    property VHost:THostCallback read FHost;
   end;
 
   { TPluginEditor }
@@ -154,17 +154,16 @@ type
     function GetGui:TForm;
     function GetPlugin:IPluginComponent;
   protected
-    // IPluginEditor
-    function GetRect(rect:PPERect):boolean;
-    function Open(ptr: Pointer): boolean;
+    function GetRect(rect:PPERect):longint;
+    function Open(ptr: Pointer):longint;
     procedure Close;
     function IsOpen: boolean;
     procedure Idle;virtual;
 {$ifdef VST_2_1_EXTENSIONS}
-    function OnKeyDown(var keyCode: TVstKeyCode): boolean;virtual;
-    function OnKeyUp(var keyCode: TVstKeyCode): boolean;virtual;
-    function OnWheel(distance: single): boolean;virtual;
-    function SetKnobMode(val: Int32):boolean;virtual;
+    function OnKeyDown(var keyCode: TVstKeyCode): longint;virtual;
+    function OnKeyUp(var keyCode: TVstKeyCode): longint;virtual;
+    function OnWheel(distance: single): longint;virtual;
+    function SetKnobMode(val: Int32):longint;virtual;
 {$endif VST_2_1_EXTENSIONS}
   public
     constructor Create(Plugin:TPluginComponent;GuiClass:TFormClass); virtual;
@@ -185,7 +184,7 @@ type
   protected
     function Dispatcher(opcode:TAEffectOpcodes;index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;override;
   public
-    constructor Create(VstHost: TVstHostCallback); override;
+    constructor Create(VstHost: THostCallback); override;
     destructor Destroy; override;
     procedure EnableProcess64(state:boolean=true);
     // IPluginAudioProcessor
@@ -220,7 +219,7 @@ begin
 end;
 --------------------------------------------------------------------------------
 Note: TMyPlugin is your plugin class }
-function DoVSTPluginMain(VstHost: TVstHostCallback; PluginClass:TVSTPluginClass):PAEffect;
+function DoVSTPluginMain(VstHost: THostCallback; PluginClass:TVSTPluginClass):PAEffect;
 
 implementation
 
@@ -333,7 +332,7 @@ end;
 {$endif}
 {$endif}
 
-function DoVSTPluginMain(VstHost: TVstHostCallback; PluginClass: TVSTPluginClass): PAEffect;
+function DoVSTPluginMain(VstHost: THostCallback; PluginClass: TVSTPluginClass): PAEffect;
 var
   Plugin:TVSTPlugin;
 begin
@@ -343,7 +342,7 @@ end;
 
 { TVSTPlugin }
 
-constructor TVSTPlugin.Create(VstHost: TVstHostCallback);
+constructor TVSTPlugin.Create(VstHost: THostCallback);
 begin
   inherited Create(VstHost);
 end;
@@ -365,6 +364,7 @@ begin
     // TODO
     effOpen:;
     effClose:;
+    effMainsChanged:;
     else Result := inherited Dispatcher(opcode, index, Value, ptr, opt);
   end;
 end;
@@ -431,22 +431,22 @@ begin
   Result:=FPlugin;
 end;
 
-function TPluginEditor.GetRect(rect: PPERect): boolean;
+function TPluginEditor.GetRect(rect: PPERect): longint;
 begin
   FRect.Left := 0;
   FRect.Top := 0;
   FRect.Right := FGui.Width;
   FRect.Bottom := FGui.Height;
   rect^:=@FRect;
-  Result:=True;
+  Result:=1;
 end;
 
-function TPluginEditor.Open(ptr: Pointer): boolean;
+function TPluginEditor.Open(ptr: Pointer): longint;
 begin
   FParent := ptr;
   FGui.ParentWindow := ToIntPtr(FParent);
   FGui.Show;
-  Result := True;
+  Result := 1;
 end;
 
 procedure TPluginEditor.Close;
@@ -465,30 +465,30 @@ begin
 end;
 
 {$ifdef VST_2_1_EXTENSIONS}
-function TPluginEditor.OnKeyDown(var keyCode: TVstKeyCode): boolean;
+function TPluginEditor.OnKeyDown(var keyCode: TVstKeyCode): longint;
 begin
-  Result:=False;
+  Result:=0;
 end;
 
-function TPluginEditor.OnKeyUp(var keyCode: TVstKeyCode): boolean;
+function TPluginEditor.OnKeyUp(var keyCode: TVstKeyCode): longint;
 begin
-  Result:=False;
+  Result:=0;
 end;
 
-function TPluginEditor.OnWheel(distance: single): boolean;
+function TPluginEditor.OnWheel(distance: single): longint;
 begin
-  Result:=False;
+  Result:=0;
 end;
 
-function TPluginEditor.SetKnobMode(val: Int32): boolean;
+function TPluginEditor.SetKnobMode(val: Int32): longint;
 begin
-  Result:=False;
+  Result:=0;
 end;
 {$endif}
 
 { TPluginComponent }
 
-constructor TPluginComponent.Create(VstHost: TVstHostCallback);
+constructor TPluginComponent.Create(VstHost: THostCallback);
 begin
   FHost := VstHost;
   FNumPrograms := 0;
@@ -530,18 +530,6 @@ begin
   inherited Destroy;
 end;
 
-procedure TPluginComponent.SetProgram(index: int32);
-var
-  i: Integer;
-begin
-  if index<FNumPrograms then
-  begin
-    for i:=0 to FNumParams-1 do
-      FParamInfos[i].Value:=FPresetInfos[index].Params[i];
-    FCurProgram := index;
-  end;
-end;
-
 function TPluginComponent.CanDo(str: PAnsiChar): integer;
 var
   s:string;
@@ -559,16 +547,17 @@ begin
     pdmFloat:Result:=Format('%.7f',[Value]);
     pdmdB:Result:=Format('%.7f',[Log10(Value)*20]);
     pdmInteger:Result:=IntToStr(Trunc(Value));
-    pdmMs:;
-    pdmHz:;
+    pdmMs:Result:=FloatToStr(Value*1000/FSampleRate);
+    pdmHz:if Value=0 then Result:='0' else Result:=FloatToStr(FSampleRate/(Value*2));
     else Result:='';
   end;
 end;
 
 function TPluginComponent.Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
   opt: single): IntPtr;
-{$ifdef VST_2_1_EXTENSIONS}
 var
+  i: Integer;
+{$ifdef VST_2_1_EXTENSIONS}
   KeyCode: TVstKeyCode;
 {$endif}
 begin
@@ -576,21 +565,26 @@ begin
   case opcode of
     effOpen:;
     effClose:;
-    effSetProgram: SetProgram(Value);
+    effSetProgram: if index<FNumPrograms then
+                   begin
+                     for i:=0 to FNumParams-1 do
+                       FParamInfos[i].Value:=FPresetInfos[index].Params[i];
+                     FCurProgram := index;
+                   end;
     effGetProgram: Result:=FCurProgram;
     effSetProgramName: FPresetInfos[FCurProgram].Name := StrPas(ptr);
     effGetProgramName: VstStrncpy(ptr,PAnsiChar(FPresetInfos[FCurProgram].Name),23);
     effGetParamLabel: VstStrncpy(ptr,PAnsiChar(FParamInfos[index].Lbl),7);
-    effGetParamDisplay: VstStrncpy(ptr,PAnsiChar(GetParamDisplay(index)),7);
+    effGetParamDisplay: VstStrncpy(ptr,PAnsiChar(GetParamDisplay(index)),15);
     effGetParamName: VstStrncpy(ptr,PAnsiChar(FParamInfos[index].Name),15);
 {$ifndef VST_FORCE_DEPRECATED}
     effGetVu:;
 {$endif}
     effSetSampleRate: FSampleRate := opt;
     effSetBlockSize: FBlockSize := Value;
-    effMainsChanged:;
-    effEditGetRect: Result:=IntPtr(FEditor.GetRect(ptr));
-    effEditOpen: Result:=IntPtr(FEditor.Open(ptr));
+    effMainsChanged: ;
+    effEditGetRect: Result:=FEditor.GetRect(ptr);
+    effEditOpen: Result:=FEditor.Open(ptr);
     effEditClose: FEditor.Close;
     effEditIdle: FEditor.Idle;
     effIdentify: Result:=FEffect.UniqueID; // deprecated
@@ -643,7 +637,7 @@ begin
 {$endif}
     effGetParameterProperties: if Assigned(FParamInfos[index].Properties) then
                                begin
-                                 ptr:=FParamInfos[index].Properties;
+                                 PVstParameterProperties(ptr)^:=FParamInfos[index].Properties^;
                                  Result:=1;
                                end else Result:=0;
     effGetVstVersion: Result:=kVstVersion;
@@ -660,7 +654,7 @@ begin
                     KeyCode.virt := TVstVirtualKey(Trunc(opt));
                     Result := IntPtr(FEditor.OnKeyUp(KeyCode));
                   end;
-    effSetEditKnobMode: Result:=IntPtr(FEditor.SetKnobMode(Value));
+    effSetEditKnobMode: Result:=FEditor.SetKnobMode(Value);
     effGetMidiProgramName: ;
     effGetCurrentMidiProgram: Result:=-1;
     effGetMidiProgramCategory: ;

@@ -13,13 +13,13 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
-    ListView1:    TListView;
-    MemoLog:      TMemo;
-    MenuItemClear: TMenuItem;
-    PopupMenuMemo: TPopupMenu;
-    Timer:        TTimer;
+    ListView1:      TListView;
+    MemoLog:        TMemo;
+    MenuItemClear:  TMenuItem;
+    PopupMenuMemo:  TPopupMenu;
+    Timer:          TTimer;
     ToggleBoxPause: TToggleBox;
-    TrackBarGain: TTrackBar;
+    TrackBarGain:   TTrackBar;
     procedure FormShow(Sender: TObject);
     procedure MenuItemClearClick(Sender: TObject);
     procedure TimerTimer(Sender: TObject);
