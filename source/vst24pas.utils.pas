@@ -19,22 +19,22 @@ type
 
   TVSTPluginClass = class of TVstPlugin;
 
-  PAEffect = ^TAEffect; // Redefine for VSTPluginMain
-  TVstHostCallback = AudioMasterCallback; // Redefine for VSTPluginMain
+  PEffect = PAEffect; // Alias for VSTPluginMain
+  TVstHostCallback = AudioMasterCallback; // Alias for VSTPluginMain
 
 { Used for VSTPluginMain, here is an example:
 --------------------------------------------------------------------------------
-function VSTPluginMain(VstHost: TVSTHostCallback): PAEffect; cdecl; export;
+function VSTPluginMain(VstHost: TVSTHostCallback): PEffect; cdecl; export;
 begin
   Result := DoVSTPluginMain(TMyPlugin, VstHost, 0, 0);
 end;
 -------------------------------------------------------------------------------}
 function DoVSTPluginMain(PluginClass: TVSTPluginClass; VstHost: TVstHostCallback;
-  NumPrograms, NumParams: Int32): PAEffect;
+  NumPrograms, NumParams: Int32): PEffect;
 
-// Convert amplitude to decibel, usually amplitude is in range [0,1]
+// Convert amplitude to decibel, usually amplitude is in range [0,1], return NegInfinity if Amp <= 0
 function VstAmp2dB(Amp: double): double; inline;
-// Convert decibel to amplitude, usually decibel is in range (-∞,0]
+// Convert decibel to amplitude, usually decibel is in range (-∞,0], return 0 if dB < -140
 function VstdB2Amp(dB: double): double; inline;
 
 // Use 4 charactors to make a unique ID
@@ -52,7 +52,7 @@ uses
   Math;
 
 function DoVSTPluginMain(PluginClass: TVSTPluginClass; VstHost: TVstHostCallback;
-  NumPrograms, NumParams: Int32): PAEffect;
+  NumPrograms, NumParams: Int32): PEffect;
 var
   plugin: TVstPlugin;
 begin
@@ -62,14 +62,20 @@ end;
 
 function VstAmp2dB(Amp: double): double;
 begin
-  Result := 20 * Log10(Amp);
+  if Amp>0 then
+    Result := 20 * Log10(Amp)
+  else
+    Result := NegInfinity;
 end;
 
 function VstdB2Amp(dB: double): double;
 begin
   // Result := Power(10, dB * 0.05);
   // Power(10,db*0.05)=exp(db*0.05*ln(10))=below
-  Result:=exp(db*0.1151292546497{0228420089957273422});
+  if dB>=-140 then
+    Result:=exp(db*0.1151292546497{0228420089957273422})
+  else
+    Result:=0;
 end;
 
 function MakeUniqueID(a, b, c, d: AnsiChar): Int32;

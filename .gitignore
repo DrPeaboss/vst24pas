@@ -2,6 +2,7 @@
 *.exe
 *.dll
 *.res
+*.so
 
 # lazarus and fpc
 backup/

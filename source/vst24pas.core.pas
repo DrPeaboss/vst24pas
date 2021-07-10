@@ -10,7 +10,7 @@ unit vst24pas.core;
 
 interface
 
-{$push}{$A8}{$Z1} // {$Z1} is very important
+{$A8}{$Z1} // {$Z1} is very important
 
 const
   { Current VST Version }
@@ -1254,8 +1254,6 @@ type
           end);
     end;
   end;
-
-{$pop}
 
 implementation
 
