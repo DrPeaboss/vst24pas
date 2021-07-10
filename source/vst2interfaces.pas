@@ -1232,6 +1232,11 @@ type
     end;
   end;
 
+// Some useful additional constants
+const
+  kVstAEffectOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
+  kVstAMasterOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
+
 implementation
 
 function MakeUniqueID(a, b, c, d: AnsiChar): Int32;

@@ -13,6 +13,8 @@ type
   { TFormMain }
 
   TFormMain = class(TForm)
+    LabelCnt: TLabel;
+    LabelIdleCount: TLabel;
     ListView1:      TListView;
     MemoLog:        TMemo;
     MenuItemClear:  TMenuItem;
@@ -25,8 +27,8 @@ type
     procedure TimerTimer(Sender: TObject);
     procedure TrackBarGainChange(Sender: TObject);
   private
-    FAutoChanging: boolean;
   public
+    AutoChanging: boolean;
     opTimes: array[0..Ord(effGetNumMidiOutputChannels)] of integer;
   end;
 
@@ -41,15 +43,16 @@ uses
 
 procedure TFormMain.TrackBarGainChange(Sender: TObject);
 begin
-  if not FAutoChanging then
+  if not AutoChanging then
     gPlugin.Parameters[0] := TrackBarGain.Position / 2000;
 end;
 
 procedure TFormMain.TimerTimer(Sender: TObject);
 begin
-  FAutoChanging := True;
+  AutoChanging := True;
   TrackBarGain.Position := Round(2000 * gPlugin.Parameters[0]);
-  FAutoChanging := False;
+  LabelCnt.Caption := IntToStr(gPlugin.Process32Count);
+  AutoChanging := False;
 end;
 
 procedure TFormMain.FormShow(Sender: TObject);

@@ -12,12 +12,18 @@ type
   { TMyPlugin }
 
   TMyPlugin = class(TVSTPlugin)
+  private
+    FProcess32Count:integer;
+    FIdleCount:integer;
+    // Called by host, similar to timer, but usually have low fps
+    procedure EditIdle;
   public
     constructor Create(VstHost: THostCallback); override;
     procedure Process32(const inputs, outputs: TBuffer32; sampleframes: integer); override;
     function GetParamDisplay(index: integer): string; override;
     function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
       opt: single): IntPtr; override;
+    property Process32Count:integer read FProcess32Count;
   end;
 
 var
@@ -26,21 +32,28 @@ var
 implementation
 
 uses
-  ueditor, SysUtils, Math, TypInfo, Forms;
+  ueditor, SysUtils, TypInfo, Forms;
 
 { TMyPlugin }
+
+procedure TMyPlugin.EditIdle;
+begin
+  Inc(FIdleCount);
+  TFormMain(Editor.Gui).LabelIdleCount.Caption := IntToStr(FIdleCount);
+end;
 
 constructor TMyPlugin.Create(VstHost: THostCallback);
 begin
   inherited Create(VstHost);
   PlugInitEffectInfo('v020testplugin', 'PeaZomboss', 'test', 20, kPlugCategEffect);
-  PlugInitParamInfo(0, 0.5, 'Gain', 'dB', pdmCustom);
+  PlugInitParamInfo(0, 0.5, 'Gain', 'dB', pdmdB);
   PlugInitPreset(0, 'Preset 0', [0.5]);
   PlugInitPreset(1, 'Preset 1', [1.0]);
   SetUniqueID('P', 'Z', 'n', '2');
   SetVersion(20);
   SetEditor(TPluginEditor.Create(self, TFormMain));
   gPlugin := self; // Set global variant for ueditor
+  Editor.SetIdleProc(@EditIdle); // Here enable the 'timer', set nil to disable it
 end;
 
 procedure TMyPlugin.Process32(const inputs, outputs: TBuffer32; sampleframes: integer);
@@ -48,6 +61,7 @@ var
   gain: single;
   i: integer;
 begin
+  inc(FProcess32Count);
   gain := Parameters[0] * 2;
   for i := 0 to sampleframes - 1 do
   begin
@@ -60,7 +74,7 @@ function TMyPlugin.GetParamDisplay(index: integer): string;
 begin
   if index = 0 then
   begin
-    Result := Format('%.7f', [20 * log10(2 * Parameters[0])]); // Our custom display
+    Result := Float2String(VstAmp2dB(2*Parameters[0])); // Our custom display
   end else
     Result := inherited GetParamDisplay(index);
 end;

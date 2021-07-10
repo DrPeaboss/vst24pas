@@ -58,6 +58,7 @@ type
     function GetPlugin:IPluginComponent;
     function GetGui:TForm;
     function IsOpen: boolean;
+    procedure SetIdleProc(AProc:TProcedureOfObject);
     property Plugin:IPluginComponent read GetPlugin;
     property Gui:TForm read GetGui;
   end;
@@ -110,6 +111,10 @@ type
     procedure PlugInitParamInfo(index:int32;value:single=0;name:string='';lbl:string='';
       dispmode:TParamDisplayMode=pdmFloat;CanBeAutomated:boolean=true);
     procedure PlugInitPreset(index:int32;const Name:string;values:array of single);
+    // Float to string, max length is 7 due to bad precision when parameter type is single
+    function Float2String(const value:double):string;
+    // Integer part of float to string, max length is 7, reason as above
+    function Int2String(const value:double):string;
     // Set number of inputs and outputs
     procedure SetNumberInOut(InNum:Int32=2;OutNum:Int32=2);
     // Set your plugin's editor with lcl or vcl form
@@ -127,7 +132,7 @@ type
     procedure SetParameter(index: integer; value: single);
     // Get value of a parameter by index
     function GetParameter(index: integer): single;
-    // Used for effCanDo, see PlugCanDo strings, or override it
+    // Used for effCanDo, see TPlugCanDos strings, or override it
     function CanDo(str:PAnsiChar):integer;virtual;
     // Used for effGetParamDisplay, override it if you set pdmCustom
     function GetParamDisplay(index:integer):string;virtual;
@@ -151,14 +156,15 @@ type
     FParent:Pointer;
     FGui:TForm;
     FRect:TERect;
+    FIdleProc:TProcedureOfObject;
     function GetGui:TForm;
     function GetPlugin:IPluginComponent;
   protected
     function GetRect(rect:PPERect):longint;
     function Open(ptr: Pointer):longint;
     procedure Close;
+    procedure SetIdleProc(AProc:TProcedureOfObject);
     function IsOpen: boolean;
-    procedure Idle;virtual;
 {$ifdef VST_2_1_EXTENSIONS}
     function OnKeyDown(var keyCode: TVstKeyCode): longint;virtual;
     function OnKeyUp(var keyCode: TVstKeyCode): longint;virtual;
@@ -183,10 +189,6 @@ type
     FOnClose:TProcedureOfObject;
   protected
     function Dispatcher(opcode:TAEffectOpcodes;index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;override;
-  public
-    constructor Create(VstHost: THostCallback); override;
-    destructor Destroy; override;
-    procedure EnableProcess64(state:boolean=true);
     // IPluginAudioProcessor
     // Must be implemented in subclass if not 2.4
     procedure Process(const inputs,outputs:TBuffer32;sampleframes:integer);virtual;{$ifndef VST_2_4_EXTENSIONS}abstract;{$endif}
@@ -197,6 +199,10 @@ type
     // You can call EnableProcess64 to quickly set it
     procedure Process64(const inputs, outputs: TBuffer64; sampleframes: integer);virtual;
 {$endif}
+  public
+    constructor Create(VstHost: THostCallback); override;
+    destructor Destroy; override;
+    procedure EnableProcess64(state:boolean=true);
   end;
 
 // Here are callback functions used in AEffect
@@ -220,6 +226,10 @@ end;
 --------------------------------------------------------------------------------
 Note: TMyPlugin is your plugin class }
 function DoVSTPluginMain(VstHost: THostCallback; PluginClass:TVSTPluginClass):PAEffect;
+// A helper function to convert the amplitude to decibels, value should bigger than 1E-7
+function VstAmp2dB(const value:double):double;inline;
+// A helper function to convert the decibels to amplitude, value should bigger than -140
+function VstdB2Amp(const value:double):double;inline;
 
 implementation
 
@@ -274,7 +284,7 @@ begin
     OutputsArr[i] := Pointer(outputs^);
     Inc(outputs);
   end;
-  TCustomPlugin(e^._Object).Process(InputsArr, OutputsArr, SampleFrames);
+  TVSTPlugin(e^.pObject).Process(InputsArr, OutputsArr, SampleFrames);
 end;
 {$endif}
 
@@ -300,7 +310,7 @@ begin
     OutputsArr[i] := Pointer(outputs^);
     Inc(outputs);
   end;
-  TCustomPlugin(e^._Object).Process32(InputsArr, OutputsArr, SampleFrames);
+  TVSTPlugin(e^.pObject).Process32(InputsArr, OutputsArr, SampleFrames);
 end;
 {$endif}
 
@@ -327,7 +337,7 @@ begin
     OutputsArr[i] := Pointer(outputs^);
     Inc(outputs);
   end;
-  TCustomPlugin(e^._Object).Process64(InputsArr, OutputsArr, SampleFrames);
+  TVSTPlugin(e^.pObject).Process64(InputsArr, OutputsArr, SampleFrames);
 end;
 {$endif}
 {$endif}
@@ -338,6 +348,22 @@ var
 begin
   Plugin:=PluginClass.Create(VstHost);
   Result:=Plugin.AEffect;
+end;
+
+function VstAmp2dB(const value: double): double;
+begin
+  if value>=1E-7 then
+    Result:=20*Log10(value)
+  else
+    Result:=NegInfinity;
+end;
+
+function VstdB2Amp(const value: double): double;
+begin
+  if value >= -140 then
+    Result:=exp(value*0.1151292546497)
+  else
+    Result:=0;
 end;
 
 { TVSTPlugin }
@@ -460,8 +486,9 @@ begin
   Result:=FParent<>nil;
 end;
 
-procedure TPluginEditor.Idle;
+procedure TPluginEditor.SetIdleProc(AProc: TProcedureOfObject);
 begin
+  FIdleProc := AProc;
 end;
 
 {$ifdef VST_2_1_EXTENSIONS}
@@ -544,11 +571,11 @@ begin
   if index<FNumParams then
   with FParamInfos[index] do
   case DisplayMode of
-    pdmFloat:Result:=Format('%.7f',[Value]);
-    pdmdB:Result:=Format('%.7f',[Log10(Value)*20]);
-    pdmInteger:Result:=IntToStr(Trunc(Value));
-    pdmMs:Result:=FloatToStr(Value*1000/FSampleRate);
-    pdmHz:if Value=0 then Result:='0' else Result:=FloatToStr(FSampleRate/(Value*2));
+    pdmFloat:Result:=Float2String(Value);
+    pdmdB:Result:=Float2String(VstAmp2dB(Value));
+    pdmInteger:Result:=Int2String(Value);
+    pdmMs:Result:=Float2String(Value*1000/FSampleRate);
+    pdmHz:if Value=0 then Result:='0' else Result:=Float2String(FSampleRate/(Value*2));
     else Result:='';
   end;
 end;
@@ -586,7 +613,7 @@ begin
     effEditGetRect: Result:=FEditor.GetRect(ptr);
     effEditOpen: Result:=FEditor.Open(ptr);
     effEditClose: FEditor.Close;
-    effEditIdle: FEditor.Idle;
+    effEditIdle: if Assigned(FEditor.FIdleProc) then FEditor.FIdleProc;
     effIdentify: Result:=FEffect.UniqueID; // deprecated
     effGetChunk: ;
     effSetChunk: ;
@@ -762,7 +789,56 @@ begin
     FPresetInfos[index].Params[i]:=values[i];
 end;
 
-procedure TPluginComponent.SetNumberInOut(InNum, OutNum: Int32);
+function TPluginComponent.Float2String(const value: double): string;
+var
+  i: integer;
+  mantissa: double;
+begin
+  if value=NegInfinity then Exit('-Inf'); // Cooperate with VstAmp2dB
+  if (Value > 999999) or (Value < -99999) then
+    Exit('Huge !!');
+  Result := IntToStr(Trunc(Value));
+  mantissa := Abs(Frac(Value));
+  if Length(Result) = 6 then
+  begin
+    // If the param type is *single*, 999998.47, 999998.48 and 999998.49
+    // will be considered as 999998.5 due to precision, so the final result
+    // will be 999999 rather 999998
+    // Actually, 999998.47 to 999998.53 will all be 999998.5
+    if mantissa>=0.5 then Result:=Float2String(double(Trunc(Value)+1));
+    Exit; // No dot at last place if length is 6
+  end;
+  Result := Result + '.';
+  i := Length(Result);
+  while i<=6 do
+  begin
+    mantissa := Frac(mantissa) * 10;
+    Result := Result + AnsiChar(Trunc(mantissa) + 48);
+    Inc(i);
+  end;
+  mantissa := Frac(mantissa) * 10;
+  if mantissa >= 5 then // Similar reason, see above
+  begin
+    while Result[i] = '9' do
+    begin
+      Result[i] := '0';
+      Dec(i);
+    end;
+    if Result[i] <> '.' then
+      Inc(Result[i])
+    else
+      Result := Float2String(double(Trunc(Value)+1));
+  end;
+end;
+
+function TPluginComponent.Int2String(const value: double): string;
+begin
+  if (value>9999999) or (value<-999999) then
+    Exit('Huge !!');
+  Result:=IntToStr(Trunc(value));
+end;
+
+procedure TPluginComponent.SetNumberInOut(InNum: Int32; OutNum: Int32);
 begin
   FEffect.NumInputs := InNum;
   FEffect.NumOutputs := OutNum;
