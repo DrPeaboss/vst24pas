@@ -11,7 +11,7 @@ const
   DllName64 = '..\version_0_2_0_test\v020test_x64.dll';
 
 type
-  TVstPluginMain = function(vsthost: TVstHostCallback): PAEffect; cdecl;
+  TVstPluginMain = function(vsthost: THostCallback): PAEffect; cdecl;
 
   function UniqueIDToString(id: integer): string;
   begin
@@ -149,6 +149,11 @@ begin
     effect^.Dispatcher(effect, effEditGetRect, 0, 0, @rect, 0);
     if Assigned(rect) then
       Writeln('Rect L T R B is ', rect^.Left, ' ', rect^.Top, ' ', rect^.Right, ' ', rect^.Bottom);
+
+    //effect^.Dispatcher(effect, effSetProgram,0,3,nil,0);
+    //Writeln('Get program index is ',effect^.Dispatcher(effect, effGetProgram,0,0,nil,0));
+    //Writeln('Now param 0 is ',effect^.GetParameter(effect,0));
+
     // Process test
     effect^.SetParameter(effect, 0, 0.1);
     effect^.Dispatcher(effect, effGetParamName, 0, 0, @buffer, 0);

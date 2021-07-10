@@ -7,6 +7,7 @@ object FormMain: TFormMain
   ClientHeight = 489
   ClientWidth = 1003
   DesignTimePPI = 120
+  OnCreate = FormCreate
   OnShow = FormShow
   object TrackBarGain: TTrackBar
     Left = 8
@@ -82,6 +83,12 @@ object FormMain: TFormMain
     object MenuItemClear: TMenuItem
       Caption = 'ClearLogNow'
       OnClick = MenuItemClearClick
+    end
+    object MenuItemBlockEditIdle: TMenuItem
+      AutoCheck = True
+      Caption = 'BlockEditIdle'
+      Checked = True
+      OnClick = MenuItemBlockEditIdleClick
     end
   end
 end

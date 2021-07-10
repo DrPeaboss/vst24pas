@@ -46,6 +46,8 @@ type
   end;
   TPresetInfos = array of TPresetInfo;
 
+  TChunkBlock = array of single;
+
   IPluginComponent = interface
     ['{6085C611-5DEC-403F-9AF1-DB47F84C6F79}']
     procedure SetParameter(index:integer;value:single);
@@ -77,7 +79,8 @@ type
   // Plugin base class that disable reference count
   TPluginBase = class(TObject,IUnknown)
   protected
-    function QueryInterface(constref iid: tguid; out obj): longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+    function QueryInterface({$ifdef FPC}{$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF}
+      {$else}const{$endif}iid: tguid; out obj): longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
     function _AddRef: longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
     function _Release: longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
   end;
@@ -100,6 +103,7 @@ type
     FEffectInfo:TEffectInfo;
     FParamInfos:TParamInfos;
     FPresetInfos:TPresetInfos;
+    FChunks:TChunkBlock;
     function GetAEffect:PAEffect;
     function GetEditor:IPluginEditor;
     procedure SetNumParams(Num:Int32);
@@ -112,7 +116,7 @@ type
       dispmode:TParamDisplayMode=pdmFloat;CanBeAutomated:boolean=true);
     procedure PlugInitPreset(index:int32;const Name:string;values:array of single);
     // Float to string, max length is 7 due to bad precision when parameter type is single
-    function Float2String(const value:double):string;
+    function Float2String(const value:double):shortstring;
     // Integer part of float to string, max length is 7, reason as above
     function Int2String(const value:double):string;
     // Set number of inputs and outputs
@@ -411,7 +415,8 @@ end;
 
 { TPluginBase }
 
-function TPluginBase.QueryInterface(constref iid: tguid; out obj): longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
+function TPluginBase.QueryInterface({$ifdef FPC}{$IFDEF FPC_HAS_CONSTREF}constref{$ELSE}const{$ENDIF}
+  {$else}const{$endif}iid: tguid; out obj): longint;{$ifdef MSWINDOWS}stdcall;{$else}cdecl;{$endif}
 begin
   if GetInterface(iid,obj) then
     Result:=S_OK
@@ -554,6 +559,7 @@ begin
       SetLength(FPresetInfos[i].Params,0);
   SetLength(FPresetInfos,0);
   SetLength(FParamInfos,0);
+  SetLength(FChunks,0);
   inherited Destroy;
 end;
 
@@ -590,13 +596,13 @@ var
 begin
   Result:=0;
   case opcode of
-    effOpen:;
-    effClose:;
-    effSetProgram: if index<FNumPrograms then
+    effOpen: ;
+    effClose: ;
+    effSetProgram: if value<FNumPrograms then
                    begin
+                     FCurProgram := value;
                      for i:=0 to FNumParams-1 do
-                       FParamInfos[i].Value:=FPresetInfos[index].Params[i];
-                     FCurProgram := index;
+                       FParamInfos[i].Value:=FPresetInfos[FCurProgram].Params[i];
                    end;
     effGetProgram: Result:=FCurProgram;
     effSetProgramName: FPresetInfos[FCurProgram].Name := StrPas(ptr);
@@ -615,9 +621,19 @@ begin
     effEditClose: FEditor.Close;
     effEditIdle: if Assigned(FEditor.FIdleProc) then FEditor.FIdleProc;
     effIdentify: Result:=FEffect.UniqueID; // deprecated
-    effGetChunk: ;
-    effSetChunk: ;
-
+    effGetChunk: begin
+                   for i:=0 to FNumParams-1 do
+                     FChunks[i]:=Parameters[i];
+                   PPointer(ptr)^:=FChunks;
+                   Result:=FNumParams*sizeof(single);
+                 end;
+    effSetChunk: begin
+                   for i:=0 to FNumParams-1 do begin
+                     Parameters[i]:=PSingle(ptr)^;
+                     inc(PSingle(ptr));
+                   end;
+                   Result:=1;
+                 end;
     effProcessEvents: ;
     effCanBeAutomated: Result:=IntPtr(FParamInfos[index].CanBeAutomated);
     effString2Parameter: Result:=IntPtr(TryStrToFloat(StrPas(ptr),FParamInfos[index].Value));
@@ -714,6 +730,7 @@ begin
   if index<FNumParams then
   begin
     FParamInfos[index].Value:=value;
+    if FCurProgram>0 then FPresetInfos[FCurProgram].Params[index]:=value;
     if FParamInfos[index].CanBeAutomated then
       FHost(AEffect,amAutomate,index,0,nil,value); // Can be called only once !
       // This will tell host this parameter can be automated
@@ -772,6 +789,7 @@ begin
   FParamInfos[index].Lbl := lbl;
   FParamInfos[index].DisplayMode := dispmode;
   FParamInfos[index].CanBeAutomated := CanBeAutomated;
+  SetLength(FChunks, FNumParams);
 end;
 
 procedure TPluginComponent.PlugInitPreset(index: int32; const Name: string; values: array of single);
@@ -789,7 +807,7 @@ begin
     FPresetInfos[index].Params[i]:=values[i];
 end;
 
-function TPluginComponent.Float2String(const value: double): string;
+function TPluginComponent.Float2String(const value: double): shortstring;
 var
   i: integer;
   mantissa: double;

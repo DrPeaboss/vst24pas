@@ -17,18 +17,22 @@ type
     LabelIdleCount: TLabel;
     ListView1:      TListView;
     MemoLog:        TMemo;
+    MenuItemBlockEditIdle: TMenuItem;
     MenuItemClear:  TMenuItem;
     PopupMenuMemo:  TPopupMenu;
     Timer:          TTimer;
     ToggleBoxPause: TToggleBox;
     TrackBarGain:   TTrackBar;
+    procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure MenuItemBlockEditIdleClick(Sender: TObject);
     procedure MenuItemClearClick(Sender: TObject);
     procedure TimerTimer(Sender: TObject);
     procedure TrackBarGainChange(Sender: TObject);
   private
   public
     AutoChanging: boolean;
+    BlockEditIdle: boolean;
     opTimes: array[0..Ord(effGetNumMidiOutputChannels)] of integer;
   end;
 
@@ -66,6 +70,16 @@ begin
       Caption := GetEnumName(typeinfo(TAEffectOpcodes), i);
       SubItems.Add(IntToStr(opTimes[i]));
     end;
+end;
+
+procedure TFormMain.FormCreate(Sender: TObject);
+begin
+  BlockEditIdle := PopupMenuMemo.Items[1].Checked;
+end;
+
+procedure TFormMain.MenuItemBlockEditIdleClick(Sender: TObject);
+begin
+  BlockEditIdle := PopupMenuMemo.Items[1].Checked;
 end;
 
 procedure TFormMain.MenuItemClearClick(Sender: TObject);

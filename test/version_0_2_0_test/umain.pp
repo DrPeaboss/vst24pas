@@ -7,6 +7,9 @@ interface
 uses
   vst2pluginbase, vst2interfaces;
 
+const
+  BigNum = 100000000;
+
 type
 
   { TMyPlugin }
@@ -15,6 +18,7 @@ type
   private
     FProcess32Count:integer;
     FIdleCount:integer;
+    FChunk:Single;
     // Called by host, similar to timer, but usually have low fps
     procedure EditIdle;
   public
@@ -46,12 +50,15 @@ constructor TMyPlugin.Create(VstHost: THostCallback);
 begin
   inherited Create(VstHost);
   PlugInitEffectInfo('v020testplugin', 'PeaZomboss', 'test', 20, kPlugCategEffect);
-  PlugInitParamInfo(0, 0.5, 'Gain', 'dB', pdmdB);
+  PlugInitParamInfo(0, 0.5, 'Gain', 'dB', pdmCustom);
   PlugInitPreset(0, 'Preset 0', [0.5]);
   PlugInitPreset(1, 'Preset 1', [1.0]);
+  PlugInitPreset(2, 'Preset 2', [0.66]);
+  PlugInitPreset(3, 'Preset 3', [0.33]);
   SetUniqueID('P', 'Z', 'n', '2');
   SetVersion(20);
   SetEditor(TPluginEditor.Create(self, TFormMain));
+  SetEffectFlag(effFlagsProgramChunks);
   gPlugin := self; // Set global variant for ueditor
   Editor.SetIdleProc(@EditIdle); // Here enable the 'timer', set nil to disable it
 end;
@@ -90,14 +97,15 @@ begin
   if f.ToggleBoxPause.Checked then exit; // Stop changing UI
   if f.MemoLog.Lines.Count > 1000 then
     f.MemoLog.Clear;
+  // ListView will clear items when hide the form, so we must stop changing the item
+  if Editor.IsOpen then
+    f.ListView1.Items.Item[Ord(opcode)].SubItems[0] := IntToStr(f.opTimes[Ord(opcode)]);
+  if (opcode = effEditIdle) and f.BlockEditIdle then exit;
   s := format('opcode:%s index:%d value:%d ptr:%p opt:%.2f',
     [GetEnumName(TypeInfo(TAEffectOpcodes), Ord(opcode)), index, Value, ptr, opt]);
   if opcode = effCanDo then
     f.MemoLog.Lines.Add('Got cando string: ' + strpas(ptr));
   f.MemoLog.Lines.Add(s);
-  // ListView will clear items when hide the form, so we must stop changing the item
-  if Editor.IsOpen then
-    f.ListView1.Items.Item[Ord(opcode)].SubItems[0] := IntToStr(f.opTimes[Ord(opcode)]);
 end;
 
 end.
