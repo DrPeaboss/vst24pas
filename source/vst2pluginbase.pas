@@ -14,6 +14,9 @@ uses
   vst2interfaces,forms,sysutils;
 
 type
+  // Vendor specific function for effVendorSpecific and amVendorSpecific
+  TVendorSpecific = function(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single):IntPtr of object;
+
   // Effect infomations
   TEffectInfo = record
     EffectName:string;
@@ -46,7 +49,12 @@ type
   end;
   TPresetInfos = array of TPresetInfo;
 
-  TChunkBlock = array of single;
+  TPresetChunk = array of single;
+
+  TPanLaw = record
+    Gain:single;
+    plType:TVstPanLawType;
+  end;
 
   IPluginComponent = interface
     ['{6085C611-5DEC-403F-9AF1-DB47F84C6F79}']
@@ -103,7 +111,19 @@ type
     FEffectInfo:TEffectInfo;
     FParamInfos:TParamInfos;
     FPresetInfos:TPresetInfos;
-    FChunks:TChunkBlock;
+    FPresetChunk:TPresetChunk;
+    FPanLaw:TPanLaw;
+    FProcessPrecision:TVstProcessPrecision;
+    // Events
+    FEffOpen:TProcedureOfObject;
+    FEffClose:TProcedureOfObject;
+    FEffTurnOn:TProcedureOfObject;
+    FEffTurnOff:TProcedureOfObject;
+    FEffVendorSpecific:TVendorSpecific;
+    FEffSetPreset:TProcedureOfObject;
+    FEffEndSetPreset:TProcedureOfObject;
+    FEffStartProcess:TProcedureOfObject;
+    FEffStopProcess:TProcedureOfObject;
     function GetAEffect:PAEffect;
     function GetEditor:IPluginEditor;
     procedure SetNumParams(Num:Int32);
@@ -119,7 +139,7 @@ type
     function Float2String(const value:double):shortstring;
     // Integer part of float to string, max length is 7, reason as above
     function Int2String(const value:double):string;
-    // Set number of inputs and outputs
+    // Set number of inputs and outputs, pass -1 to ignore one
     procedure SetNumberInOut(InNum:Int32=2;OutNum:Int32=2);
     // Set your plugin's editor with lcl or vcl form
     procedure SetEditor(Editor: TPluginEditor);
@@ -149,6 +169,24 @@ type
     property AEffect:PAEffect read GetAEffect;
     // Can call host directly for advanced usage
     property VHost:THostCallback read FHost;
+    // effOpen
+    property OnEffOpen:TProcedureOfObject write FEffOpen;
+    // effClose
+    property OnEffClose:TProcedureOfObject write FEffClose;
+    // effMainsChanged when value is 1 (turn on)
+    property OnEffTrunOn:TProcedureOfObject write FEffTurnOn;
+    // effMainsChanged when value is 0 (turn off)
+    property OnEffTrunOff:TProcedureOfObject write FEffTurnOff;
+    // effVendorSpecific
+    property OnEffVendorSpecific:TVendorSpecific write FEffVendorSpecific;
+    // effBeginSetProgram
+    property OnEffSetPreset:TProcedureOfObject write FEffSetPreset;
+    // effEndSetProgram
+    property OnEffEndSetPreset:TProcedureOfObject write FEffEndSetPreset;
+    // effStartProcess
+    property OnEffStartProcess:TProcedureOfObject write FEffStartProcess;
+    // effStopProcess
+    property OnEffStopProcess:TProcedureOfObject write FEffStopProcess;
   end;
 
   { TPluginEditor }
@@ -189,14 +227,13 @@ type
   // The plugin class with full functions
   TVSTPlugin = class(TPluginComponent, IPluginAudioProcessor)
   private
-    FOnOpen:TProcedureOfObject;
-    FOnClose:TProcedureOfObject;
+
   protected
     function Dispatcher(opcode:TAEffectOpcodes;index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;override;
     // IPluginAudioProcessor
-    // Must be implemented in subclass if not 2.4
+    // Must be implemented in subclass if version before 2.4
     procedure Process(const inputs,outputs:TBuffer32;sampleframes:integer);virtual;{$ifndef VST_2_4_EXTENSIONS}abstract;{$endif}
-    // Must be implemented in subclass if 2.4
+    // Must be implemented in subclass if version is 2.4
     procedure Process32(const inputs,outputs:TBuffer32;sampleframes:integer);virtual;{$ifdef VST_2_4_EXTENSIONS}abstract;{$endif}
 {$ifdef VST_2_4_EXTENSIONS}
     // Should set flag effFlagsCanDoubleReplacing first to use it
@@ -547,6 +584,7 @@ begin
   SetEffectFlag(effFlagsCanReplacing); // mandatory in VST 2.4!
   FEffect.ProcessDoubleReplacing := @Process64Cb;
 {$endif}
+  SetEffectFlag(effFlagsProgramChunks);
 end;
 
 destructor TPluginComponent.Destroy;
@@ -559,7 +597,7 @@ begin
       SetLength(FPresetInfos[i].Params,0);
   SetLength(FPresetInfos,0);
   SetLength(FParamInfos,0);
-  SetLength(FChunks,0);
+  SetLength(FPresetChunk,0);
   inherited Destroy;
 end;
 
@@ -581,7 +619,7 @@ begin
     pdmdB:Result:=Float2String(VstAmp2dB(Value));
     pdmInteger:Result:=Int2String(Value);
     pdmMs:Result:=Float2String(Value*1000/FSampleRate);
-    pdmHz:if Value=0 then Result:='0' else Result:=Float2String(FSampleRate/(Value*2));
+    pdmHz:if Value=0 then Result:='0' else Result:=Float2String(FSampleRate*Value*0.5);
     else Result:='';
   end;
 end;
@@ -596,8 +634,8 @@ var
 begin
   Result:=0;
   case opcode of
-    effOpen: ;
-    effClose: ;
+    effOpen: if Assigned(FEffOpen) then FEffOpen;
+    effClose: if Assigned(FEffClose) then FEffClose;
     effSetProgram: if value<FNumPrograms then
                    begin
                      FCurProgram := value;
@@ -615,7 +653,12 @@ begin
 {$endif}
     effSetSampleRate: FSampleRate := opt;
     effSetBlockSize: FBlockSize := Value;
-    effMainsChanged: ;
+    effMainsChanged: if value=1 then begin
+                       if (CanDo(TPlugCanDos.CanDoReceiveVstMidiEvent)=1) or
+                          (effFlagsIsSynth in FEffect.Flags) then
+                          FHost(@FEffect,amWantMidi,0,1,nil,0);
+                       if Assigned(FEffTurnOn) then FEffTurnOn;
+                     end else if Assigned(FEffTurnOff) then FEffTurnOff;
     effEditGetRect: Result:=FEditor.GetRect(ptr);
     effEditOpen: Result:=FEditor.Open(ptr);
     effEditClose: FEditor.Close;
@@ -623,8 +666,8 @@ begin
     effIdentify: Result:=FEffect.UniqueID; // deprecated
     effGetChunk: begin
                    for i:=0 to FNumParams-1 do
-                     FChunks[i]:=Parameters[i];
-                   PPointer(ptr)^:=FChunks;
+                     FPresetChunk[i]:=Parameters[i];
+                   PPointer(ptr)^:=FPresetChunk;
                    Result:=FNumParams*sizeof(single);
                  end;
     effSetChunk: begin
@@ -668,7 +711,7 @@ begin
     effGetVendorString:begin VstStrncpy(ptr,PAnsiChar(FEffectInfo.Vendor),63); Result:=1; end;
     effGetProductString:begin VstStrncpy(ptr,PAnsiChar(FEffectInfo.Product),63); Result:=1; end;
     effGetVendorVersion: Result:=FEffectInfo.VendorVersion;
-    effVendorSpecific: ;
+    effVendorSpecific:if Assigned(FEffVendorSpecific) then Result:=FEffVendorSpecific(index,Value,ptr,opt);
     effCanDo: Result:=CanDo(ptr);
     effGetTailSize: ;
 {$ifndef VST_FORCE_DEPRECATED}
@@ -689,13 +732,13 @@ begin
                       KeyCode.Character := index;
                       KeyCode.modifier := TVstModifierKeys(Value);
                       KeyCode.virt := TVstVirtualKey(Trunc(opt));
-                      Result := IntPtr(FEditor.OnKeyDown(KeyCode));
+                      Result := FEditor.OnKeyDown(KeyCode);
                     end;
     effEditKeyUp: begin
                     KeyCode.Character := index;
                     KeyCode.modifier := TVstModifierKeys(Value);
                     KeyCode.virt := TVstVirtualKey(Trunc(opt));
-                    Result := IntPtr(FEditor.OnKeyUp(KeyCode));
+                    Result := FEditor.OnKeyUp(KeyCode);
                   end;
     effSetEditKnobMode: Result:=FEditor.SetKnobMode(Value);
     effGetMidiProgramName: ;
@@ -703,21 +746,21 @@ begin
     effGetMidiProgramCategory: ;
     effHasMidiProgramsChanged: ;
     effGetMidiKeyName: ;
-    effBeginSetProgram: ;
-    effEndSetProgram: ;
+    effBeginSetProgram:if Assigned(FEffSetPreset) then FEffSetPreset;
+    effEndSetProgram:if Assigned(FEffEndSetPreset) then FEffEndSetPreset;
 {$endif}
 {$ifdef VST_2_3_EXTENSIONS}
     effGetSpeakerArrangement: ;
     effShellGetNextPlugin: ; // Only called if is kPlugCategShell
-    effStartProcess: ;
-    effStopProcess: ;
+    effStartProcess:if Assigned(FEffStartProcess) then FEffStartProcess;
+    effStopProcess:if Assigned(FEffStopProcess) then FEffStopProcess;
     effSetTotalSampleToProcess: Result:=Value;
-    effSetPanLaw: ;
+    effSetPanLaw: begin FPanLaw.plType := TVstPanLawType(value); FPanLaw.Gain := opt; end;
     effBeginLoadBank: ;
     effBeginLoadProgram: ;
 {$endif}
 {$ifdef VST_2_4_EXTENSIONS}
-    effSetProcessPrecision: ;
+    effSetProcessPrecision: FProcessPrecision:=TVstProcessPrecision(value);
     effGetNumMidiInputChannels: ;
     effGetNumMidiOutputChannels: ;
 {$endif}
@@ -732,7 +775,7 @@ begin
     FParamInfos[index].Value:=value;
     if FCurProgram>0 then FPresetInfos[FCurProgram].Params[index]:=value;
     if FParamInfos[index].CanBeAutomated then
-      FHost(AEffect,amAutomate,index,0,nil,value); // Can be called only once !
+      FHost(@FEffect,amAutomate,index,0,nil,value); // Can be called only once !
       // This will tell host this parameter can be automated
       // If you called it twice, the automation will stop
   end;
@@ -789,7 +832,7 @@ begin
   FParamInfos[index].Lbl := lbl;
   FParamInfos[index].DisplayMode := dispmode;
   FParamInfos[index].CanBeAutomated := CanBeAutomated;
-  SetLength(FChunks, FNumParams);
+  SetLength(FPresetChunk, FNumParams);
 end;
 
 procedure TPluginComponent.PlugInitPreset(index: int32; const Name: string; values: array of single);
@@ -858,8 +901,8 @@ end;
 
 procedure TPluginComponent.SetNumberInOut(InNum: Int32; OutNum: Int32);
 begin
-  FEffect.NumInputs := InNum;
-  FEffect.NumOutputs := OutNum;
+  if InNum>-1 then FEffect.NumInputs := InNum;
+  if OutNum>-1 then FEffect.NumOutputs := OutNum;
 end;
 
 procedure TPluginComponent.SetEditor(Editor: TPluginEditor);

@@ -26,8 +26,12 @@ const
   kVstVersion = 2;
 {$endif}
 
-  // AEffect magic number
+// AEffect magic number
+{$ifdef ENDIAN_LITTLE}
   kEffectMagic = $56737450;
+{$else}
+  kEffectMagic = $50747356;
+{$endif}
 
 type
   // hostCanDos strings Plug-in
@@ -258,7 +262,7 @@ type
 
     // VST 2.x dispatcher Opcodes (Plug-in to Host)
 
-    amWantMidi = Ord(amPinConnected) + 2, // deprecated. Tell host want to receive midi
+    amWantMidi = Ord(amPinConnected) + 2, // deprecated. [value]: unknown, set 1. Tell host want to receive midi
     {[return value]: PVstTimeInfo or null if not supported
      [value]: request mask see TVstTimeInfoFlags.
      Get time information from Host }
