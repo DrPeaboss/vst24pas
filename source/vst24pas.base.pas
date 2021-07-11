@@ -147,7 +147,7 @@ type
     { Stuffs text with a string representation on the integer value.}
     procedure Int2String(Value: single; Text: PAnsiChar; MaxLen: Int32=7); virtual;
 
-    { same as processReplace but is deprecated }
+    { Similar to processReplace but is deprecated in 2.4 }
     procedure Process(const Inputs, Outputs: TBuffer32; sampleFrames: Int32); virtual; deprecated;
     function GetVu: single; virtual; deprecated;
     procedure HasVu(state: boolean = True); virtual; deprecated;
@@ -1041,7 +1041,7 @@ begin
   if samples = 0 then
     float2string(0, Text, maxlen)
   else
-    float2string(0.5 * GetSampleRate / samples, Text, maxlen);
+    float2string(GetSampleRate * samples * 0.5, Text, maxlen);
 end;
 
 procedure TVstPlugin.Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32);

@@ -41,8 +41,8 @@ uses
 
 constructor TGuiEditor.Create(Gui: TForm; Plugin: TVstPlugin);
 begin
-  if not Assigned(Gui) then
-    raise Exception.Create('TGuiEditor.Create : Invalid Gui');
+  if not Assigned(Gui) then Exit;
+    //raise Exception.Create('TGuiEditor.Create : Invalid Gui');
   inherited Create(Plugin);
   FGui := Gui;
   FGui.BorderStyle := bsNone;

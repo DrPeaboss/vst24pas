@@ -98,15 +98,15 @@ end;
 procedure TFilter.GetParameterLabel(index: Int32; _Label: PAnsiChar);
 begin
   case index of
-    0,1:VstStrncpy(_Label,'',7);
+    0,1:VstStrncpy(_Label,'Hz',7);
   end;
 end;
 
 procedure TFilter.GetParameterDisplay(index: Int32; Text: PAnsiChar);
 begin
   case index of
-    0:Float2String(FCutoff,Text,7);
-    1:Float2String(FResonance,Text,7);
+    0:Hz2String(FCutoff,Text,7);
+    1:Hz2String(FResonance,Text,7);
   end;
 end;
 
@@ -124,6 +124,7 @@ end;
 
 function TFilter.ProcessOneValue(inputvalue: double): double;
 begin
+  // There maybe bugs
   fbuf0:=fbuf0+FCutoff*(inputvalue-fbuf0+FFeedbackAmount * (fbuf0 - fbuf1));
   fbuf1:=fbuf1+FCutoff*(fbuf0-fbuf1);
   if FAttenuationMode=am12 then

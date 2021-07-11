@@ -8,7 +8,7 @@ uses
   vst24pas.utils,
   umain;
 
-  function main(vsthost:TVstHostCallback):PAEffect;cdecl;export;
+  function main(vsthost:TVstHostCallback):PEffect;cdecl;export;
   begin
     Result:=DoVSTPluginMain(TNewGain,vsthost,3,1);
   end;

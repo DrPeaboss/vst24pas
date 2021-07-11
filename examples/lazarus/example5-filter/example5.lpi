@@ -70,6 +70,7 @@
         <Filename Value="ueditor.pp"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="FormFilter"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit2>
     </Units>

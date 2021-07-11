@@ -24,7 +24,7 @@ type
     VendorVersion:Int32;
   end;
 
-  TDisplayMode = (dmFloat, dmdB, dmInteger, dmHz, dmMs, dmCustom, dmDonotDisplay);
+  TDisplayMode = (dmFloat, dmdB, dmInteger, dmHz, dmMs, dmCustom);
   PParamInfo = ^TParamInfo;
   TParamInfo = record
     Value:single;

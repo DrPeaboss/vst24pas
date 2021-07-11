@@ -79,7 +79,7 @@ const
   //CanDoReceiveVstEvents = 'receiveVstEvents';
   //CanDoReceiveVstMidiEvent = 'receiveVstMidiEvent';
 
-  { VST String length limits (in characters excl. 0 byte) }
+  { VST String length limits (in characters excl. 0 byte). Usually bigger than this. }
 
   kVstMaxParamStrLen   = 8;
   kVstMaxProgNameLen   = 24;
@@ -403,7 +403,7 @@ type
 
   { main structure define }
   TAEffect = record
-    Magic:         Int32; // must be kEffectMagic
+    Magic:         Int32; // must be kEffectMagic, big endian
     Dispatcher:    TAEDispatcher; // Host to Plug-in dispatcher @see TVSTPlugin::dispatcher
     Process:       TAEProcess;    // deprecated unused member
     SetParameter:  TAESetParameter; // Set new value of automatable parameter @see TVSTPlugin::setParameter
