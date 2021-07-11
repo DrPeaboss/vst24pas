@@ -1,6 +1,7 @@
 program getpluginfos;
 
 uses
+  {$ifdef linux}dynlibs,{$endif}
   SysUtils,
   vst2interfaces;
 
@@ -45,6 +46,7 @@ begin
   if ParamCount > 0 then
   begin
     sDll := ParamStr(1);
+    Writeln('Get param: ', sDll);
   end else
   begin
 {$ifdef CPUX86}
@@ -53,9 +55,15 @@ begin
     sDll := DllName64;
 {$endif}
   end;
-  hDll := 0;
-  if FileExists(sDll) then;
-  hDll := LoadLibrary(sDll);
+  hDll := -1;
+  if FileExists(sDll) then hDll := LoadLibrary(sDll);
+  if hDll = -1 then
+  begin
+    Writeln('Cannot find this file');
+    Writeln('press enter to exit --------');
+    Readln;
+    halt;
+  end;
   if hDll = 0 then
   begin
     Writeln('Cannot load library');

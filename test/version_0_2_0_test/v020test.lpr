@@ -3,7 +3,7 @@ library v020test;
 {$mode objfpc}{$H+}
 
 uses
-  forms,interfaces,vst2interfaces,vst2pluginbase, umain;
+  {$ifdef linux}cthreads,{$endif}interfaces,forms,vst2interfaces,vst2pluginbase, umain;
 
   function main(vsthost:THostCallback):PAEffect;cdecl;export;
   begin

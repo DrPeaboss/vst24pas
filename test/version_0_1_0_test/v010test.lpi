@@ -40,7 +40,7 @@
           </Linking>
         </CompilerOptions>
       </Item2>
-      <Item3 Name="Linux64">
+      <Item3 Name="linux64">
         <CompilerOptions>
           <Version Value="11"/>
           <PathDelim Value="\"/>

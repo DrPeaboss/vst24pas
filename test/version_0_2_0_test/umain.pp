@@ -18,7 +18,6 @@ type
   private
     FProcess32Count:integer;
     FIdleCount:integer;
-    FChunk:Single;
     // Called by host, similar to timer, but usually have low fps
     procedure EditIdle;
   public
@@ -49,7 +48,7 @@ end;
 constructor TMyPlugin.Create(VstHost: THostCallback);
 begin
   inherited Create(VstHost);
-  PlugInitEffectInfo('v020testplugin', 'PeaZomboss', 'test', 20, kPlugCategEffect);
+  PlugInitEffectInfo('v020testPlugin', 'PeaZomboss', 'test', 20, kPlugCategEffect);
   PlugInitParamInfo(0, 0.5, 'Gain', 'dB', pdmCustom);
   PlugInitPreset(0, 'Preset 0', [0.5]);
   PlugInitPreset(1, 'Preset 1', [1.0]);

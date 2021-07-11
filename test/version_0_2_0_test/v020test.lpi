@@ -74,7 +74,7 @@
     </RunParams>
     <RequiredPackages Count="2">
       <Item1>
-        <PackageName Value="LCL"/>
+        <PackageName Value="FCL"/>
       </Item1>
       <Item2>
         <PackageName Value="vst24pas"/>
