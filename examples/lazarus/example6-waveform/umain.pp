@@ -34,7 +34,7 @@ type
 implementation
 
 uses
-  vst24pas.utils, ueditor;
+  vst24pas.utils, vst24pas.gui, ueditor;
 
 { TWaveForm }
 
@@ -42,6 +42,7 @@ constructor TWaveForm.Create(VstHost: TVstHostCallback; NumPrograms, NumParams: 
 begin
   inherited Create(VstHost, NumPrograms, NumParams);
   VstPluginit(self, CCONST('P', 'Z', 'e', '6'), TFormMain);
+  TFormMain(TGuiEditor(FEditor).Gui).Plugin:=self;
   FInfo.Accuracy := 3;
 end;
 

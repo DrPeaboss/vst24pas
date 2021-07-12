@@ -43,9 +43,6 @@ function MakeUniqueID(a,b,c,d:AnsiChar):Int32;inline;
 function VstPluginit(Plugin:TVstPlugin;UniqueID:Int32):boolean;inline;overload;
 function VstPluginit(Plugin:TVstPlugin;UniqueID:Int32;GUIClass:TVstGUIClass):boolean;inline;overload;
 
-var
-  gPlugin:TVstPlugin; // Plugin global variable for GUI, must call VstPluginit first
-
 implementation
 
 uses
@@ -86,7 +83,6 @@ end;
 function VstPluginit(Plugin: TVstPlugin; UniqueID: Int32): boolean;
 begin
   if not Assigned(Plugin) then exit(False);
-  gPlugin:=Plugin;
   Plugin.SetUniqueID(UniqueID);
   Result:=True;
 end;

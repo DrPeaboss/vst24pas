@@ -42,7 +42,7 @@ type
 implementation
 
 uses
-  ueditor;
+  ueditor, vst24pas.gui;
 
 { TFilter }
 
@@ -55,6 +55,7 @@ constructor TFilter.Create(VstHost: TVstHostCallback; NumPrograms, NumParams: In
 begin
   inherited Create(VstHost, NumPrograms, NumParams);
   VstPluginit(self,CCONST('P','Z','e','5'),TFormFilter);
+  TFormFilter(TGuiEditor(FEditor).Gui).Plugin:=self;
   FCutoff := 0.99;
   FResonance := 0.01;
 end;

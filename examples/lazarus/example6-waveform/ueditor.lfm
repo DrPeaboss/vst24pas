@@ -7,6 +7,7 @@ object FormMain: TFormMain
   ClientHeight = 509
   ClientWidth = 624
   DesignTimePPI = 120
+  LCLVersion = '2.0.12.0'
   object ToggleBoxPause: TToggleBox
     Left = 16
     Height = 31

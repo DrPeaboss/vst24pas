@@ -5,7 +5,8 @@ unit ueditor;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls, ComCtrls;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls, ComCtrls,
+  umain;
 
 type
 
@@ -24,13 +25,10 @@ type
   private
 
   public
-
+    Plugin:TWaveForm;
   end;
 
 implementation
-
-uses
-  umain, vst24pas.utils;
 
 {$R *.lfm}
 
@@ -43,7 +41,7 @@ end;
 
 procedure TFormMain.TrackBarAccuracyChange(Sender: TObject);
 begin
-  TWaveForm(gPlugin).Accuracy := TrackBarAccuracy.Position;
+  TWaveForm(Plugin).Accuracy := TrackBarAccuracy.Position;
 end;
 
 procedure TFormMain.TimerTimer(Sender: TObject);
@@ -58,7 +56,7 @@ var
   Start0, Start1: TPoint; // Relative to PaintBox
   Y0, Y1, bufid: integer;
 begin
-  info := @TWaveForm(gPlugin).Info;
+  info := @TWaveForm(Plugin).Info;
   if info^.CanBuf0 then bufid:=0 else bufid:=1; // We read the buffer
   Start0.Create(0, PaintBox.Height div 4);
   Start1.Create(0, Start0.Y + PaintBox.Height div 2);
