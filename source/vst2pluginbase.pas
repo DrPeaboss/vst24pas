@@ -28,14 +28,16 @@ type
   end;
 
   // The display mode for effGetParamDisplay
-  TParamDisplayMode = (pdmFloat, pdmdB, pdmInteger, pdmHz, pdmMs, pdmCustom);
+  TParamDisplayMode = (pdmNone, pdmCustom, pdmFloat, pdmdB, pdmInteger, pdmHz, pdmMs);
+  // Custom parameter display function if you set pdmCustom
+  TCustomParamDisplay = function(index:integer):string of object;
   PParamInfo = ^TParamInfo;
   // Parameter informations
   TParamInfo = record
     Value:single; // The parameter value in range [0,1]
     Name:string; // e.g. Gain, Frequency ...
     Lbl:string; // e.g. dB, % ...
-    DisplayMode:TParamDisplayMode; // Set pdmCustom then do it yourself or do nothing
+    DisplayMode:TParamDisplayMode; // Set pdmCustom then do it yourself
     CanBeAutomated:boolean; // Whether the value can be automated by host
     Properties:PVstParameterProperties; // Support VstParameterProperties if not nil
   end;
@@ -44,7 +46,7 @@ type
   PPresetInfo = ^TPresetInfo;
   // Preset(program) informations
   TPresetInfo = record
-    Name:string; // Preset name
+    Name:string; // Preset's name
     Params:array of single; // All parameters
   end;
   TPresetInfos = array of TPresetInfo;
@@ -124,6 +126,7 @@ type
     FEffEndSetPreset:TProcedureOfObject;
     FEffStartProcess:TProcedureOfObject;
     FEffStopProcess:TProcedureOfObject;
+    FCustomParamDisplay:TCustomParamDisplay;
     function GetAEffect:PAEffect;
     function GetEditor:IPluginEditor;
     procedure SetNumParams(Num:Int32);
@@ -142,7 +145,8 @@ type
     // Set number of inputs and outputs, pass -1 to ignore one
     procedure SetNumberInOut(InNum:Int32=2;OutNum:Int32=2);
     // Set your plugin's editor with lcl or vcl form
-    procedure SetEditor(Editor: TPluginEditor);
+    procedure SetEditor(Editor:TPluginEditor);overload;
+    procedure SetEditor(GuiClass:TFormClass);overload;
     // Set your plugin's unique ID, must be called
     procedure SetUniqueID(A,B,C,D:AnsiChar);overload;
     procedure SetUniqueID(ID:Integer);overload;
@@ -156,10 +160,10 @@ type
     procedure SetParameter(index: integer; value: single);
     // Get value of a parameter by index
     function GetParameter(index: integer): single;
-    // Used for effCanDo, see TPlugCanDos strings, or override it
-    function CanDo(str:PAnsiChar):integer;virtual;
-    // Used for effGetParamDisplay, override it if you set pdmCustom
-    function GetParamDisplay(index:integer):string;virtual;
+    // Used for effCanDo, see TPlugCanDos strings, check strings in FEffectInfo.CanDos
+    function CanDo(str:PAnsiChar):integer;
+    // Used for effGetParamDisplay
+    function GetParamDisplay(index:integer):string;
   public
     constructor Create(VstHost: THostCallback); virtual;
     destructor Destroy; override;
@@ -187,6 +191,8 @@ type
     property OnEffStartProcess:TProcedureOfObject write FEffStartProcess;
     // effStopProcess
     property OnEffStopProcess:TProcedureOfObject write FEffStopProcess;
+    // Set it if you set pdmCustom of your parameter, function see TCustomParamDisplay
+    property OnCustomParamDisplay:TCustomParamDisplay write FCustomParamDisplay;
   end;
 
   { TPluginEditor }
@@ -612,6 +618,7 @@ end;
 
 function TPluginComponent.GetParamDisplay(index: integer): string;
 begin
+  Result:='';
   if index<FNumParams then
   with FParamInfos[index] do
   case DisplayMode of
@@ -620,7 +627,8 @@ begin
     pdmInteger:Result:=Int2String(Value);
     pdmMs:Result:=Float2String(Value*1000/FSampleRate);
     pdmHz:if Value=0 then Result:='0' else Result:=Float2String(FSampleRate*Value*0.5);
-    else Result:='';
+    pdmCustom:if Assigned(FCustomParamDisplay) then Result:=FCustomParamDisplay(index);
+    else ;
   end;
 end;
 
@@ -911,6 +919,11 @@ begin
     FEditor:=Editor;
     Include(FEffect.Flags,effFlagsHasEditor);
   end;
+end;
+
+procedure TPluginComponent.SetEditor(GuiClass: TFormClass);
+begin
+  SetEditor(TPluginEditor.Create(self,GuiClass));
 end;
 
 procedure TPluginComponent.SetUniqueID(A, B, C, D: AnsiChar);

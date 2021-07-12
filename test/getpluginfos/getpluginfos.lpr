@@ -74,12 +74,12 @@ begin
   Writeln('Dll: "', sDll, '" is loaded, the handle is ', hDll);
   Pointer(VstMain) := GetProcAddress(hDll, 'VSTPluginMain');
   if Assigned(VstMain) then
-    Writeln('VSTPluginMain got, address is ', IntToHex(PInteger(@Pointer(VstMain))^))
+    Writeln('VSTPluginMain got, address is ', IntToHex(ToIntPtr(VstMain)))
   else
   begin
     Pointer(VstMain) := GetProcAddress(hDll, 'main');
     if Assigned(VstMain) then
-      Writeln('main got, address is ', IntToHex(PInteger(@Pointer(VstMain))^))
+      Writeln('main got, address is ', IntToHex(ToIntPtr(VstMain)))
     else
     begin
       Writeln('Cannot find "VSTPluginMain" or "main"');
@@ -105,16 +105,16 @@ begin
   Writeln('--------- Start open the plugin ------------');
   try
     effect := VstMain(@HostCallBack);
-    //Writeln('Sizeof effect is ', sizeof(effect^));
+    Writeln('The address of effect is ', IntToHex(ToIntPtr(effect)));
     Writeln('Magic is ', IntToHex(effect^.Magic), ' or ', UniqueIDToString(effect^.Magic));
-    Writeln('Dispatcher address is ', IntToHex(PInteger(@Pointer(effect^.Dispatcher))^));
-    Writeln('GetParameter address is ', IntToHex(PInteger(@Pointer(effect^.GetParameter))^));
-    Writeln('SetParameter address is ', IntToHex(PInteger(@Pointer(effect^.SetParameter))^));
-    Writeln('Process address is ', IntToHex(PInteger(@Pointer(effect^.Process))^));
-    Writeln('ProcessReplacing address is ', IntToHex(PInteger(@Pointer(effect^.ProcessReplacing))^));
-    Writeln('ProcessDoubleReplacing address is ', IntToHex(PInteger(@Pointer(effect^.ProcessDoubleReplacing))^));
-    Writeln('Object address is ', IntToHex(PInteger(@Pointer(effect^.pObject))^));
-    Writeln('User address is ', IntToHex(PInteger(@Pointer(effect^.User))^));
+    Writeln('Dispatcher address is ', IntToHex(ToIntPtr(effect^.Dispatcher)));
+    Writeln('GetParameter address is ', IntToHex(ToIntPtr(effect^.GetParameter)));
+    Writeln('SetParameter address is ', IntToHex(ToIntPtr(effect^.SetParameter)));
+    Writeln('Process address is ', IntToHex(ToIntPtr(effect^.Process)));
+    Writeln('ProcessReplacing address is ', IntToHex(ToIntPtr(effect^.ProcessReplacing)));
+    Writeln('ProcessDoubleReplacing address is ', IntToHex(ToIntPtr(effect^.ProcessDoubleReplacing)));
+    Writeln('Object address is ', IntToHex(ToIntPtr(effect^.pObject)));
+    Writeln('User address is ', IntToHex(ToIntPtr(effect^.User)));
     Writeln('Number of programs is ', effect^.NumPrograms);
     Writeln('Number of params is ', effect^.NumParams);
     Writeln('Number of inputs is ', effect^.NumInputs);
@@ -187,6 +187,8 @@ begin
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
   end;
+  Writeln('----- Press enter to free library and memory ...');
+  Readln;
   FreeLibrary(hDll);
   Freemem(inputs[0]);
   Freemem(inputs[1]);

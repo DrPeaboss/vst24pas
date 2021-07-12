@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls, StdCtrls, Menus,
-  vst2interfaces;
+  vst2interfaces,vst2pluginbase,umain;
 
 type
 
@@ -31,6 +31,7 @@ type
     procedure TrackBarGainChange(Sender: TObject);
   private
   public
+    Plugin:TMyPlugin;
     AutoChanging: boolean;
     BlockEditIdle: boolean;
     opTimes: array[0..Ord(effGetNumMidiOutputChannels)] of integer;
@@ -39,7 +40,7 @@ type
 implementation
 
 uses
-  umain, typinfo;
+  typinfo;
 
 {$R *.lfm}
 
@@ -48,14 +49,14 @@ uses
 procedure TFormMain.TrackBarGainChange(Sender: TObject);
 begin
   if not AutoChanging then
-    gPlugin.Parameters[0] := TrackBarGain.Position / 2000;
+    Plugin.Parameters[0] := TrackBarGain.Position / 2000;
 end;
 
 procedure TFormMain.TimerTimer(Sender: TObject);
 begin
   AutoChanging := True;
-  TrackBarGain.Position := Round(2000 * gPlugin.Parameters[0]);
-  LabelCnt.Caption := IntToStr(gPlugin.Process32Count);
+  TrackBarGain.Position := Round(2000 * Plugin.Parameters[0]);
+  LabelCnt.Caption := IntToStr(Plugin.Process32Count);
   AutoChanging := False;
 end;
 

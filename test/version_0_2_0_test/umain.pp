@@ -20,17 +20,14 @@ type
     FIdleCount:integer;
     // Called by host, similar to timer, but usually have low fps
     procedure EditIdle;
+    function CustomParamDisplay(index:integer):string;
   public
     constructor Create(VstHost: THostCallback); override;
     procedure Process32(const inputs, outputs: TBuffer32; sampleframes: integer); override;
-    function GetParamDisplay(index: integer): string; override;
     function Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
       opt: single): IntPtr; override;
     property Process32Count:integer read FProcess32Count;
   end;
-
-var
-  gPlugin: TMyPlugin;
 
 implementation
 
@@ -56,10 +53,11 @@ begin
   PlugInitPreset(3, 'Preset 3', [0.33]);
   SetUniqueID('P', 'Z', 'n', '2');
   SetVersion(20);
-  SetEditor(TPluginEditor.Create(self, TFormMain));
+  SetEditor(TFormMain);
   SetEffectFlag(effFlagsProgramChunks);
-  gPlugin := self; // Set global variant for ueditor
+  TFormMain(Editor.Gui).Plugin:=self;
   Editor.SetIdleProc(@EditIdle); // Here enable the 'timer', set nil to disable it
+  OnCustomParamDisplay := @CustomParamDisplay;
 end;
 
 procedure TMyPlugin.Process32(const inputs, outputs: TBuffer32; sampleframes: integer);
@@ -76,13 +74,12 @@ begin
   end;
 end;
 
-function TMyPlugin.GetParamDisplay(index: integer): string;
+function TMyPlugin.CustomParamDisplay(index: integer): string;
 begin
   if index = 0 then
-  begin
-    Result := Float2String(VstAmp2dB(2*Parameters[0])); // Our custom display
-  end else
-    Result := inherited GetParamDisplay(index);
+    Result := Float2String(VstAmp2dB(2*Parameters[0])) // Our custom display
+  else
+    Result := '';
 end;
 
 function TMyPlugin.Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer; opt: single): IntPtr;
