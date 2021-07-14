@@ -1041,12 +1041,12 @@ begin
   if samples = 0 then
     float2string(0, Text, maxlen)
   else
-    float2string(GetSampleRate * samples * 0.5, Text, maxlen);
+    float2string(FSampleRate / samples, Text, maxlen);
 end;
 
 procedure TVstPlugin.Ms2String(samples: single; Text: PAnsiChar; MaxLen: Int32);
 begin
-  float2string(samples * 1000 / GetSampleRate, Text, maxlen);
+  float2string(samples * 1000 / FSampleRate, Text, maxlen);
 end;
 
 procedure TVstPlugin.Float2String(Value: single; Text: PAnsiChar; MaxLen: Int32);
