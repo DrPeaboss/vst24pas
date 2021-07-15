@@ -8,21 +8,6 @@ object FormGain: TFormGain
   ClientWidth = 298
   DesignTimePPI = 120
   OnCreate = FormCreate
-  OnHide = FormHide
-  OnShow = FormShow
-  object ScrollBarGain: TScrollBar
-    Left = 16
-    Height = 33
-    Top = 80
-    Width = 264
-    LargeChange = 5
-    Max = 1000
-    PageSize = 0
-    PopupMenu = PopupMenuReset
-    Position = 500
-    TabOrder = 0
-    OnChange = ScrollBarGainChange
-  end
   object LabelGain: TLabel
     Left = 16
     Height = 20
@@ -38,6 +23,18 @@ object FormGain: TFormGain
     Width = 85
     Caption = 'HighFPS'
     OnChange = CheckBoxHiFPSChange
+    TabOrder = 0
+  end
+  object TrackBarGain: TTrackBar
+    Left = 16
+    Height = 31
+    Top = 80
+    Width = 264
+    Frequency = 100
+    Max = 1000
+    OnChange = TrackBarGainChange
+    Position = 500
+    ShowSelRange = False
     TabOrder = 1
   end
   object PopupMenuReset: TPopupMenu

@@ -5,7 +5,7 @@ unit uEditor;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, Menus, vst24pas.gui;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls, Menus,ComCtrls, vst24pas.gui;
 
 type
 
@@ -16,13 +16,11 @@ type
     LabelGain:      TLabel;
     MenuItemReset:  TMenuItem;
     PopupMenuReset: TPopupMenu;
-    ScrollBarGain:  TScrollBar;
+    TrackBarGain:TTrackBar;
     procedure CheckBoxHiFPSChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormHide(Sender: TObject);
-    procedure FormShow(Sender: TObject);
     procedure MenuItemResetClick(Sender: TObject);
-    procedure ScrollBarGainChange(Sender: TObject);
+    procedure TrackBarGainChange(Sender:TObject);
   private
     FLocked: boolean;
     Timer:   TTimer;
@@ -40,11 +38,11 @@ uses
 
 { TFormGain }
 
-procedure TFormGain.ScrollBarGainChange(Sender: TObject);
+procedure TFormGain.TrackBarGainChange(Sender:TObject);
 var
   param: single;
 begin
-  param := ScrollBarGain.Position / 1000;
+  param := TrackBarGain.Position / 1000;
   if not FLocked then
     Editor.GetPlugin.SetParameterAutomated(0, param);
   LabelGain.Caption := format('Gain %.3fdB %.3f', [VstAmp2dB(2 * param), 2 * param]);
@@ -53,7 +51,7 @@ end;
 procedure TFormGain.TimerTimer(Sender: TObject);
 begin
   FLocked := True;
-  ScrollBarGain.Position := Round(Editor.GetPlugin.GetParameter(0) * 1000);
+  TrackBarGain.Position := Round(Editor.GetPlugin.GetParameter(0) * 1000);
   FLocked := False;
 end;
 
@@ -63,7 +61,6 @@ begin
   Timer := TTimer.Create(self);
   Timer.Interval := 40;
   Timer.OnTimer := @TimerTimer;
-  Timer.Enabled := False;
 end;
 
 procedure TFormGain.CheckBoxHiFPSChange(Sender: TObject);
@@ -74,19 +71,9 @@ begin
     Timer.Interval := 40;
 end;
 
-procedure TFormGain.FormHide(Sender: TObject);
-begin
-  Timer.Enabled := False;
-end;
-
-procedure TFormGain.FormShow(Sender: TObject);
-begin
-  Timer.Enabled := True;
-end;
-
 procedure TFormGain.MenuItemResetClick(Sender: TObject);
 begin
-  ScrollBarGain.Position := 500;
+  TrackBarGain.Position := 500;
 end;
 
 end.
