@@ -109,7 +109,7 @@ begin
 {$if defined(MSWINDOWS)}
   OpenDialogLoad.Filter := 'VST 2 Plugin|*.dll';
 {$elseif defined(LINUX)}
-  OpenDialogLoad.Filter := 'VST 2 Plugin|lib*.so';
+  OpenDialogLoad.Filter := 'VST 2 Plugin|*.so';
 {$endif}
   OpenDialogLoad.InitialDir:=GetCurrentDir;
   if OpenDialogLoad.Execute then

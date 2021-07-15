@@ -1,7 +1,7 @@
 program GuiLoaderTest010;
 
 {$mode objfpc}{$H+}
-{$apptype console}
+{$ifdef MSWINDOWS}{$apptype console}{$endif}
 
 uses
   {$IFDEF UNIX}{$IFDEF UseCThreads}

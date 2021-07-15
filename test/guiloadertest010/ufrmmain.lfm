@@ -13,7 +13,6 @@ object FormPlugManager: TFormPlugManager
     Height = 385
     Top = 16
     Width = 258
-    Caption = 'PanelPlugs'
     TabOrder = 0
   end
   object OpenDialogLoad: TOpenDialog

@@ -5,7 +5,7 @@ unit uloader;
 interface
 
 uses
-  Classes, SysUtils, vst24pas.core;
+  {$ifdef Linux}dynlibs,{$endif}Classes, SysUtils, vst24pas.core;
 
 type
   TVSTMain = function(vsthost:TVstHostCallback):PAEffect;cdecl;
@@ -48,6 +48,15 @@ function HostCallback(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int3
 var
   pm:TPlugManager;
 begin
+  if IsConsole then
+  begin
+    Writeln('opcode: ',opcode,' index: ',index,' value: ',value,
+      ' ptr: ',IntToHex(ToIntPtr(ptr)),' opt: ', opt:3:3);
+    if opcode=amCanDo then
+      Writeln('CanDo string: ',StrPas(ptr));
+  end;
+
+
   if Assigned(effect) and (effect^.Resvd1<>0) then
   begin
     pm:=TPlugManager(effect^.Resvd1);
@@ -55,8 +64,6 @@ begin
   end else
   begin
     Result:=0;
-    if IsConsole then Writeln('opcode: ',opcode,' index: ',index,' value: ',value,
-      ' ptr: ',IntToHex(ToIntPtr(ptr)),' opt: ', opt:3:3);
     case opcode of
       amVersion:Result:=kVstVersion;
       amGetSampleRate:Result:=44100;
@@ -205,7 +212,7 @@ end;
 
 procedure TPlugManager.InitPlugin(ID:Int32);
 begin
-  if IsConsole then Writeln('Init plugin, ID',ID);
+  if IsConsole then Writeln('Init plugin, ID: ',ID);
   Dispatcher(ID,effOpen,0,0,nil,0);
   Dispatcher(ID,effSetSampleRate,0,0,nil,44100);
   Dispatcher(ID,effSetBlockSize,0,1024,nil,0);
