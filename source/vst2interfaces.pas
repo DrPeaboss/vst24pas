@@ -1195,7 +1195,7 @@ const
 type
   // Program (fxp) structure.
   PFxProgram = ^TFxProgram;
-  TFxProgram = record
+  TFxProgram = packed record
     ChunkMagic: Int32; // 'CcnK'
     ByteSize:   Int32; // size of this chunk, excl. magic + byteSize
     FxMagic:    Int32; // 'FxCk' (regular) or 'FPCh' (opaque chunk)
@@ -1216,7 +1216,7 @@ type
 
   // Bank (fxb) structure.
   PFxBank = ^TFxBank;
-  TFxBank = record
+  TFxBank = packed record
     ChunkMagic:     Int32; // 'CcnK'
     ByteSize:       Int32; // size of this chunk, excl. magic + byteSize
     FxMagic:        Int32; // 'FxBk' (regular) or 'FBCh' (opaque chunk)
@@ -1237,9 +1237,11 @@ type
   end;
 
 // Some useful additional constants
+{ // Not good enough
 const
   kVstAEffectOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
   kVstAMasterOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
+}
 
 implementation
 

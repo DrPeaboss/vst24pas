@@ -28,7 +28,7 @@ type
   end;
 
   // The display mode for effGetParamDisplay
-  TParamDisplayMode = (pdmNone, pdmCustom, pdmFloat, pdmdB, pdmInteger, pdmHz, pdmMs);
+  TParamDisplayMode = (pdmNone, pdmCustom, pdmFloat, pdmdB, pdmInteger{, pdmHz, pdmMs});
   // Custom parameter display function if you set pdmCustom
   TCustomParamDisplay = function(index:integer):string of object;
   PParamInfo = ^TParamInfo;
@@ -249,7 +249,9 @@ type
   public
     constructor Create(VstHost: THostCallback); override;
     destructor Destroy; override;
+{$ifdef VST_2_4_EXTENSIONS}
     procedure EnableProcess64(state:boolean=true);
+{$endif}
   end;
 
 // Here are callback functions used in AEffect
@@ -425,10 +427,12 @@ begin
   inherited Destroy;
 end;
 
+{$ifdef VST_2_4_EXTENSIONS}
 procedure TVSTPlugin.EnableProcess64(state: boolean);
 begin
   SetEffectFlag(effFlagsCanDoubleReplacing,state);
 end;
+{$endif}
 
 function TVSTPlugin.Dispatcher(opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
   opt: single): IntPtr;
@@ -446,15 +450,15 @@ end;
 procedure TVSTPlugin.Process(const inputs, outputs: TBuffer32; sampleframes: integer);
 begin
 end;
-{$else}
-procedure TCustomPlugin.Process32(const inputs, outputs: TBuffer32; sampleframes: integer);
-begin
-end;
-{$endif}
 
 procedure TVSTPlugin.Process64(const inputs, outputs: TBuffer64; sampleframes: integer);
 begin
 end;
+{$else}
+procedure TVSTPlugin.Process32(const inputs, outputs: TBuffer32; sampleframes: integer);
+begin
+end;
+{$endif}
 
 { TPluginBase }
 
@@ -625,8 +629,9 @@ begin
     pdmFloat:Result:=Float2String(Value);
     pdmdB:Result:=Float2String(VstAmp2dB(Value));
     pdmInteger:Result:=Int2String(Value);
-    pdmMs:Result:=Float2String(Value*1000/FSampleRate);
-    pdmHz:if Value=0 then Result:='0' else Result:=Float2String(FSampleRate*Value*0.5);
+    // Not sure
+    //pdmMs:Result:=Float2String(Value*1000/FSampleRate);
+    //pdmHz:if Value=0 then Result:='0' else Result:=Float2String(FSampleRate*Value*0.5);
     pdmCustom:if Assigned(FCustomParamDisplay) then Result:=FCustomParamDisplay(index);
     else ;
   end;
@@ -874,7 +879,7 @@ begin
     // will be considered as 999998.5 due to precision, so the final result
     // will be 999999 rather 999998
     // Actually, 999998.47 to 999998.53 will all be 999998.5
-    if mantissa>=0.5 then Result:=Float2String(double(Trunc(Value)+1));
+    if mantissa>=0.5 then Result:=Float2String(Int(Value)+1);
     Exit; // No dot at last place if length is 6
   end;
   Result := Result + '.';
@@ -896,7 +901,7 @@ begin
     if Result[i] <> '.' then
       Inc(Result[i])
     else
-      Result := Float2String(double(Trunc(Value)+1));
+      Result := Float2String(Int(Value)+1);
   end;
 end;
 
