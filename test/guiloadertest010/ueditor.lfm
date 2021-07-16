@@ -10,9 +10,10 @@ object FormEditor: TFormEditor
   ClientWidth = 400
   DesignTimePPI = 120
   OnClose = FormClose
+  OnCreate = FormCreate
   OnHide = FormHide
   OnShow = FormShow
-  object PanelEditor: TPanel
+  object PanelMain: TPanel
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = PanelTools
     AnchorSideTop.Side = asrBottom
@@ -40,14 +41,27 @@ object FormEditor: TFormEditor
     ClientHeight = 40
     ClientWidth = 400
     TabOrder = 1
-    object ButtonInfo: TButton
+    object ToggleBoxPlug: TToggleBox
       Left = 8
       Height = 31
       Top = 4
       Width = 94
-      Caption = 'Info'
-      OnClick = ButtonInfoClick
+      AllowGrayed = True
+      Caption = 'Plugin'
+      Checked = True
+      OnClick = ToggleBoxPlugClick
+      State = cbChecked
       TabOrder = 0
+    end
+    object ToggleBoxInfo: TToggleBox
+      Left = 112
+      Height = 31
+      Top = 4
+      Width = 94
+      AllowGrayed = True
+      Caption = 'Info'
+      OnClick = ToggleBoxInfoClick
+      TabOrder = 1
     end
   end
   object Timer: TTimer

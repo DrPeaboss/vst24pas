@@ -11,6 +11,7 @@ type
   TVSTMain = function(vsthost:TVstHostCallback):PAEffect;cdecl;
 
   TPlugInfo = record
+    FileName:string;
     PlugHandle:TLibHandle;
     PlugEffect:PAEffect;
     IsLoaded:Boolean;
@@ -25,6 +26,7 @@ type
     FPlugInfos:TPlugInfos;
     function GetAEffect(index:integer):PAEffect;
     function FindEffect(e:PAEffect):integer;
+    function GetPlugFileName(index:integer):string;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -35,13 +37,18 @@ type
     procedure InitPlugin(ID:Int32);
     function IsPlugLoaded(ID:Int32):Boolean;
     function HasEditor(ID:Int32):Boolean;
+    property PlugNumber:integer read FPlugNumber;
     property AEffect[index:integer]:PAEffect read GetAEffect;
+    property PlugFileName[index:integer]:string read GetPlugFileName;
   end;
 
 function HostCallback(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32;
     Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
 
 implementation
+
+uses
+  ufrmmain;
 
 function HostCallback(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
   opt: single): IntPtr; cdecl;
@@ -50,17 +57,18 @@ var
 begin
   if IsConsole then
   begin
-    Writeln('opcode: ',opcode,' index: ',index,' value: ',value,
-      ' ptr: ',IntToHex(ToIntPtr(ptr)),' opt: ', opt:3:3);
-    if opcode=amCanDo then
-      Writeln('CanDo string: ',StrPas(ptr));
+    if integer(opcode)<=ord(amGetInputSpeakerArrangement) then
+      Writeln('opcode: ',opcode,' index: ',index,' value: ',value,
+        ' ptr: ',IntToHex(ToIntPtr(ptr)),' opt: ', opt:5:5)
+    else
+      Writeln('Unknown opcode: ',Integer(opcode),' index: ',index,' value: ',value,
+        ' ptr: ',IntToHex(ToIntPtr(ptr)),' opt: ', opt:5:5,' ',strpas(ptr));
   end;
-
 
   if Assigned(effect) and (effect^.Resvd1<>0) then
   begin
     pm:=TPlugManager(effect^.Resvd1);
-    pm.Host(pm.FindEffect(effect),opcode,index,value,ptr,opt);
+    Result:=pm.Host(pm.FindEffect(effect),opcode,index,value,ptr,opt);
   end else
   begin
     Result:=0;
@@ -71,6 +79,10 @@ begin
       amGetProductString:VstStrncpy(ptr,'GuiLoaderTest010',31);
       amGetVendorString:VstStrncpy(ptr,'PeaZomboss',15);
       amGetVendorVersion:Result:=10;
+      amCanDo:begin
+                //if StrPas(ptr)='sizeWindow' then Result:=1;
+                if IsConsole then Writeln('CanDo string: ',StrPas(ptr));
+              end;
       else ;
     end;
   end;
@@ -104,6 +116,14 @@ begin
       Result:=i;
       break;
     end;
+end;
+
+function TPlugManager.GetPlugFileName(index:integer):string;
+begin
+  if IsPlugLoaded(index) then
+    Result:=FPlugInfos[index].FileName
+  else
+    Result:='';
 end;
 
 constructor TPlugManager.Create(AOwner: TComponent);
@@ -164,6 +184,7 @@ begin
   Inc(FPlugNumber);
   with FPlugInfos[ID] do
   begin
+    FileName:=libname;
     PlugHandle := hLib;
     PlugEffect := eff;
     IsLoaded := True;
@@ -179,9 +200,11 @@ begin
   if not (ID in [0..9]) then Exit;
   with FPlugInfos[ID] do
     if IsLoaded then begin
-      Dispatcher(ID,effEditClose,0,0,nil,0);
+      //Dispatcher(ID,effEditClose,0,0,nil,0);
+      Dec(FPlugNumber);
       Dispatcher(ID,effClose,0,0,nil,0);
       FreeLibrary(PlugHandle);
+      FileName:='';
       PlugEffect:=nil;
       PlugHandle:=0;
       IsLoaded := False;
@@ -201,11 +224,26 @@ end;
 function TPlugManager.Host(ID:Int32; opcode:TAudioMasterOpcodes; index:int32; value:IntPtr; ptr:Pointer;
   opt:single):IntPtr;
 begin
+  Result:=0;
   if IsPlugLoaded(ID) then
   begin
     case opcode of
     amVersion:Result:=kVstVersion;
-    else Result:=0;
+    amGetBlockSize:Result:=1024;
+    amGetSampleRate:Result:=44100;
+    amGetProductString:VstStrncpy(ptr,'GuiLoaderTest010',31);
+    amGetVendorString:VstStrncpy(ptr,'PeaZomboss',15);
+    amGetVendorVersion:Result:=10;
+    amSizeWindow:begin
+                   FormPlugManager.ResizeEditor(ID,index,value);
+                   Result:=1;
+                 end;
+    amCanDo:begin
+              if IsConsole then Writeln('CanDo string: ',StrPas(ptr));
+              if StrPas(ptr)='sizeWindow' then Result:=1;
+            end;
+    amIdle:with FPlugInfos[ID] do PlugEffect^.Dispatcher(PlugEffect,effEditIdle,0,0,nil,0);
+    else;
     end;
   end;
 end;

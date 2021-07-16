@@ -1,0 +1,39 @@
+object FramePluginfo: TFramePluginfo
+  Left = 0
+  Height = 300
+  Top = 0
+  Width = 400
+  ClientHeight = 300
+  ClientWidth = 400
+  DesignTimePPI = 120
+  ParentFont = False
+  TabOrder = 0
+  DesignLeft = 328
+  DesignTop = 5
+  object ListViewInfo: TListView
+    Left = 0
+    Height = 300
+    Top = 0
+    Width = 400
+    Align = alClient
+    Columns = <    
+      item
+        Caption = 'Type'
+        Width = 150
+      end    
+      item
+        Caption = 'Info'
+        Width = 230
+      end>
+    Items.LazData = {
+      6600000003000000FFFFFFFFFFFFFFFFFFFFFFFF000000000B00000045666665
+      6374204E616D65FFFFFFFFFFFFFFFFFFFFFFFF000000000B00000056656E646F
+      72204E616D65FFFFFFFFFFFFFFFFFFFFFFFF000000000C00000050726F647563
+      74204E616D65
+    }
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+  end
+end

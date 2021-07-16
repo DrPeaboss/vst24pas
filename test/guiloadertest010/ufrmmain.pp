@@ -13,22 +13,30 @@ type
   { TFormPlugManager }
 
   TFormPlugManager = class(TForm)
+    ButtonUnloadAll:TButton;
+    MenuItemCloneTo:TMenuItem;
     MenuItemUnload:TMenuItem;
     OpenDialogLoad: TOpenDialog;
     PanelPlugs: TPanel;
     PopupMenuPlugin:TPopupMenu;
+    procedure ButtonUnloadAllClick(Sender:TObject);
     procedure FormCreate(Sender: TObject);
     procedure MenuItemUnloadClick(Sender:TObject);
+    procedure PopupMenuPluginPopup(Sender:TObject);
   private
     FToggleBoxs: array[0..9] of TToggleBox;
     FButtons:array[0..9] of TButton;
     FEditors:array[0..9] of TFormEditor;
     FPlugManager:TPlugManager;
-  public
+    procedure LoadPlugin(PlugName:string;ID:Int32);
+    procedure UnloadPlugin(ID:Int32);
     procedure BtnLoadClick(Sender: TObject);
-    procedure BoxPlugClick(Sender: TObject);
+    procedure BoxSlotClick(Sender: TObject);
+    procedure MenuCloneToClick(Sender:TObject);
     procedure ShowEditor(ID:Int32);
+  public
     procedure UncheckBox(ID:Int32);
+    procedure ResizeEditor(ID,W,H:Integer);
   end;
 
 var
@@ -48,13 +56,23 @@ var
   i: integer;
   box: TToggleBox;
   btn: TButton;
+  item: TMenuItem;
+  editor :TFormEditor;
 begin
   if IsConsole then Writeln('Init plug manager ...');
   FPlugManager:=TPlugManager.Create(self);
   for i := 0 to 9 do
   begin
-    FEditors[i]:=TFormEditor.Create(Application);
-    FEditors[i].ID:=i;
+    item:=TMenuItem.Create(PopupMenuPlugin.Items.Items[1]);
+    item.Name:='Clone'+Chr(i+48);
+    item.Caption:='Slot '+Chr(i+48);
+    item.OnClick:=@MenuCloneToClick;
+    PopupMenuPlugin.Items.Items[1].Add(item);
+    editor:=TFormEditor.Create(Application);
+    editor.Left:=30*i;
+    editor.Top:=15*i;
+    editor.ID:=i;
+    FEditors[i]:=editor;
     box:=TToggleBox.Create(PanelPlugs);
     box.Parent:=PanelPlugs;
     box.Left := 50;
@@ -63,9 +81,9 @@ begin
     box.Top := 35*i+20;
     box.Enabled := False;
     box.PopupMenu:=PopupMenuPlugin;
-    box.Name := 'Plug'+IntToStr(i);
-    box.Caption := 'Plug '+IntToStr(i);
-    box.OnClick:=@BoxPlugClick;
+    box.Name := 'Slot'+Chr(i+48);
+    box.Caption := 'Slot '+Chr(i+48);
+    box.OnClick:=@BoxSlotClick;
     FToggleBoxs[i]:=box;
     btn:=TButton.Create(PanelPlugs);
     btn.Parent:=PanelPlugs;
@@ -73,11 +91,26 @@ begin
     btn.Width := 35;
     btn.Height := 35;
     btn.Top := 35*i+20;
-    btn.Name := 'Load'+IntToStr(i);
+    btn.Name := 'Load'+Chr(i+48);
     btn.Caption := '...';
     btn.OnClick := @BtnLoadClick;
     FButtons[i]:=btn;
   end;
+end;
+
+procedure TFormPlugManager.ButtonUnloadAllClick(Sender:TObject);
+var
+  i,count:Integer;
+begin
+  if IsConsole then Writeln('Unload all plugins clicked');
+  count:=0;
+  for i:=0 to 9 do
+    if FPlugManager.IsPlugLoaded(i) then
+    begin
+      UnloadPlugin(i);
+      inc(count);
+    end;
+  if IsConsole then Writeln('Unloaded ',count,' plugins');
 end;
 
 procedure TFormPlugManager.MenuItemUnloadClick(Sender:TObject);
@@ -86,24 +119,61 @@ var
 begin
   ID:=ord(PopupMenuPlugin.PopupComponent.Name[5])-48;
   if IsConsole then Writeln('Unload clicked, ID: ',ID);
+  UnloadPlugin(ID);
+end;
+
+procedure TFormPlugManager.PopupMenuPluginPopup(Sender:TObject);
+var
+  i:integer;
+begin
+  for i:=0 to 9 do
+  begin
+    if FPlugManager.IsPlugLoaded(i) then
+      PopupMenuPlugin.Items.Items[1].Items[i].Enabled:=False
+    else
+      PopupMenuPlugin.Items.Items[1].Items[i].Enabled:=True;
+  end;
+end;
+
+procedure TFormPlugManager.LoadPlugin(PlugName:string; ID:Int32);
+var
+  buf1:array[0..63] of char;
+  buf2:array[0..63] of char;
+begin
+  if FPlugManager.TryLoadPlugin(PlugName,ID) then
+  begin
+    buf1[0]:=#0;
+    buf2[0]:=#0;
+    FToggleBoxs[ID].Enabled := True;
+    FPlugManager.InitPlugin(ID);
+    FButtons[ID].Enabled:=False;
+    FEditors[ID].AEffect:=FPlugManager.AEffect[ID];
+    FPlugManager.Dispatcher(ID,effGetEffectName,0,0,@buf1,0);
+    FPlugManager.Dispatcher(ID,effGetVendorString,0,0,@buf2,0);
+    FToggleBoxs[ID].Caption:=StrPas(@buf1);
+    FEditors[ID].Caption:=StrPas(@buf1)+' ('+StrPas(@buf2)+')';
+    FToggleBoxs[ID].Checked:=True;
+    FEditors[ID].LoadInformations;
+  end;
+end;
+
+procedure TFormPlugManager.UnloadPlugin(ID:Int32);
+begin
+  if FEditors[ID].Showing then FEditors[ID].Hide;
   if FPlugManager.TryUnLoad(ID) then;
   begin
+    FToggleBoxs[ID].Caption:='Slot '+Chr(ID+48);
     FButtons[ID].Enabled:=True;
     FToggleBoxs[ID].Checked:=False;
     FToggleBoxs[ID].Enabled:=False;
-    FEditors[ID].AEffect:=nil;
-    if FEditors[ID].Showing then FEditors[ID].Hide;
+    FEditors[ID].Reinitialize;
   end;
 end;
 
 procedure TFormPlugManager.BtnLoadClick(Sender: TObject);
 var
   ID:integer;
-  buf1:array[0..63] of char;
-  buf2:array[0..63] of char;
 begin
-  buf1[0]:=#0;
-  buf2[0]:=#0;
   ID:=ord((sender as TButton).Name[5])-48;
   if IsConsole then Writeln('Load clicked, ID: ',ID);
 {$if defined(MSWINDOWS)}
@@ -114,28 +184,28 @@ begin
   OpenDialogLoad.InitialDir:=GetCurrentDir;
   if OpenDialogLoad.Execute then
   begin
-    if FPlugManager.TryLoadPlugin(OpenDialogLoad.FileName,ID) then
-    begin
-      FToggleBoxs[ID].Enabled := True;
-      FPlugManager.InitPlugin(ID);
-      FButtons[ID].Enabled:=False;
-      FEditors[ID].AEffect:=FPlugManager.AEffect[ID];
-      FPlugManager.Dispatcher(ID,effGetEffectName,0,0,@buf1,0);
-      FPlugManager.Dispatcher(ID,effGetVendorString,0,0,@buf2,0);
-      FEditors[ID].Caption:=StrPas(@buf1)+' ('+StrPas(@buf2)+')';
-      FToggleBoxs[ID].Checked:=True;
-    end;
+    LoadPlugin(OpenDialogLoad.FileName,ID);
   end;
 end;
 
-procedure TFormPlugManager.BoxPlugClick(Sender:TObject);
+procedure TFormPlugManager.BoxSlotClick(Sender:TObject);
 var
   ID:integer;
 begin
   ID:=ord((sender as TToggleBox).Name[5])-48;
-  if IsConsole then Writeln('Called BoxPlugClick, ID: ',ID);
+  if IsConsole then Writeln('Called BoxSlotClick, ID: ',ID);
   if FPlugManager.IsPlugLoaded(ID) then
     ShowEditor(ID);
+end;
+
+procedure TFormPlugManager.MenuCloneToClick(Sender:TObject);
+var
+  ToID,FromID:Integer;
+begin
+  FromID:=ord(PopupMenuPlugin.PopupComponent.Name[5])-48;
+  ToID:=ord((Sender as TMenuItem).Name[6])-48;
+  if IsConsole then Writeln('Clone plugin from ID: ',FromID,' to ID: ',ToID);
+  LoadPlugin(FPlugManager.PlugFileName[FromID],ToID);
 end;
 
 procedure TFormPlugManager.ShowEditor(ID:Int32);
@@ -153,6 +223,12 @@ procedure TFormPlugManager.UncheckBox(ID:Int32);
 begin
   if IsConsole then Writeln('Uncheck called');
   FToggleBoxs[ID].Checked:=False;
+end;
+
+procedure TFormPlugManager.ResizeEditor(ID,W,H:Integer);
+begin
+  FEditors[ID].Width:=W;
+  FEditors[ID].Height:=H+FEditors[ID].PanelTools.Height;
 end;
 
 end.
