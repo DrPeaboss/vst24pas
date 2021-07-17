@@ -48,7 +48,7 @@ function HostCallback(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int3
 implementation
 
 uses
-  ufrmmain;
+  ufrmmain,math;
 
 function HostCallback(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
   opt: single): IntPtr; cdecl;
@@ -135,10 +135,7 @@ begin
   // Attention here !
   // The following two lines are very very important !
   // Without them some plugins can not be loaded correctly !
-  SetMXCSR($1FA0);
-  Set8087CW($1337);
-  // You can use below line to replace above 2 lines, with math unit.
-  //SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
+  SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide,exOverflow, exUnderflow, exPrecision]);
   if IsConsole then Writeln('New 8087 CW: ',IntToHex(Get8087CW));
   if IsConsole then Writeln('New MX CSR: ',IntToHex(GetMXCSR));
   //if IsConsole then Writeln('New Exception Mask: ',IntToHex(DWord(GetExceptionMask)));
@@ -217,6 +214,7 @@ end;
 function TPlugManager.Dispatcher(PlugID:int32; opcode:TAEffectOpcodes; index:int32; value:IntPtr; ptr:Pointer;
   opt:single):IntPtr;
 begin
+  Result:=0;
   with FPlugInfos[plugid] do
   if IsLoaded then
     Result:=PlugEffect^.Dispatcher(PlugEffect,opcode,index,value,ptr,opt);

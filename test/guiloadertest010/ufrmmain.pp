@@ -68,7 +68,6 @@ begin
     item:=TMenuItem.Create(PopupMenuPlugin.Items.Items[1]);
     item.Name:='Clone'+Chr(i+48);
     item.Caption:='Slot '+Chr(i+48);
-    item.ImageIndex:=-1; { TODO : Test For Linux, fix bugs }
     item.OnClick:=@MenuCloneToClick;
     PopupMenuPlugin.Items.Items[1].Add(item);
     editor:=TFormEditor.Create(Application);

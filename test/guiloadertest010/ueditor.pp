@@ -15,6 +15,8 @@ type
   TFormEditor = class(TForm)
     PanelMain:TPanel;
     PanelTools:TPanel;
+    RadioButtonInfo:TRadioButton;
+    RadioButtonPlug:TRadioButton;
     Timer:TTimer;
     ToggleBoxInfo:TToggleBox;
     ToggleBoxPlug:TToggleBox;
@@ -22,9 +24,13 @@ type
     procedure FormCreate(Sender:TObject);
     procedure FormHide(Sender:TObject);
     procedure FormShow(Sender:TObject);
+    procedure RadioButtonInfoClick(Sender:TObject);
+    procedure RadioButtonPlugClick(Sender:TObject);
     procedure TimerTimer(Sender:TObject);
+    {
     procedure ToggleBoxInfoClick(Sender:TObject);
     procedure ToggleBoxPlugClick(Sender:TObject);
+    }
   private
     FPluginfo:TFramePluginfo;
     FEditorOpening:Boolean;
@@ -50,7 +56,7 @@ procedure TFormEditor.TimerTimer(Sender:TObject);
 begin
   if Assigned(AEffect) then AEffect^.Dispatcher(AEffect,effEditIdle,0,0,nil,0);
 end;
-
+{
 procedure TFormEditor.ToggleBoxInfoClick(Sender:TObject);
 begin
   if not FEditorOpening then ToggleBoxInfo.Checked:=True;
@@ -74,10 +80,9 @@ begin
     ToggleBoxInfo.Checked:=not ToggleBoxPlug.Checked;
     FPluginfo.Hide;
     OpenEditor;
-    FEditorOpening:=True;
   end;
 end;
-
+}
 procedure TFormEditor.OpenEditor;
 var
   Rect:PERect;
@@ -136,7 +141,7 @@ end;
 
 procedure TFormEditor.FormCreate(Sender:TObject);
 begin
-  FPluginfo:=TFramePluginfo.Create(self);
+  FPluginfo:=TFramePluginfo.Create(PanelMain);
   FPluginfo.Parent:=PanelMain;
   FPluginfo.Visible:=False;
   FEditorOpening:=True;
@@ -152,6 +157,28 @@ procedure TFormEditor.FormShow(Sender:TObject);
 begin
   if IsConsole then Writeln('Editor Show, ID: ',ID);
   if FEditorOpening then OpenEditor;
+end;
+
+procedure TFormEditor.RadioButtonInfoClick(Sender:TObject);
+begin
+  if FEditorOpening then
+  begin
+    FEditorOpening:=False;
+    CloseEditor;
+    FPluginfo.Show;
+    self.Width:=FPluginfo.Width;
+    self.Height:=PanelTools.Height+FPluginfo.Height;
+  end;
+end;
+
+procedure TFormEditor.RadioButtonPlugClick(Sender:TObject);
+begin
+  if not FEditorOpening then
+  begin
+    FEditorOpening:=True;
+    FPluginfo.Hide;
+    OpenEditor;
+  end;
 end;
 
 end.

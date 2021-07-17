@@ -3,7 +3,6 @@ object FormEditor: TFormEditor
   Height = 300
   Top = 250
   Width = 400
-  BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSingle
   Caption = 'FormEditor'
   ClientHeight = 300
@@ -26,6 +25,7 @@ object FormEditor: TFormEditor
     Top = 40
     Width = 400
     Anchors = [akTop, akLeft, akRight, akBottom]
+    BevelOuter = bvSpace
     TabOrder = 0
   end
   object PanelTools: TPanel
@@ -42,24 +42,44 @@ object FormEditor: TFormEditor
     ClientWidth = 400
     TabOrder = 1
     object ToggleBoxPlug: TToggleBox
-      Left = 8
+      Left = 200
       Height = 31
       Top = 4
       Width = 94
       Caption = 'Plugin'
       Checked = True
-      OnClick = ToggleBoxPlugClick
       State = cbChecked
       TabOrder = 0
+      Visible = False
     end
     object ToggleBoxInfo: TToggleBox
-      Left = 112
+      Left = 304
       Height = 31
       Top = 4
       Width = 94
       Caption = 'Info'
-      OnClick = ToggleBoxInfoClick
       TabOrder = 1
+      Visible = False
+    end
+    object RadioButtonPlug: TRadioButton
+      Left = 12
+      Height = 24
+      Top = 8
+      Width = 69
+      Caption = 'Plugin'
+      Checked = True
+      OnClick = RadioButtonPlugClick
+      TabOrder = 3
+      TabStop = True
+    end
+    object RadioButtonInfo: TRadioButton
+      Left = 120
+      Height = 24
+      Top = 8
+      Width = 52
+      Caption = 'Info'
+      OnClick = RadioButtonInfoClick
+      TabOrder = 2
     end
   end
   object Timer: TTimer
