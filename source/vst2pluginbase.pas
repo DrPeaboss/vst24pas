@@ -201,7 +201,7 @@ type
   TPluginEditor = class(TPluginBase, IPluginEditor)
   private
     FPlugin:TPluginComponent;
-    FParent:Pointer;
+    FIsOpen:Boolean;
     FGui:TForm;
     FRect:TERect;
     FIdleProc:TProcedureOfObject;
@@ -487,14 +487,15 @@ constructor TPluginEditor.Create(Plugin: TPluginComponent; GuiClass: TFormClass)
 begin
   FPlugin:=Plugin;
   FGui:=GuiClass.Create(nil);
-  FParent := nil;
   FGui.Left:=0;
   FGui.Top := 0;
   FGui.BorderStyle:=bsNone;
+  FIsOpen:=False;
 end;
 
 destructor TPluginEditor.Destroy;
 begin
+  FIsOpen:=False;
   FGui.Free;
   inherited Destroy;
 end;
@@ -521,21 +522,22 @@ end;
 
 function TPluginEditor.Open(ptr: Pointer): longint;
 begin
-  FParent := ptr;
-  FGui.ParentWindow := ToIntPtr(FParent);
+  FGui.ParentWindow := ToIntPtr(ptr);
   FGui.Show;
+  FIsOpen:=True;
   Result := 1;
 end;
 
 procedure TPluginEditor.Close;
 begin
   FGui.Hide;
-  FParent := nil;
+  FGui.ParentWindow:=0;
+  FIsOpen:=False;
 end;
 
 function TPluginEditor.IsOpen: boolean;
 begin
-  Result:=FParent<>nil;
+  Result:=FIsOpen;
 end;
 
 procedure TPluginEditor.SetIdleProc(AProc: TProcedureOfObject);

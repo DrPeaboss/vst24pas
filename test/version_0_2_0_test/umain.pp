@@ -87,9 +87,9 @@ var
   s: string;
   f: TFormMain;
 begin
-  Result := inherited Dispatcher(opcode, index, Value, ptr, opt);
   f := tformmain(Editor.Gui);
   Inc(f.opTimes[Ord(opcode)]);
+  Result := inherited Dispatcher(opcode, index, Value, ptr, opt);
   if f.ToggleBoxPause.Checked then exit; // Stop changing UI
   if f.MemoLog.Lines.Count > 1000 then
     f.MemoLog.Clear;

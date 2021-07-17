@@ -24,7 +24,6 @@ type
     ToggleBoxPause: TToggleBox;
     TrackBarGain:   TTrackBar;
     procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
     procedure MenuItemBlockEditIdleClick(Sender: TObject);
     procedure MenuItemClearClick(Sender: TObject);
     procedure TimerTimer(Sender: TObject);
@@ -60,22 +59,17 @@ begin
   AutoChanging := False;
 end;
 
-procedure TFormMain.FormShow(Sender: TObject);
+procedure TFormMain.FormCreate(Sender: TObject);
 var
   i: integer;
 begin
-  // We should add items every time form show because the items will be clear when form hide
+  BlockEditIdle := PopupMenuMemo.Items[1].Checked;
   for i := 0 to Ord(effGetNumMidiOutputChannels) do
     with ListView1.Items.Add do
     begin
       Caption := GetEnumName(typeinfo(TAEffectOpcodes), i);
       SubItems.Add(IntToStr(opTimes[i]));
     end;
-end;
-
-procedure TFormMain.FormCreate(Sender: TObject);
-begin
-  BlockEditIdle := PopupMenuMemo.Items[1].Checked;
 end;
 
 procedure TFormMain.MenuItemBlockEditIdleClick(Sender: TObject);
