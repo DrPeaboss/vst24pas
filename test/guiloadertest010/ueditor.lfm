@@ -46,7 +46,6 @@ object FormEditor: TFormEditor
       Height = 31
       Top = 4
       Width = 94
-      AllowGrayed = True
       Caption = 'Plugin'
       Checked = True
       OnClick = ToggleBoxPlugClick
@@ -58,7 +57,6 @@ object FormEditor: TFormEditor
       Height = 31
       Top = 4
       Width = 94
-      AllowGrayed = True
       Caption = 'Info'
       OnClick = ToggleBoxInfoClick
       TabOrder = 1

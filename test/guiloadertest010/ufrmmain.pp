@@ -66,6 +66,7 @@ begin
     item:=TMenuItem.Create(PopupMenuPlugin.Items.Items[1]);
     item.Name:='Clone'+Chr(i+48);
     item.Caption:='Slot '+Chr(i+48);
+    item.ImageIndex:=-1; { TODO : Test For Linux, fix bugs }
     item.OnClick:=@MenuCloneToClick;
     PopupMenuPlugin.Items.Items[1].Add(item);
     editor:=TFormEditor.Create(Application);
@@ -160,7 +161,7 @@ end;
 procedure TFormPlugManager.UnloadPlugin(ID:Int32);
 begin
   if FEditors[ID].Showing then FEditors[ID].Hide;
-  if FPlugManager.TryUnLoad(ID) then;
+  if FPlugManager.TryUnLoad(ID) then
   begin
     FToggleBoxs[ID].Caption:='Slot '+Chr(ID+48);
     FButtons[ID].Enabled:=True;

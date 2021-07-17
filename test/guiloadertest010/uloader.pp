@@ -149,7 +149,8 @@ var
   i: Integer;
 begin
   for i:=0 to 9 do
-    TryUnLoad(i);
+    if FPlugInfos[i].IsLoaded then
+      TryUnLoad(i);
   inherited Destroy;
 end;
 
