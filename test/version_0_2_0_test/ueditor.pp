@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls, StdCtrls, Menus,
-  vst2interfaces,vst2pluginbase,umain;
+  vst2interfaces,vst2pluginbaseold,umain;
 
 type
 

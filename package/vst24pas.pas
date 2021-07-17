@@ -8,7 +8,9 @@ unit vst24pas;
 interface
 
 uses
-  vst24pas.base, vst24pas.core, vst24pas.utils, vst24pas.gui, vst24pas.new, vst2interfaces, vst2pluginbase;
+  vst24pas.base, vst24pas.core, vst24pas.utils, vst24pas.gui, vst24pas.new, 
+  vst2interfaces, vst2pluginbase, vst2plugingui, vst2hostbase, 
+  vst2pluginbaseold;
 
 implementation
 

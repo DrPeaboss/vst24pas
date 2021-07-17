@@ -1,18 +1,18 @@
 {-------------------------------------------------------------------------------
 //
-// Unit name   : vst2pluginbase
-// Description : Base for vst2 plugin
+// Unit name   : vst2plugingui
+// Description : Gui for vst2 plugin
 // Created by  : PeaZomboss, 2021/07
 -------------------------------------------------------------------------------}
 
-unit vst2pluginbase;
+unit vst2plugingui;
 
-{$mode objfpc}{$H+}
+{$I vcompiler.inc}
 
 interface
 
 uses
-  Classes, SysUtils;
+  vst2pluginbaseold;
 
 implementation
 

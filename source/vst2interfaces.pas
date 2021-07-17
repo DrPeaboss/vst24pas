@@ -4,13 +4,12 @@
 // Description : Basic structures
 // Created by  : PeaZomboss, 2021/07
 -------------------------------------------------------------------------------}
+
 unit vst2interfaces;
 
-{$I vcompiler.inc}
+{$I vcompiler.inc}{$A8}{$Z-}
 
 interface
-
-{$push}{$A8}{$Z1}
 
 const
 // VST version
@@ -345,21 +344,19 @@ type
   PAEffect = ^TAEffect; // forward
 
   // Implemented by host, called by plugin, use opcodes in TAudioMasterOpcodes
-  AudioMasterCallback = function(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32;
-    Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
+  AudioMasterCallback=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
   // Implemented by plugin, called by host, use opcodes in TAEffectOpcodes
-  AEffectDispatcherProc = function(effect: PAEffect; opcode: TAEffectOpcodes; index: Int32;
-    Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
-  AEffectProcessProc = procedure(effect: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
-  AEffectProcessDoubleProc = procedure(effect: PAEffect; inputs, outputs: PPDouble; sampleFrames: Int32); cdecl;
-  AEffectSetParameterProc = procedure(effect: PAEffect; index: Int32; parameter: single); cdecl;
-  AEffectGetParameterProc = function(effect: PAEffect; index: Int32): single; cdecl;
+  AEffectDispatcherProc=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
+  AEffectProcessProc=procedure(effect:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
+  AEffectProcessDoubleProc=procedure(effect:PAEffect;inputs,outputs:PPDouble;sampleFrames:Int32);cdecl;
+  AEffectSetParameterProc=procedure(effect:PAEffect;index:Int32;parameter:single);cdecl;
+  AEffectGetParameterProc=function(effect:PAEffect;index:Int32):single;cdecl;
 
   { set some alias }
 
   THostCallback   = AudioMasterCallback;
   TAEDispatcherCb = AEffectDispatcherProc;
-  TAEProcess32Cb    = AEffectProcessProc;
+  TAEProcess32Cb  = AEffectProcessProc;
   TAEProcess64Cb  = AEffectProcessDoubleProc;
   TAESetParamCb   = AEffectSetParameterProc;
   TAEGetParamCb   = AEffectGetParameterProc;
@@ -411,16 +408,16 @@ const
   kVstMaxVendorStrLen  = 64; // used for effGetVendorString, amGetVendorString
   kVstMaxProductStrLen = 64; // used for effGetProductString, amGetProductString
 
-// Make a unique ID from 4 charactors
-function MakeUniqueID(a,b,c,d:AnsiChar):Int32; inline;
+// Make a Longint from 4 charactors
+function MakeLong(a,b,c,d:AnsiChar):Longint; inline;
 // Cast pointer to IntPtr.
-function FromIntPtr(const arg: IntPtr): Pointer; inline;
+function FromIntPtr(const arg: IntPtr):Pointer; inline;
 // Cast IntPtr to pointer.
-function ToIntPtr(const ptr: Pointer): IntPtr; inline;
+function ToIntPtr(const ptr: Pointer):IntPtr; inline;
 // String copy taking care of null terminator.
-function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
+function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;
 // String concatenation taking care of null terminator.
-function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
+function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;
 
 type
   PPERect = ^PERect;
@@ -1177,7 +1174,8 @@ type
     kVstAutomationReadWrite    // read and write
   );
 
-{$pop}
+function VstEffOpcode2Str(opcode:TAEffectOpcodes):string;
+function VstAmOpcode2Str(opcode:TAudioMasterOpcodes):string;
 
 { FxStore }
 const
@@ -1237,15 +1235,25 @@ type
   end;
 
 // Some useful additional constants
-{ // Not good enough
 const
-  kVstAEffectOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
-  kVstAMasterOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
-}
+  kVstAMOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
+{$if defined(VST_2_4_EXTENSIONS)}
+  kVstEffOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
+{$elseif defined(VST_2_3_EXTENSIONS) or defined(VST_2_2_EXTENSIONS)}
+  kVstEffOpcodeNum = ord(effBeginLoadProgram)+1;
+{$elseif defined(VST_2_1_EXTENSIONS)}
+  kVstEffOpcodeNum = ord(effEndSetProgram)+1;
+{$else}
+  kVstEffOpcodeNum = ord(effGetVstVersion)+1;
+{$endif}
+
 
 implementation
 
-function MakeUniqueID(a, b, c, d: AnsiChar): Int32;
+uses
+  sysutils;
+
+function MakeLong(a, b, c, d: AnsiChar): Int32;
 begin
   Result:=ord(a) shl 24 or ord(b) shl 16 or ord(c) shl 8 or ord(d);
 end;
@@ -1275,6 +1283,154 @@ begin
   Move(Source^, (Dest + Len)^, maxLen - Len);
   Dest[maxLen] := #0;
   Result := Dest;
+end;
+
+function VstEffOpcode2Str(opcode:TAEffectOpcodes):string;
+begin
+  case opcode of
+    effOpen:Result:='effOpen';
+    effClose:Result:='effClose';
+    effSetProgram:Result:='effSetProgram';
+    effGetProgram:Result:='effGetProgram';
+    effSetProgramName:Result:='effSetProgramName';
+    effGetProgramName:Result:='effGetProgramName';
+    effGetParamLabel:Result:='effGetParamLabel';
+    effGetParamDisplay:Result:='effGetParamDisplay';
+    effGetParamName:Result:='effGetParamName';
+    effGetVu:Result:='effGetVu';
+    effSetSampleRate:Result:='effSetSampleRate';
+    effSetBlockSize:Result:='effSetBlockSize';
+    effMainsChanged:Result:='effMainsChanged';
+    effEditGetRect:Result:='effEditGetRect';
+    effEditOpen:Result:='effEditOpen';
+    effEditClose:Result:='effEditClose';
+    effEditDraw:Result:='effEditDraw';
+    effEditMouse:Result:='effEditMouse';
+    effEditKey:Result:='effEditKey';
+    effEditIdle:Result:='effEditIdle';
+    effEditTop:Result:='effEditTop';
+    effEditSleep:Result:='effEditSleep';
+    effIdentify:Result:='effIdentify';
+    effGetChunk:Result:='effGetChunk';
+    effSetChunk:Result:='effSetChunk';
+    effProcessEvents:Result:='effProcessEvents';
+    effCanBeAutomated:Result:='effCanBeAutomated';
+    effString2Parameter:Result:='effString2Parameter';
+    effGetNumProgramCategories:Result:='effGetNumProgramCategories';
+    effGetProgramNameIndexed:Result:='effGetProgramNameIndexed';
+    effCopyProgram:Result:='effCopyProgram';
+    effConnectInput:Result:='effConnectInput';
+    effConnectOutput:Result:='effConnectOutput';
+    effGetInputProperties:Result:='effGetInputProperties';
+    effGetOutputProperties:Result:='effGetOutputProperties';
+    effGetPlugCategory:Result:='effGetPlugCategory';
+    effGetCurrentPosition:Result:='effGetCurrentPosition';
+    effGetDestinationBuffer:Result:='effGetDestinationBuffer';
+    effOfflineNotify:Result:='effOfflineNotify';
+    effOfflinePrepare:Result:='effOfflinePrepare';
+    effOfflineRun:Result:='effOfflineRun';
+    effProcessVarIO:Result:='effProcessVarIO';
+    effSetSpeakerArrangement:Result:='effSetSpeakerArrangement';
+    effSetBlockSizeAndSampleRate:Result:='effSetBlockSizeAndSampleRate';
+    effSetBypass:Result:='effSetBypass';
+    effGetEffectName:Result:='effGetEffectName';
+    effGetErrorText:Result:='effGetErrorText';
+    effGetVendorString:Result:='effGetVendorString';
+    effGetProductString:Result:='effGetProductString';
+    effGetVendorVersion:Result:='effGetVendorVersion';
+    effVendorSpecific:Result:='effVendorSpecific';
+    effGetTailSize:Result:='effGetTailSize';
+    effIdle:Result:='effIdle';
+    effGetIcon:Result:='effGetIcon';
+    effSetViewPosition:Result:='effSetViewPosition';
+    effGetParameterProperties:Result:='effGetParameterProperties';
+    effKeysRequired:Result:='effKeysRequired';
+    effGetVstVersion:Result:='effGetVstVersion';
+{$ifdef VST_2_1_EXTENSIONS}
+    effEditKeyDown:Result:='effEditKeyDown';
+    effEditKeyUp:Result:='effEditKeyUp';
+    effSetEditKnobMode:Result:='effSetEditKnobMode';
+    effGetMidiProgramName:Result:='effGetMidiProgramName';
+    effGetCurrentMidiProgram:Result:='effGetCurrentMidiProgram';
+    effGetMidiProgramCategory:Result:='effGetMidiProgramCategory';
+    effHasMidiProgramsChanged:Result:='effHasMidiProgramsChanged';
+    effGetMidiKeyName:Result:='effGetMidiKeyName';
+    effBeginSetProgram:Result:='effBeginSetProgram';
+    effEndSetProgram:Result:='effEndSetProgram';
+{$endif}
+{$ifdef VST_2_3_EXTENSIONS}
+    effGetSpeakerArrangement:Result:='effGetSpeakerArrangement';
+    effShellGetNextPlugin:Result:='effShellGetNextPlugin';
+    effStartProcess:Result:='effStartProcess';
+    effStopProcess:Result:='effStopProcess';
+    effSetTotalSampleToProcess:Result:='effSetTotalSampleToProcess';
+    effSetPanLaw:Result:='effSetPanLaw';
+    effBeginLoadBank:Result:='effBeginLoadBank';
+    effBeginLoadProgram:Result:='effBeginLoadProgram';
+{$endif}
+{$ifdef VST_2_4_EXTENSIONS}
+    effSetProcessPrecision:Result:='effSetProcessPrecision';
+    effGetNumMidiInputChannels:Result:='effGetNumMidiInputChannels';
+    effGetNumMidiOutputChannels:Result:='effGetNumMidiOutputChannels';
+{$endif}
+  else Result:='Unknown opcode '+IntToStr(Integer(opcode));
+  end;
+end;
+
+function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
+begin
+  case opcode of
+    amAutomate:Result:='amAutomate';
+    amVersion:Result:='amVersion';
+    amCurrentId:Result:='amCurrentId';
+    amIdle:Result:='amIdle';
+    amPinConnected:Result:='amPinConnected';
+    amWantMidi:Result:='amWantMidi';
+    amGetTime:Result:='amGetTime';
+    amProcessEvents:Result:='amProcessEvents';
+    amSetTime:Result:='amSetTime';
+    amTempoAt:Result:='amTempoAt';
+    amGetNumAutomatableParameters:Result:='amGetNumAutomatableParameters';
+    amGetParameterQuantization:Result:='amGetParameterQuantization';
+    amIOChanged:Result:='amIOChanged';
+    amNeedIdle:Result:='amNeedIdle';
+    amSizeWindow:Result:='amSizeWindow';
+    amGetSampleRate:Result:='amGetSampleRate';
+    amGetBlockSize:Result:='amGetBlockSize';
+    amGetInputLatency:Result:='amGetInputLatency';
+    amGetOutputLatency:Result:='amGetOutputLatency';
+    amGetPreviousPlug:Result:='amGetPreviousPlug';
+    amGetNextPlug:Result:='amGetNextPlug';
+    amWillReplaceOrAccumulate:Result:='amWillReplaceOrAccumulate';
+    amGetCurrentProcessLevel:Result:='amGetCurrentProcessLevel';
+    amGetAutomationState:Result:='amGetAutomationState';
+    amOfflineStart:Result:='amOfflineStart';
+    amOfflineRead:Result:='amOfflineRead';
+    amOfflineWrite:Result:='amOfflineWrite';
+    amOfflineGetCurrentPass:Result:='amOfflineGetCurrentPass';
+    amOfflineGetCurrentMetaPass:Result:='amOfflineGetCurrentMetaPass';
+    amSetOutputSampleRate:Result:='amSetOutputSampleRate';
+    amGetOutputSpeakerArrangement:Result:='amGetOutputSpeakerArrangement';
+    amGetVendorString:Result:='amGetVendorString';
+    amGetProductString:Result:='amGetProductString';
+    amGetVendorVersion:Result:='amGetVendorVersion';
+    amVendorSpecific:Result:='amVendorSpecific';
+    amSetIcon:Result:='amSetIcon';
+    amCanDo:Result:='amCanDo';
+    amGetLanguage:Result:='amGetLanguage';
+    amOpenWindow:Result:='amOpenWindow';
+    amCloseWindow:Result:='amCloseWindow';
+    amGetDirectory:Result:='amGetDirectory';
+    amUpdateDisplay:Result:='amUpdateDisplay';
+    amBeginEdit:Result:='amBeginEdit';
+    amEndEdit:Result:='amEndEdit';
+    amOpenFileSelector:Result:='amOpenFileSelector';
+    amCloseFileSelector:Result:='amCloseFileSelector';
+    amEditFile:Result:='amEditFile';
+    amGetChunkFile:Result:='amGetChunkFile';
+    amGetInputSpeakerArrangement:Result:='amGetInputSpeakerArrangement';
+  else Result:='Unknown opcode '+IntToStr(Integer(opcode));
+  end;
 end;
 
 { TVstFileType }

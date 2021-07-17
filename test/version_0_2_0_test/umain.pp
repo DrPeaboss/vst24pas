@@ -5,10 +5,7 @@ unit umain;
 interface
 
 uses
-  vst2pluginbase, vst2interfaces;
-
-const
-  BigNum = 100000000;
+  vst2pluginbaseold, vst2interfaces;
 
 type
 

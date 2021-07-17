@@ -1,13 +1,13 @@
 {-------------------------------------------------------------------------------
 //
-// Unit name   : vst2pluginbase
-// Description : Base for vst2 plugin
+// Unit name   : vst2hostbase
+// Description : Base for vst2 host
 // Created by  : PeaZomboss, 2021/07
 -------------------------------------------------------------------------------}
 
-unit vst2pluginbase;
+unit vst2hostbase;
 
-{$mode objfpc}{$H+}
+{$I vcompiler.inc}
 
 interface
 

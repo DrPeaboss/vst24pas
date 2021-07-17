@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="vst24pas"/>
     <Author Value="PeaZomboss"/>
@@ -43,7 +43,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
     <Version Minor="2"/>
-    <Files Count="9">
+    <Files Count="12">
       <Item1>
         <Filename Value="..\source\vst24pas.inc"/>
         <Type Value="Include"/>
@@ -80,7 +80,20 @@ IN THE SOFTWARE.
         <Filename Value="..\source\vst2pluginbase.pas"/>
         <UnitName Value="vst2pluginbase"/>
       </Item9>
+      <Item10>
+        <Filename Value="..\source\vst2plugingui.pas"/>
+        <UnitName Value="vst2plugingui"/>
+      </Item10>
+      <Item11>
+        <Filename Value="..\source\vst2hostbase.pas"/>
+        <UnitName Value="vst2hostbase"/>
+      </Item11>
+      <Item12>
+        <Filename Value="..\source\vst2pluginbaseold.pas"/>
+        <UnitName Value="vst2pluginbaseold"/>
+      </Item12>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="LCL"/>
