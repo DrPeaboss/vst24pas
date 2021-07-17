@@ -7,7 +7,9 @@ object FormPlugManager: TFormPlugManager
   ClientHeight = 410
   ClientWidth = 461
   DesignTimePPI = 120
+  OnClose = FormClose
   OnCreate = FormCreate
+  LCLVersion = '2.0.12.0'
   object PanelPlugs: TPanel
     Left = 16
     Height = 385
@@ -34,6 +36,7 @@ object FormPlugManager: TFormPlugManager
     Top = 197
     object MenuItemUnload: TMenuItem
       Caption = 'Unload'
+      OnClick = MenuItemUnloadClick
     end
     object MenuItemCloneTo: TMenuItem
       Caption = 'CloneTo'

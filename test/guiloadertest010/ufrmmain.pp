@@ -20,6 +20,7 @@ type
     PanelPlugs: TPanel;
     PopupMenuPlugin:TPopupMenu;
     procedure ButtonUnloadAllClick(Sender:TObject);
+    procedure FormClose(Sender:TObject; var CloseAction:TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure MenuItemUnloadClick(Sender:TObject);
     procedure PopupMenuPluginPopup(Sender:TObject);
@@ -34,6 +35,7 @@ type
     procedure BoxSlotClick(Sender: TObject);
     procedure MenuCloneToClick(Sender:TObject);
     procedure ShowEditor(ID:Int32);
+    procedure ReInitEditor(ID:Int32);
   public
     procedure UncheckBox(ID:Int32);
     procedure ResizeEditor(ID,W,H:Integer);
@@ -70,6 +72,7 @@ begin
     item.OnClick:=@MenuCloneToClick;
     PopupMenuPlugin.Items.Items[1].Add(item);
     editor:=TFormEditor.Create(Application);
+    editor.Name:='editor'+Chr(i+48);
     editor.Left:=30*i;
     editor.Top:=15*i;
     editor.ID:=i;
@@ -101,17 +104,31 @@ end;
 
 procedure TFormPlugManager.ButtonUnloadAllClick(Sender:TObject);
 var
-  i,count:Integer;
+  i:Integer;
 begin
   if IsConsole then Writeln('Unload all plugins clicked');
-  count:=0;
-  for i:=0 to 9 do
-    if FPlugManager.IsPlugLoaded(i) then
-    begin
-      UnloadPlugin(i);
-      inc(count);
-    end;
-  if IsConsole then Writeln('Unloaded ',count,' plugins');
+  if FPlugManager.PlugNumber>0 then
+    for i:=0 to 9 do
+      if FPlugManager.IsPlugLoaded(i) then
+        UnloadPlugin(i);
+  if IsConsole then Writeln('Unloaded ',FPlugManager.PlugNumber,' plugins');
+end;
+
+procedure TFormPlugManager.FormClose(Sender:TObject; var CloseAction:TCloseAction);
+var
+  i:Integer;
+begin
+  if FPlugManager.PlugNumber>0 then
+  begin
+    if IsConsole then
+      Writeln('Main form close, there are still ',FPlugManager.PlugNumber,' plugins loaded');
+    for i:=0 to 9 do
+      if FPlugManager.IsPlugLoaded(i) then
+        UnloadPlugin(i);
+    if IsConsole then Writeln('Unloaded all these plugins');
+  end;
+  FPlugManager.Free;
+  CloseAction:=caFree;
 end;
 
 procedure TFormPlugManager.MenuItemUnloadClick(Sender:TObject);
@@ -168,6 +185,7 @@ begin
     FToggleBoxs[ID].Checked:=False;
     FToggleBoxs[ID].Enabled:=False;
     FEditors[ID].Reinitialize;
+    //ReInitEditor(ID);
   end;
 end;
 
@@ -211,13 +229,23 @@ end;
 
 procedure TFormPlugManager.ShowEditor(ID:Int32);
 begin
-  if FToggleBoxs[ID].Checked then
-  begin
-    if FPlugManager.HasEditor(ID) then
-      FEditors[ID].Show;
-  end else begin
-    FEditors[ID].Hide;
-  end;
+  if FPlugManager.IsPlugLoaded(ID) then
+    if FToggleBoxs[ID].Checked then
+    begin
+      if FPlugManager.HasEditor(ID) then
+        FEditors[ID].Show;
+    end else begin
+      FEditors[ID].Hide;
+    end;
+end;
+
+procedure TFormPlugManager.ReInitEditor(ID:Int32);
+begin
+  FEditors[ID].Free;
+  FEditors[ID]:=TFormEditor.Create(Application);
+  FEditors[ID].Width:=30*ID;
+  FEditors[ID].Height:=15*ID;
+  FEditors[ID].ID:=ID;
 end;
 
 procedure TFormPlugManager.UncheckBox(ID:Int32);

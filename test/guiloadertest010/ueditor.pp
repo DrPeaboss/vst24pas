@@ -104,6 +104,8 @@ begin
   FEditorOpening:=True;
   AEffect:=nil;
   FPluginfo.Visible:=False;
+  ToggleBoxPlug.Checked:=True;
+  ToggleBoxInfo.Checked:=False;
   for i:=0 to FPluginfo.ListViewInfo.Items.Count-1 do
     FPluginfo.ListViewInfo.Items.Item[i].SubItems.Clear;
 end;
