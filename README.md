@@ -4,7 +4,11 @@ vst2.4 for pascal
 
 The pascal implementation of VST 2.4
 
-You can use it to develop a vst plugin with lcl or vcl. But limited to my level, there may be bugs.
+You can use it to develop a vst2 plugin with lcl or vcl for win32, win64 and even native linux. Though in linux is not stable.
+
+I recommend not use lcl if you want to build linux plugin.
+
+Limited to my level, there may be bugs.
 
 ## install and use
 

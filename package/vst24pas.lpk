@@ -42,7 +42,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
-    <Version Minor="1"/>
+    <Version Minor="1" Release="1"/>
     <Files Count="6">
       <Item1>
         <Filename Value="..\source\vst24pas.inc"/>
