@@ -1,0 +1,48 @@
+object FormTest2: TFormTest2
+  Left = 341
+  Height = 463
+  Top = 153
+  Width = 771
+  Caption = 'FormTest2'
+  ClientHeight = 463
+  ClientWidth = 771
+  DesignTimePPI = 120
+  OnCreate = FormCreate
+  LCLVersion = '2.2.0.1'
+  object TrackBarGain: TTrackBar
+    Left = 16
+    Height = 31
+    Top = 16
+    Width = 280
+    Frequency = 100
+    Max = 2000
+    OnChange = TrackBarGainChange
+    Position = 1000
+    ShowSelRange = False
+    OnMouseDown = TrackBarGainMouseDown
+    OnMouseUp = TrackBarGainMouseUp
+    TabOrder = 0
+  end
+  object LabelGain: TLabel
+    Left = 320
+    Height = 20
+    Top = 16
+    Width = 32
+    Caption = 'Gain'
+  end
+  object MemoLog: TMemo
+    Left = 11
+    Height = 386
+    Top = 58
+    Width = 736
+    Font.CharSet = ANSI_CHARSET
+    Font.Height = -18
+    Font.Name = 'Consolas'
+    Font.Pitch = fpFixed
+    Font.Quality = fqDraft
+    ParentFont = False
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 1
+  end
+end

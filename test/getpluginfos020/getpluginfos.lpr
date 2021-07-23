@@ -3,11 +3,12 @@ program getpluginfos;
 uses
   {$ifdef linux}dynlibs,{$endif}
   SysUtils,
-  vst2interfaces;
+  vst2intf;
 
 const
-  DllName = '..\version_0_2_0_test\v020test.dll';
+  //DllName = '..\version_0_2_0_test\v020test.dll';
   //DllName = '..\..\examples\lazarus\bin\example5.dll';
+  DllName = '..\version_0_2_x_tests\v02xtest2.dll';
   //DllName64 = '..\..\examples\lazarus\bin\example5_x64.dll';
   DllName64 = '..\version_0_2_0_test\v020test_x64.dll';
 
@@ -19,11 +20,11 @@ type
     Result := '"' + char(id shr 24) + char(id shr 16) + char(id shr 8) + char(id) + '"';
   end;
 
-  function HostCallBack(effect: PAEffect; opcode: TAudioMasterOpcodes; index: Int32;
+  function HostCallBack(effect: PAEffect; opcode, index: Int32;
     Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
   begin
     Result := 0;
-    case opcode of
+    case TAudioMasterOpcodes(opcode) of
       amVersion: Result := 2400;
       amGetBlockSize: Result := 512;
       amGetLanguage: Result := Ord(kVstLangUnknown);
@@ -126,35 +127,35 @@ begin
       Write(flag, ' ');
     Writeln;
     Writeln('---------------- Start dispatcher -------------------');
-    effect^.Dispatcher(effect, effOpen, 0, 0, nil, 0);
-    effect^.Dispatcher(effect, effSetSampleRate, 0, 0, nil, 44100);
-    effect^.Dispatcher(effect, effSetBlockSize, 0, 512, nil, 0);
-    effect^.Dispatcher(effect, effMainsChanged, 0, 1, nil, 0);
-    Writeln('Vst version is ', effect^.Dispatcher(effect, effGetVstVersion, 0, 0, nil, 0));
-    effect^.Dispatcher(effect, effGetEffectName, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effOpen), 0, 0, nil, 0);
+    effect^.Dispatcher(effect, ord(effSetSampleRate), 0, 0, nil, 44100);
+    effect^.Dispatcher(effect, ord(effSetBlockSize), 0, 512, nil, 0);
+    effect^.Dispatcher(effect, ord(effMainsChanged), 0, 1, nil, 0);
+    Writeln('Vst version is ', effect^.Dispatcher(effect, ord(effGetVstVersion), 0, 0, nil, 0));
+    effect^.Dispatcher(effect, ord(effGetEffectName), 0, 0, @buffer, 0);
     Writeln('Effect name is ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effGetVendorString, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetVendorString), 0, 0, @buffer, 0);
     Writeln('Vendor string is ', buffer);
     buffer[0] := #0;
-    Writeln('Vendor version is ', effect^.Dispatcher(effect, effGetVendorVersion, 0, 0, nil, 0));
-    effect^.Dispatcher(effect, effGetProductString, 0, 0, @buffer, 0);
+    Writeln('Vendor version is ', effect^.Dispatcher(effect, ord(effGetVendorVersion), 0, 0, nil, 0));
+    effect^.Dispatcher(effect, ord(effGetProductString), 0, 0, @buffer, 0);
     Writeln('Product string is ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effGetParamName, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetParamName), 0, 0, @buffer, 0);
     Writeln('Parameter 0 name is ', buffer);
     buffer[0] := #0;
     Writeln('Parameter 0 default is ', effect^.GetParameter(effect, 0): 7: 7);
-    effect^.Dispatcher(effect, effGetParamLabel, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetParamLabel), 0, 0, @buffer, 0);
     Writeln('Parameter 0 label is ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effGetParamDisplay, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetParamDisplay), 0, 0, @buffer, 0);
     Writeln('Parameter 0 display is ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effGetProgramName, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetProgramName), 0, 0, @buffer, 0);
     Writeln('Current program name is ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effEditGetRect, 0, 0, @rect, 0);
+    effect^.Dispatcher(effect, ord(effEditGetRect), 0, 0, @rect, 0);
     if Assigned(rect) then
       Writeln('Rect L T R B is ', rect^.Left, ' ', rect^.Top, ' ', rect^.Right, ' ', rect^.Bottom);
 
@@ -164,13 +165,13 @@ begin
 
     // Process test
     effect^.SetParameter(effect, 0, 0.1);
-    effect^.Dispatcher(effect, effGetParamName, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetParamName), 0, 0, @buffer, 0);
     Write('Parameter 0: ', 0.1: 3: 3, ' ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effGetParamDisplay, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetParamDisplay), 0, 0, @buffer, 0);
     Write(' ', buffer);
     buffer[0] := #0;
-    effect^.Dispatcher(effect, effGetParamLabel, 0, 0, @buffer, 0);
+    effect^.Dispatcher(effect, ord(effGetParamLabel), 0, 0, @buffer, 0);
     Writeln(' ', buffer);
     buffer[0] := #0;
 
@@ -182,7 +183,7 @@ begin
       Write(i, ' | inputs', ': L=', inputs[0][i]: 3: 3, ' R=', inputs[1][i]: 3: 3);
       Writeln(' | outputs', ': L=', outputs[0][i]: 3: 3, ' R=', outputs[1][i]: 3: 3);
     end;
-    effect^.Dispatcher(effect, effClose, 0, 0, nil, 0);
+    effect^.Dispatcher(effect, ord(effClose), 0, 0, nil, 0);
   except
     on E: Exception do
       Writeln(E.ClassName, ': ', E.Message);
