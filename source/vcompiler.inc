@@ -1,14 +1,18 @@
 { Compiler Directives }
 
 {$ifdef FPC}
-  {$mode Delphi}
+  {$mode delphi}
+  {$PointerMath on} // In delphi mode, FPC default close
+  {$ifopt D+}
+    {$define debug}
+  {$endif}
 {$endif}
 
-// Define VST Version
-{$define VST_2_1_EXTENSIONS} // Version 2.1 extensions (08-06-2000)
-{$define VST_2_2_EXTENSIONS} // Version 2.2 extensions (08-06-2001)
-{$define VST_2_3_EXTENSIONS} // Version 2.3 extensions (20-05-2003)
-{$define VST_2_4_EXTENSIONS} // Version 2.4 extensions (01-01-2006)
+// Define VST Version extensions
+{$define VST_2_1_EXTENSIONS} // 2.1 (2000/06/08)
+{$define VST_2_2_EXTENSIONS} // 2.2 (2001/06/08)
+{$define VST_2_3_EXTENSIONS} // 2.3 (2003/05/20)
+{$define VST_2_4_EXTENSIONS} // 2.4 (2006/01/01)
 
 // Disable for Hosts to serve Plug-ins below VST 2.4
 {$ifdef VST_2_4_EXTENSIONS}

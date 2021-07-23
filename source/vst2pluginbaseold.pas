@@ -1,5 +1,5 @@
 {-------------------------------------------------------------------------------
-//
+// This unit is part of vst24pas
 // Unit name   : vst2pluginbase
 // Description : Classes for vst2 plugin (old)
 // Created by  : PeaZomboss, 2021/07
@@ -12,7 +12,7 @@ unit vst2pluginbaseold;
 interface
 
 uses
-  vst2interfaces,forms,sysutils;
+  vst2intf,forms,sysutils;
 
 type
   // Vendor specific function for effVendorSpecific and amVendorSpecific
@@ -257,7 +257,7 @@ type
 
 // Here are callback functions used in AEffect
 
-function DispatchEffectCb(e: PAEffect; opcode: TAEffectOpcodes; index: Int32;
+function DispatchEffectCb(e: PAEffect; opcode, index: Int32;
     Value: IntPtr; ptr: Pointer; opt: single): IntPtr; cdecl;
 function GetParameterCb(e: PAEffect; index: Int32): single; cdecl;
 procedure SetParameterCb(e: PAEffect; index: Int32; value: single); cdecl;
@@ -286,19 +286,19 @@ implementation
 uses
   Controls,Math;
 
-function DispatchEffectCb(e: PAEffect; opcode: TAEffectOpcodes; index: Int32; Value: IntPtr; ptr: Pointer;
+function DispatchEffectCb(e: PAEffect; opcode, index: Int32; Value: IntPtr; ptr: Pointer;
   opt: single): IntPtr; cdecl;
 var
   v:TPluginComponent;
 begin
   v:=TPluginComponent(e^.pObject);
-  if opcode=effClose then
+  if opcode=ord(effClose) then
   begin
-    v.Dispatcher(opcode,index,value,ptr,opt);
+    v.Dispatcher(TAEffectOpcodes(opcode),index,value,ptr,opt);
     v.Free;
     Exit(1);
   end;
-  Result:=v.Dispatcher(opcode,index,value,ptr,opt);
+  Result:=v.Dispatcher(TAEffectOpcodes(opcode),index,value,ptr,opt);
 end;
 
 function GetParameterCb(e: PAEffect; index: Int32): single; cdecl;
@@ -670,7 +670,7 @@ begin
     effSetSampleRate: FSampleRate := opt;
     effSetBlockSize: FBlockSize := Value;
     effMainsChanged: if value=1 then begin
-                       if (CanDo(TPlugCanDos.CanDoReceiveVstMidiEvent)=1) or
+                       if (CanDo(TPlugCanDos.cdReceiveVstMidiEvent)=1) or
                           (effFlagsIsSynth in FEffect.Flags) then
                           FHost(@FEffect,ord(amWantMidi),0,1,nil,0);
                        if Assigned(FEffTurnOn) then FEffTurnOn;

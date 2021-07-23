@@ -1,13 +1,15 @@
 {-------------------------------------------------------------------------------
-//
-// Unit name   : vst2interfaces
-// Description : Basic structures
+// This unit is part of vst24pas
+// Unit name   : vst2intf
+// Description : Basic structures and interfaces
 // Created by  : PeaZomboss, 2021/07
+
+// All plugins and hosts are depended on this unit
 -------------------------------------------------------------------------------}
 
-unit vst2interfaces;
+unit vst2intf;
 
-{$I vcompiler.inc}{$A8}{$Z-}
+{$I vcompiler.inc}{$A8}{$Z1}
 
 interface
 
@@ -25,50 +27,47 @@ const
   kVstVersion = 2;
 {$endif}
 
-// AEffect magic number
-{$ifdef ENDIAN_LITTLE}
-  kEffectMagic = $56737450;
-{$else}
-  kEffectMagic = $50747356;
-{$endif}
+  // AEffect magic number
+  kEffectMagic = $56737450; // Big endian
+  kVstMagic = 'VstP'; // Little endian str
 
 type
-  // hostCanDos strings Plug-in
+  // HostCanDos strings Plug-in
   THostCanDos = record
   const
-    CanDoSendVstEvents  = 'sendVstEvents'; // Host supports send of Vst events to plug-in
-    CanDoSendVstMidiEvent = 'sendVstMidiEvent'; // Host supports send of MIDI events to plug-in
-    CanDoSendVstTimeInfo = 'sendVstTimeInfo'; // Host supports send of VstTimeInfo to plug-in
-    CanDoReceiveVstEvents = 'receiveVstEvents'; // Host can receive Vst events from plug-in
-    CanDoReceiveVstMidiEvent = 'receiveVstMidiEvent'; // Host can receive MIDI events from plug-in
+    cdSendVstEvents  = 'sendVstEvents'; // Host supports send of Vst events to plug-in
+    cdSendVstMidiEvent = 'sendVstMidiEvent'; // Host supports send of MIDI events to plug-in
+    cdSendVstTimeInfo = 'sendVstTimeInfo'; // Host supports send of VstTimeInfo to plug-in
+    cdReceiveVstEvents = 'receiveVstEvents'; // Host can receive Vst events from plug-in
+    cdReceiveVstMidiEvent = 'receiveVstMidiEvent'; // Host can receive MIDI events from plug-in
     // Host will indicates the plug-in when something change in plug-in's
     // routing/connections with suspend/resume/setSpeakerArrangement
-    CanDoReportConnectionChanges = 'reportConnectionChanges';
-    CanDoAcceptIOChanges = 'acceptIOChanges'; // Host supports ioChanged ()
-    CanDoSizeWindow = 'sizeWindow'; // used by VSTGUI
-    CanDoOffline = 'offline'; // Host supports offline feature
-    CanDoOpenFileSelector = 'openFileSelector'; // Host supports function openFileSelector ()
-    CanDoCloseFileSelector = 'closeFileSelector'; // Host supports function closeFileSelector ()
-    CanDoStartStopProcess = 'startStopProcess'; // Host supports functions startProcess () and stopProcess ()
+    cdReportConnectionChanges = 'reportConnectionChanges';
+    cdAcceptIOChanges = 'acceptIOChanges'; // Host supports ioChanged ()
+    cdSizeWindow = 'sizeWindow'; // used by VSTGUI
+    cdOffline = 'offline'; // Host supports offline feature
+    cdOpenFileSelector = 'openFileSelector'; // Host supports function openFileSelector ()
+    cdCloseFileSelector = 'closeFileSelector'; // Host supports function closeFileSelector ()
+    cdStartStopProcess = 'startStopProcess'; // Host supports functions startProcess () and stopProcess ()
     // 'shell' handling via uniqueID.
     // If supported by the Host and the Plug-in has the category kPlugCategShell
-    CanDoShellCategory = 'shellCategory';
-    CanDoSendVstMidiEventFlagIsRealtime = 'sendVstMidiEventFlagIsRealtime'; // Host supports flags for TVstMidiEvent
+    cdShellCategory = 'shellCategory';
+    cdSendVstMidiEventFlagIsRealtime = 'sendVstMidiEventFlagIsRealtime'; // Host supports flags for TVstMidiEvent
   end;
 
-  // plugCanDos strings Host
+  // PlugCanDos strings Host
   TPlugCanDos = record
   const
-    CanDoSendVstEvents = 'sendVstEvents'; // plug-in will send Vst events to Host
-    CanDoSendVstMidiEvent = 'sendVstMidiEvent'; // plug-in will send MIDI events to Host
-    CanDoReceiveVstEvents = 'receiveVstEvents'; // plug-in can receive MIDI events from Host
-    CanDoReceiveVstMidiEvent = 'receiveVstMidiEvent'; // plug-in can receive MIDI events from Host
-    CanDoReceiveVstTimeInfo = 'receiveVstTimeInfo'; // plug-in can receive Time info from Host
-    CanDoOffline = 'offline'; // plug-in supports offline functions (offlineNotify, offlinePrepare, offlineRun)
-    CanDoBypass = 'bypass'; // plug-in supports function setBypass ()
-    CanDoMidiProgramNames = 'midiProgramNames'; // plug-in supports function getMidiProgramName ()
+    cdSendVstEvents = 'sendVstEvents'; // plug-in will send Vst events to Host
+    cdSendVstMidiEvent = 'sendVstMidiEvent'; // plug-in will send MIDI events to Host
+    cdReceiveVstEvents = 'receiveVstEvents'; // plug-in can receive MIDI events from Host
+    cdReceiveVstMidiEvent = 'receiveVstMidiEvent'; // plug-in can receive MIDI events from Host
+    cdReceiveVstTimeInfo = 'receiveVstTimeInfo'; // plug-in can receive Time info from Host
+    cdOffline = 'offline'; // plug-in supports offline functions (offlineNotify, offlinePrepare, offlineRun)
+    cdBypass = 'bypass'; // plug-in supports function setBypass ()
+    cdMidiProgramNames = 'midiProgramNames'; // plug-in supports function getMidiProgramName ()
     // Found in FL Studio 20
-    CanDoSupportsViewDpiScaling = 'supportsViewDpiScaling'; // plug-in's editor support DPI scaling
+    cdSupportsViewDpiScaling = 'supportsViewDpiScaling'; // plug-in's editor support DPI scaling
   end;
 
   // Basic types
@@ -92,6 +91,81 @@ type
   TBuffer32 = PPSingle;
   TBuffer64 = PPDouble;
 {$endif}
+
+  PAEffect = ^TAEffect; // forward
+
+  // Implemented by host, called by plugin, use opcodes in TAudioMasterOpcodes
+  AudioMasterCallback=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
+  // Implemented by plugin, called by host, use opcodes in TAEffectOpcodes
+  AEffectDispatcherProc=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
+  AEffectProcessProc=procedure(effect:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
+  AEffectProcessDoubleProc=procedure(effect:PAEffect;inputs,outputs:PPDouble;sampleFrames:Int32);cdecl;
+  AEffectSetParameterProc=procedure(effect:PAEffect;index:Int32;parameter:single);cdecl;
+  AEffectGetParameterProc=function(effect:PAEffect;index:Int32):single;cdecl;
+
+  // Set some alias
+
+  TAMCallback     = AudioMasterCallback;
+  THostCallback   = AudioMasterCallback;
+  TAEDispatcherCb = AEffectDispatcherProc;
+  TAEProcess32Cb  = AEffectProcessProc;
+  TAEProcess64Cb  = AEffectProcessDoubleProc;
+  TAESetParamCb   = AEffectSetParameterProc;
+  TAEGetParamCb   = AEffectGetParameterProc;
+
+  TVstAEffectFlag  = (
+    effFlagsHasEditor, // 1<<0 set if the plug-in provides a custom editor
+    effFlagsHasClip,   // 1<<1 deprecated
+    effFlagsHasVu,     // 1<<2 deprecated
+    effFlagsCanMono,   // 1<<3 deprecated
+    effFlagsCanReplacing,  // 1<<4 supports replacing process mode (which should the default mode in VST 2.4)
+    effFlagsProgramChunks, // 1<<5 program data is handled in formatless chunks
+    effFlagsIsSynth=8,     // 1<<8  plug-in is a synth (VSTi), Host may assign mixer channels for its outputs
+    effFlagsNoSoundInStop, // 1<<9  plug-in does not produce sound when input is all silence
+    effFlagsExtIsAsync,    // 1<<10 deprecated
+    effFlagsExtHasBuffer   // 1<<11 deprecated
+{$ifdef VST_2_4_EXTENSIONS}
+    , effFlagsCanDoubleReplacing // 1<<12 plug-in supports double precision processing
+{$endif} );
+  // AEffect flags
+  TVstAEffectFlags = set of TVstAEffectFlag;
+
+  // Audio effect structure define
+  TAEffect = record
+    Magic:         Int32;  // must be kEffectMagic
+    Dispatcher:    TAEDispatcherCb; // Host to Plug-in dispatcher
+    Process:       TAEProcess32Cb; // deprecated, default process callback function before 2.4
+    SetParameter:  TAESetParamCb; // Set new value of automatable parameter
+    GetParameter:  TAEGetParamCb; // Returns current value of automatable parameter
+    NumPrograms:   Int32;  // number of programs, or we can say presets
+    NumParams:     Int32;  // number of parameters, all parameter are included in preset
+    NumInputs:     Int32;  // number of audio inputs
+    NumOutputs:    Int32;  // number of audio outputs
+    Flags:         TVstAEffectFlags; // See TVstAEffectFlags
+    Resvd1:        IntPtr; // reserved for Host, must be 0
+    Resvd2:        IntPtr; // reserved for Host, must be 0
+    { For algorithms which need input in the first place(Group delay or latency in Samples).
+      This value should be initialized in a resume state. }
+    InitialDelay:  Int32;
+    RealQualities: Int32;   // deprecated unused member
+    OffQualities:  Int32;   // deprecated unused member
+    IORatio:       single;  // deprecated unused member
+    pObject:       Pointer; // The plugin class pointer, see vst2pluginbase unit
+    User:          Pointer; // user-defined pointer
+    { Registered unique identifier(register it at Steinberg 3rd party support Web).
+      This is used to identify a plug-in during save+load of preset and project. }
+    UniqueID:      Int32;
+    Version:       Int32; // plug-in version (example 1100 for version 1.1.0.0)
+    ProcessReplacing: TAEProcess32Cb; // Process audio samples in replacing mode, default in 2.4
+{$ifdef VST_2_4_EXTENSIONS}
+    // Process double-precision audio samples in replacing mode, optional in 2.4
+    ProcessDoubleReplacing: TAEProcess64Cb;
+    Future: array[0..55] of byte; // reserved for future use (please zero)
+{$else}
+    Future: array[0..59] of byte; // reserved for future use (please zero)
+{$endif}
+  end;
+
 
   // Basic dispatcher Opcodes (Host to Plug-in)
   TAEffectOpcodes = (
@@ -139,7 +213,7 @@ type
     {[index]: parameter index [return value]: 1=true, 0=false. Whether the parameter can be automated }
     effCanBeAutomated,
     {[index]: parameter index [ptr]: parameter string [return value]: true for success.
-     Not used most of the time, try string value to parameter value(float) }
+     Not used most of the time, try string value to parameter value (float) }
     effString2Parameter,
     effGetNumProgramCategories, // deprecated. unknown
     {[index]: program index [value]: category, deprecated, set -1
@@ -324,83 +398,16 @@ type
     amGetInputSpeakerArrangement // deprecated. [return value]: PVstSpeakerArrangement
   );
 
-  TVstAEffectFlag  = (
-    effFlagsHasEditor, // 1<<0 set if the plug-in provides a custom editor
-    effFlagsHasClip,   // 1<<1 deprecated
-    effFlagsHasVu,     // 1<<2 deprecated
-    effFlagsCanMono,   // 1<<3 deprecated
-    effFlagsCanReplacing,  // 1<<4 supports replacing process mode (which should the default mode in VST 2.4)
-    effFlagsProgramChunks, // 1<<5 program data is handled in formatless chunks
-    effFlagsIsSynth=8,     // 1<<8  plug-in is a synth (VSTi), Host may assign mixer channels for its outputs
-    effFlagsNoSoundInStop, // 1<<9  plug-in does not produce sound when input is all silence
-    effFlagsExtIsAsync,    // 1<<10 deprecated
-    effFlagsExtHasBuffer   // 1<<11 deprecated
-{$ifdef VST_2_4_EXTENSIONS}
-    , effFlagsCanDoubleReplacing // 1<<12 plug-in supports double precision processing
-{$endif} );
-  // AEffect flags
-  TVstAEffectFlags = set of TVstAEffectFlag;
-
-  PAEffect = ^TAEffect; // forward
-
-  // Implemented by host, called by plugin, use opcodes in TAudioMasterOpcodes
-  AudioMasterCallback=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
-  // Implemented by plugin, called by host, use opcodes in TAEffectOpcodes
-  AEffectDispatcherProc=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
-  AEffectProcessProc=procedure(effect:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
-  AEffectProcessDoubleProc=procedure(effect:PAEffect;inputs,outputs:PPDouble;sampleFrames:Int32);cdecl;
-  AEffectSetParameterProc=procedure(effect:PAEffect;index:Int32;parameter:single);cdecl;
-  AEffectGetParameterProc=function(effect:PAEffect;index:Int32):single;cdecl;
-
-  { set some alias }
-
-  THostCallback   = AudioMasterCallback;
-  TAEDispatcherCb = AEffectDispatcherProc;
-  TAEProcess32Cb  = AEffectProcessProc;
-  TAEProcess64Cb  = AEffectProcessDoubleProc;
-  TAESetParamCb   = AEffectSetParameterProc;
-  TAEGetParamCb   = AEffectGetParameterProc;
-
-  // Audio effect structure define
-  TAEffect = record
-    Magic:         Int32;  // must be kEffectMagic
-    Dispatcher:    TAEDispatcherCb; // Host to Plug-in dispatcher
-    Process:       TAEProcess32Cb; // deprecated, default process callback function before 2.4
-    SetParameter:  TAESetParamCb; // Set new value of automatable parameter
-    GetParameter:  TAEGetParamCb; // Returns current value of automatable parameter
-    NumPrograms:   Int32;  // number of programs, or we can say presets
-    NumParams:     Int32;  // number of parameters, all parameter are included in preset
-    NumInputs:     Int32;  // number of audio inputs
-    NumOutputs:    Int32;  // number of audio outputs
-    Flags:         TVstAEffectFlags; // See TVstAEffectFlags
-    Resvd1:        IntPtr; // reserved for Host, must be 0
-    Resvd2:        IntPtr; // reserved for Host, must be 0
-    { For algorithms which need input in the first place(Group delay or latency in Samples).
-      This value should be initialized in a resume state. }
-    InitialDelay:  Int32;
-    RealQualities: Int32;   // deprecated unused member
-    OffQualities:  Int32;   // deprecated unused member
-    IORatio:       single;  // deprecated unused member
-    pObject:       Pointer; // The plugin class pointer, see vst2pluginbase unit
-    User:          Pointer; // user-defined pointer
-    { Registered unique identifier(register it at Steinberg 3rd party support Web).
-      This is used to identify a plug-in during save+load of preset and project. }
-    UniqueID:      Int32;
-    Version:       Int32; // plug-in version (example 1100 for version 1.1.0.0)
-    ProcessReplacing: TAEProcess32Cb; // Process audio samples in replacing mode, default in 2.4
-{$ifdef VST_2_4_EXTENSIONS}
-    // Process double-precision audio samples in replacing mode, optional in 2.4
-    ProcessDoubleReplacing: TAEProcess64Cb;
-    Future: array[0..55] of byte; // reserved for future use (please zero)
-{$else}
-    Future: array[0..59] of byte; // reserved for future use (please zero)
-{$endif}
-  end;
+  // Short alias
+  TAEOpcodes = TAEffectOpcodes;
+  TAMOpcodes = TAudioMasterOpcodes;
 
 const
-  { VST String length limits (in characters excl. 0 byte)
-    Maybe useless because many hosts have bigger buffer than the limits
-    But it is better to set it smaller than 32, even 16 for shorter ones }
+{-------------------------------------------------------------------------------
+  VST String length limits (in characters excl. 0 byte)
+  Maybe useless because many hosts have bigger buffer than the limits
+  But it is better to set it smaller than 32, even 16 for shorter ones
+-------------------------------------------------------------------------------}
 
   kVstMaxParamStrLen   = 8;  // used for effGetParamLabel, effGetParamDisplay, effGetParamName
   kVstMaxProgNameLen   = 24; // used for effGetProgramName, effSetProgramName, effGetProgramNameIndexed
@@ -409,13 +416,17 @@ const
   kVstMaxProductStrLen = 64; // used for effGetProductString, amGetProductString
 
 // Make a Longint from 4 charactors
-function MakeLong(a,b,c,d:AnsiChar):Longint; inline;
-// Cast pointer to IntPtr.
+function MakeLong(a,b,c,d:AnsiChar):Longint;inline;overload;
+// The string length must be 4
+function MakeLong(chrs:ShortString):Longint;overload;
+// Cast Pointer to IntPtr.
 function FromIntPtr(const arg: IntPtr):Pointer; inline;
-// Cast IntPtr to pointer.
+// Cast IntPtr to Pointer.
 function ToIntPtr(const ptr: Pointer):IntPtr; inline;
 // String copy taking care of null terminator.
-function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;
+function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;overload;
+// Copy pascal AnsiString to AnsiChar array string
+function VstStrncpy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: longword):PAnsiChar;overload;
 // String concatenation taking care of null terminator.
 function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;
 
@@ -431,7 +442,7 @@ type
   end;
 
 const
-  { String length limits (in characters excl. 0 byte). }
+  // String length limits (in characters excl. 0 byte).
 
   kVstMaxShortLabelLen = 8;   // used for TVstParameterProperties.shortLabel, TVstPinProperties.shortLabel
   kVstMaxCategLabelLen = 24;  // used for TVstParameterProperties.label
@@ -468,9 +479,9 @@ type
   end;
 
   TVstMidiEventFlag  = (
-  { means that this event is played life (not in playback from a sequencer track).
-    This allows the Plug-In to handle these flagged events with higher priority,
-    especially when the Plug-In has a big latency (TAEffect.InitialDelay) }
+   // Means that this event is played life (not in playback from a sequencer track).
+   // This allows the Plug-In to handle these flagged events with higher priority,
+   // especially when the Plug-In has a big latency (TAEffect.InitialDelay)
     kVstMidiEventIsRealtime  // 1<<0
   );
   // Flags used in TVstMidiEvent.
@@ -543,7 +554,7 @@ type
   TVstTimeInfoFlags = set of TVstTimeInfoFlag;
 
   PVstTimeInfo = ^TVstTimeInfo;
-  { TVstTimeInfo requested via amGetTime. }
+  // TVstTimeInfo requested via amGetTime.
   {-----------------------------------------------------------------------------
    TVstTimeInfo.SamplePos :
      Current Position. It must always be valid,
@@ -581,9 +592,9 @@ type
     CycleEndPos:    double;    // Cycle End (right locator), in Quarter Note
     TimeSigNumerator: Int32;   // Time Signature Numerator (e.g. 3 for 3/4)
     TimeSigDenominator: Int32; // Time Signature Denominator (e.g. 4 for 3/4)
-    { SMPTE offset (in SMPTE subframes (bits; 1/80 of a frame)).
-      The current SMPTE position can be calculated using SamplePos,
-      SampleRate, and SmpteFrameRate.}
+    // SMPTE offset (in SMPTE subframes (bits; 1/80 of a frame)).
+    // The current SMPTE position can be calculated using SamplePos,
+    // SampleRate, and SmpteFrameRate.
     SmpteOffset:    Int32;
     SmpteFrameRate: TVstSmpteFrameRate; // see TVstSmpteFrameRate
     SamplesToNextClock: Int32; // MIDI Clock Resolution (24 Per Quarter Note), can be negative (nearest clock)
@@ -1078,14 +1089,14 @@ type
     MODIFIER_SHIFT,     // 1<<0 Shift
     MODIFIER_ALTERNATE, // 1<<1 Alt
     MODIFIER_COMMAND,   // 1<<2 Control on Mac
-    MODIFIER_CONTROL    // 1<<3 Ctrl on PC, Apple on Mac
+    MODIFIER_CONTROL,    // 1<<3 Ctrl on PC, Apple on Mac
+    // effEditKeyUp and effEditKeyDown are using variable Value to pass the param TVstModifierKeys
+    // Due to the type of variable Value is IntPtr, we must pack set to make it equal IntPtr
+    MODIFIER_MAX = {$ifdef CPUX86}31{$else}63{$endif}
   );
-// effEditKeyUp and effEditKeyDown are using variable Value to pass the param TVstModifierKeys
-// Due to the type of variable Value is IntPtr, we must pack set to make it equal IntPtr
-{$push}{$ifdef CPUX86}{$PackSet 4}{$else}{$PackSet 8}{$endif}
   // Modifier flags used in TVstKeyCode.
   TVstModifierKeys = set of TVstModifierKey;
-{$pop}
+
   PVstKeyCode = ^TVstKeyCode;
   // Structure used for effEditKeyUp/effEditKeyDown.
   TVstKeyCode = record
@@ -1114,12 +1125,12 @@ type
     kVstMultipleFilesLoad, // for loading multiple files
     kVstDirectorySelect    // for selecting a directory/folder
   );
-  { Types used in TVstFileSelect structure.}
+  // Types used in TVstFileSelect structure.
   TVstFileSelectType = (
     kVstFileType = 0 // regular file selector
   );
   PVstFileSelect = ^TVstFileSelect;
-  { File Selector Description used in amOpenFileSelector.}
+  // File Selector Description used in amOpenFileSelector.
   TVstFileSelect = record
     Command:        TVstFileSelectCommand;  // see TVstFileSelectCommand
     eType:          TVstFileSelectType;     // see TVstFileSelectType
@@ -1128,12 +1139,12 @@ type
     FileTypes:      PVstFileType;           // list of fileTypes  see TVstFileType
     Title:          array[0..1023] of AnsiChar; // text to display in file selector's title
     InitialPath:    PAnsiChar; // initial path
-    { use with kVstFileLoad and kVstDirectorySelect.
-      null: Host allocates memory, plug-in must call amCloseFileSelector! }
+    // use with kVstFileLoad and kVstDirectorySelect.
+    // null: Host allocates memory, plug-in must call amCloseFileSelector!
     ReturnPath:     PAnsiChar;
     SizeReturnPath: Int32; // size of allocated memory for return paths
-    { use with kVstMultipleFilesLoad. Host allocates memory,
-      plug-in must call amCloseFileSelector! }
+    // use with kVstMultipleFilesLoad. Host allocates memory,
+    // plug-in must call amCloseFileSelector!
     ReturnMultiplePaths: PPAnsiChar;
     NbReturnPath:   Int32;  // number of selected paths
     Reserved:       IntPtr; // reserved for Host application
@@ -1174,8 +1185,20 @@ type
     kVstAutomationReadWrite    // read and write
   );
 
+// Convert TAEffectOpcodes to strings
 function VstEffOpcode2Str(opcode:TAEffectOpcodes):string;
+// Convert TAudioMasterOpcodes to strings
 function VstAmOpcode2Str(opcode:TAudioMasterOpcodes):string;
+// Convert the amplitude to decibels, value should bigger than 1E-7
+function VstAmp2dB(const value: double): double; inline;
+// Convert the decibels to amplitude, value should bigger than -140
+function VstdB2Amp(const value: double): double; inline;
+// Convert the float number to string with length 8
+function VstFloat2String(const value: single): shortstring;
+// Convert the float number to dB string with length 8
+function VstAmp2dBString(const value: single): shortstring;
+// Convert the integer part of float number to string with length 8
+function VstInt2String(const value: single): AnsiString;
 
 { FxStore }
 const
@@ -1236,7 +1259,9 @@ type
 
 // Some useful additional constants
 const
+  // TAudioMasterOpcodes number
   kVstAMOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
+  // TAEffectOpcodes number
 {$if defined(VST_2_4_EXTENSIONS)}
   kVstEffOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
 {$elseif defined(VST_2_3_EXTENSIONS) or defined(VST_2_2_EXTENSIONS)}
@@ -1251,11 +1276,16 @@ const
 implementation
 
 uses
-  sysutils;
+  sysutils,math;
 
-function MakeLong(a, b, c, d: AnsiChar): Int32;
+function MakeLong(a, b, c, d: AnsiChar): Longint;
 begin
   Result:=ord(a) shl 24 or ord(b) shl 16 or ord(c) shl 8 or ord(d);
+end;
+
+function MakeLong(chrs:ShortString):Longint;
+begin
+  Result:=MakeLong(chrs[1],chrs[2],chrs[3],chrs[4]);
 end;
 
 function FromIntPtr(const arg: IntPtr): Pointer;
@@ -1271,6 +1301,13 @@ end;
 function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
 begin
   Move(Source^, Dest^, maxlen);
+  Dest[maxlen] := #0;
+  Result := Dest;
+end;
+
+function VstStrncpy(Dest:PAnsiChar;const Source:AnsiString;MaxLen:longword):PAnsiChar;
+begin
+  Move(PAnsiChar(Source)^, Dest^, maxlen);
   Dest[maxlen] := #0;
   Result := Dest;
 end;
@@ -1377,7 +1414,7 @@ begin
   end;
 end;
 
-function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
+function VstAmOpcode2Str(opcode:TAudioMasterOpcodes):string;
 begin
   case opcode of
     amAutomate:Result:='amAutomate';
@@ -1431,6 +1468,76 @@ begin
     amGetInputSpeakerArrangement:Result:='amGetInputSpeakerArrangement';
   else Result:='Unknown opcode '+IntToStr(Integer(opcode));
   end;
+end;
+
+function VstAmp2dB(const value: double): double;
+begin
+  if value>=1E-7 then
+    Result:=20*Log10(value)
+  else
+    Result:=NegInfinity;
+end;
+
+function VstdB2Amp(const value: double): double;
+begin
+  if value >= -140 then
+    Result:=exp(value*0.1151292546497)
+  else
+    Result:=0;
+end;
+
+function VstFloat2String(const value:single):shortstring;
+var
+  i: integer;
+  mantissa: double;
+begin
+  if value=NegInfinity then Exit('-Inf'); // Cooperate with VstAmp2dB
+  if (Value > 999999) or (Value < -99999) then
+    Exit('Huge !!');
+  Result := IntToStr(Trunc(Value));
+  mantissa := Abs(Frac(Value));
+  if Length(Result) = 6 then
+  begin
+    // If the param type is *single*, 999998.47, 999998.48 and 999998.49
+    // will be considered as 999998.5 due to precision, so the final result
+    // will be 999999 rather 999998
+    // Actually, 999998.47 to 999998.53 will all be 999998.5
+    if mantissa>=0.5 then Result:=VstFloat2String(Int(Value)+1);
+    Exit; // No dot at last place if length is 6
+  end;
+  Result := Result + '.';
+  i := Length(Result);
+  while i<=6 do
+  begin
+    mantissa := Frac(mantissa) * 10;
+    Result := Result + AnsiChar(Trunc(mantissa) + 48);
+    Inc(i);
+  end;
+  mantissa := Frac(mantissa) * 10;
+  if mantissa >= 5 then // Similar reason, see above
+  begin
+    while Result[i] = '9' do
+    begin
+      Result[i] := '0';
+      Dec(i);
+    end;
+    if Result[i] <> '.' then
+      Inc(Result[i])
+    else
+      Result := VstFloat2String(Int(Value)+1);
+  end;
+end;
+
+function VstAmp2dBString(const value:single):shortstring;
+begin
+  Result:=VstFloat2String(VstAmp2dB(value));
+end;
+
+function VstInt2String(const value:single):AnsiString;
+begin
+  if (value>9999999) or (value<-999999) then
+    Exit('Huge !!');
+  Result:=IntToStr(Trunc(value));
 end;
 
 { TVstFileType }

@@ -42,8 +42,8 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
-    <Version Minor="2"/>
-    <Files Count="12">
+    <Version Minor="2" Release="1"/>
+    <Files Count="13">
       <Item1>
         <Filename Value="..\source\vst24pas.inc"/>
         <Type Value="Include"/>
@@ -73,25 +73,29 @@ IN THE SOFTWARE.
         <Type Value="Include"/>
       </Item7>
       <Item8>
-        <Filename Value="..\source\vst2interfaces.pas"/>
-        <UnitName Value="vst2interfaces"/>
+        <Filename Value="..\source\vst2intf.pas"/>
+        <UnitName Value="vst2intf"/>
       </Item8>
       <Item9>
-        <Filename Value="..\source\vst2pluginbase.pas"/>
-        <UnitName Value="vst2pluginbase"/>
+        <Filename Value="..\source\vst2plugbas.pas"/>
+        <UnitName Value="vst2plugbas"/>
       </Item9>
       <Item10>
-        <Filename Value="..\source\vst2plugingui.pas"/>
-        <UnitName Value="vst2plugingui"/>
+        <Filename Value="..\source\vst2plugui.pas"/>
+        <UnitName Value="vst2plugui"/>
       </Item10>
       <Item11>
-        <Filename Value="..\source\vst2hostbase.pas"/>
-        <UnitName Value="vst2hostbase"/>
+        <Filename Value="..\source\vst2plugin.pas"/>
+        <UnitName Value="vst2plugin"/>
       </Item11>
       <Item12>
+        <Filename Value="..\source\vst2hostbas.pas"/>
+        <UnitName Value="vst2hostbas"/>
+      </Item12>
+      <Item13>
         <Filename Value="..\source\vst2pluginbaseold.pas"/>
         <UnitName Value="vst2pluginbaseold"/>
-      </Item12>
+      </Item13>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
