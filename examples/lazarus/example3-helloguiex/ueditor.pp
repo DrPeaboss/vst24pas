@@ -5,7 +5,7 @@ unit ueditor;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls, StdCtrls,
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, ExtCtrls, StdCtrls,Menus,
   umain;
 
 type
@@ -17,10 +17,13 @@ type
     LabelInput: TLabel;
     LabelInputShowDelay: TLabel;
     LabelOutput: TLabel;
+    MIReset:TMenuItem;
+    PMTBGain:TPopupMenu;
     Timer: TTimer;
     TrackBarGain: TTrackBar;
     TrackBarInputDelay: TTrackBar;
     procedure FormCreate(Sender: TObject);
+    procedure MIResetClick(Sender:TObject);
     procedure TimerTimer(Sender: TObject);
     procedure TrackBarGainChange(Sender: TObject);
     procedure TrackBarInputDelayChange(Sender: TObject);
@@ -45,7 +48,7 @@ begin
   Gain:=TrackBarGain.Position/2000;
   if not FLocked then
     Plugin.SetParameterAutomated(0,Gain);
-  LabelGain.Caption := Format('Gain %.3fdB %.3f',[VstAmp2dB(Gain),Gain]);
+  LabelGain.Caption := Format('Gain %.3fdB %.3f',[VstAmp2dB(Gain*2),Gain]);
 end;
 
 procedure TFormMain.TrackBarInputDelayChange(Sender: TObject);
@@ -67,7 +70,12 @@ end;
 
 procedure TFormMain.FormCreate(Sender: TObject);
 begin
-  LabelGain.Caption := Format('Gain %.3fdB %.3f',[VstAmp2dB(1.0),1.0]);
+  LabelGain.Caption := Format('Gain %.3fdB %.3f',[VstAmp2dB(1.0),0.5]);
+end;
+
+procedure TFormMain.MIResetClick(Sender:TObject);
+begin
+  TrackBarGain.Position:=1000;
 end;
 
 end.

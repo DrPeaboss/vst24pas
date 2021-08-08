@@ -18,6 +18,7 @@ object FormMain: TFormMain
     OnChange = TrackBarGainChange
     Position = 1000
     ShowSelRange = False
+    PopupMenu = PMTBGain
     TabOrder = 0
   end
   object LabelGain: TLabel
@@ -70,5 +71,13 @@ object FormMain: TFormMain
     OnTimer = TimerTimer
     Left = 200
     Top = 48
+  end
+  object PMTBGain: TPopupMenu
+    Left = 304
+    Top = 112
+    object MIReset: TMenuItem
+      Caption = 'Reset'
+      OnClick = MIResetClick
+    end
   end
 end

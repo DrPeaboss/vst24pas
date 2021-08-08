@@ -35,8 +35,8 @@ uses
 constructor TNewGain.Create(VstHost: TVstHostCallback; NumPrograms, NumParams: Int32);
 begin
   inherited Create(VstHost, NumPrograms, NumParams);
-  PlugInitBasicInfo('P','Z','n','1',TFormMain,10);
-  PlugInitEffectInfo('v010testPlugin','PeaZomboss','Test',10);
+  PlugInitBasicInfo('P','Z','e','7',TFormMain,7);
+  PlugInitEffectInfo('example7-helloguiex','PeaZomboss','vst24pas examples',7);
   PlugInitParamInfo(0,0.5,'Gain','dB',dmCustom);
   PlugInitProgramInfo(0,'Program 0: original',[0.5]);
   PlugInitProgramInfo(1,'Program 0: silent',[0]);

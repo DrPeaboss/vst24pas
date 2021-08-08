@@ -11,7 +11,7 @@
       </Flags>
       <SessionStorage Value="InProjectDir"/>
       <MainUnit Value="0"/>
-      <Title Value="v010test"/>
+      <Title Value="helloguiex"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
@@ -22,7 +22,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="v010test_x64"/>
+            <Filename Value="..\bin\example7_x64"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -45,7 +45,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="v010test_x64"/>
+            <Filename Value="..\bin\example7_x64"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -64,6 +64,9 @@
         </CompilerOptions>
       </Item3>
     </BuildModes>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
     <RunParams>
       <FormatVersion Value="2"/>
       <Modes Count="0"/>
@@ -78,7 +81,7 @@
     </RequiredPackages>
     <Units Count="3">
       <Unit0>
-        <Filename Value="v010test.lpr"/>
+        <Filename Value="helloguiex.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
@@ -98,7 +101,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="v010test"/>
+      <Filename Value="..\bin\example7"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
@@ -115,17 +118,4 @@
       </Options>
     </Linking>
   </CompilerOptions>
-  <Debugging>
-    <Exceptions Count="3">
-      <Item1>
-        <Name Value="EAbort"/>
-      </Item1>
-      <Item2>
-        <Name Value="ECodetoolError"/>
-      </Item2>
-      <Item3>
-        <Name Value="EFOpenError"/>
-      </Item3>
-    </Exceptions>
-  </Debugging>
 </CONFIG>
