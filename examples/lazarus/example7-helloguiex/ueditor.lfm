@@ -67,7 +67,7 @@ object FormMain: TFormMain
     TabOrder = 1
   end
   object Timer: TTimer
-    Interval = 20
+    Interval = 16
     OnTimer = TimerTimer
     Left = 200
     Top = 48

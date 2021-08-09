@@ -78,7 +78,7 @@ end;
 function TNewGain.CustomDisplay(index: int32): string;
 begin
   if index=0 then
-    Result := Format('%.3f',[VstdB2Amp(2*ParamInfos[0].Value)]);
+    Result := Format('%.3f',[VstAmp2dB(2*ParamInfos[0].Value)]);
 end;
 
 end.
