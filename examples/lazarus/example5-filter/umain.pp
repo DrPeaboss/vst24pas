@@ -1,3 +1,5 @@
+{ Thanks to http://www.martin-finke.de/blog/articles/audio-plugins-013-filter/ }
+
 unit umain;
 
 {$mode objfpc}{$H+}
@@ -8,8 +10,6 @@ uses
   vst24pas.core, vst24pas.base, vst24pas.utils;
 
 type
-  { Thanks to http://www.martin-finke.de/blog/articles/audio-plugins-013-filter/ }
-
   TFilterMode = (fmLowPass=0,fmHighPass,fmBandPass);
   TAttenuationMode = (am12=0,am24);
 
@@ -35,6 +35,7 @@ type
     procedure GetParameterDisplay(index: Int32; Text: PAnsiChar); override;
     function GetVendorString(Text: PAnsiChar): boolean; override;
     function GetEffectName(Name: PAnsiChar): boolean; override;
+    procedure MyHz2String(value: single; Text: PAnsiChar; MaxLen: Int32);
     property Mode:TFilterMode read FMode write FMode;
     property AttenuationMode:TAttenuationMode read FAttenuationMode write FAttenuationMode;
   end;
@@ -106,8 +107,8 @@ end;
 procedure TFilter.GetParameterDisplay(index: Int32; Text: PAnsiChar);
 begin
   case index of
-    0:Hz2String(FCutoff,Text,7);
-    1:Hz2String(FResonance,Text,7);
+    0:MyHz2String(FCutoff,Text,7);
+    1:MyHz2String(FResonance,Text,7);
   end;
 end;
 
@@ -121,6 +122,11 @@ function TFilter.GetEffectName(Name: PAnsiChar): boolean;
 begin
   VstStrncat(Name,'example5-filter',31);
   Result:=True;
+end;
+
+procedure TFilter.MyHz2String(value:single; Text:PAnsiChar; MaxLen:Int32);
+begin
+  float2string(FSampleRate * value * 0.5, Text, maxlen);
 end;
 
 function TFilter.ProcessOneValue(inputvalue: double): double;
