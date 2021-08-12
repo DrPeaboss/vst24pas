@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectGroup FileVersion="2">
+    <Targets>
+      <Target FileName="version_0_2_x_tests\v02xtest1.lpi">
+        <BuildModes>
+          <Mode Name="Win32" Compile="True"/>
+          <Mode Name="Win64"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="version_0_2_x_tests\v02xtest2.lpi">
+        <BuildModes>
+          <Mode Name="Win32" Compile="True"/>
+          <Mode Name="Win64"/>
+          <Mode Name="Linux64"/>
+        </BuildModes>
+      </Target>
+      <Target FileName="version_0_2_x_tests\v02xtest3.lpi">
+        <BuildModes>
+          <Mode Name="Default"/>
+        </BuildModes>
+      </Target>
+    </Targets>
+  </ProjectGroup>
+</CONFIG>

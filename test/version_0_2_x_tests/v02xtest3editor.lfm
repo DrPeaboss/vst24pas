@@ -1,0 +1,8 @@
+object Formain: TFormain
+  Left = 341
+  Height = 480
+  Top = 152
+  Width = 640
+  Caption = 'Formain'
+  DesignTimePPI = 120
+end
