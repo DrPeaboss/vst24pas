@@ -33,7 +33,7 @@ const
 
 type
   // HostCanDos strings Plug-in
-  THostCanDos = record
+  THcdStrings = record
   const
     cdSendVstEvents  = 'sendVstEvents'; // Host supports send of Vst events to plug-in
     cdSendVstMidiEvent = 'sendVstMidiEvent'; // Host supports send of MIDI events to plug-in
@@ -56,7 +56,7 @@ type
   end;
 
   // PlugCanDos strings Host
-  TPlugCanDos = record
+  TPcdStrings = record
   const
     cdSendVstEvents = 'sendVstEvents'; // plug-in will send Vst events to Host
     cdSendVstMidiEvent = 'sendVstMidiEvent'; // plug-in will send MIDI events to Host
@@ -374,7 +374,7 @@ type
     amGetVendorVersion, // [return value]: vendor-specific version
     amVendorSpecific, // no definition, vendor specific handling, see effVendorSpecific
     amSetIcon, // deprecated. unknown for any
-    amCanDo, // [ptr]: "can do" string [return value]: 1 for supported. Get host CanDos, See THostCanDos
+    amCanDo, // [ptr]: "can do" string [return value]: 1 for supported. Get host CanDos, See THcdStrings
     amGetLanguage, // [return value]: language code, see TVstHostLanguage
     amOpenWindow,  // deprecated. [ptr]: PVstWindow [return value]: maybe pointer to the window
     amCloseWindow, // deprecated. [ptr]: PVstWindow [return value]: maybe 1 for success
@@ -1185,6 +1185,7 @@ type
     kVstAutomationReadWrite    // read and write
   );
 
+
 // Convert TAEffectOpcodes to strings
 function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
 // Convert TAudioMasterOpcodes to strings
@@ -1263,15 +1264,56 @@ const
   kVstAMOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
   // TAEffectOpcodes number
 {$if defined(VST_2_4_EXTENSIONS)}
-  kVstEffOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
+  kVstAEOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
 {$elseif defined(VST_2_3_EXTENSIONS) or defined(VST_2_2_EXTENSIONS)}
-  kVstEffOpcodeNum = ord(effBeginLoadProgram)+1;
+  kVstAEOpcodeNum = ord(effBeginLoadProgram)+1;
 {$elseif defined(VST_2_1_EXTENSIONS)}
-  kVstEffOpcodeNum = ord(effEndSetProgram)+1;
+  kVstAEOpcodeNum = ord(effEndSetProgram)+1;
 {$else}
-  kVstEffOpcodeNum = ord(effGetVstVersion)+1;
+  kVstAEOpcodeNum = ord(effGetVstVersion)+1;
 {$endif}
 
+type
+  // see THcdStrings
+  THostCanDo = (
+    hcdUnknown,
+    hcdSendVstEvents,
+    hcdSendVstMidiEvent,
+    hcdSendVstTimeInfo,
+    hcdReceiveVstEvents,
+    hcdReceiveVstMidiEvent,
+    hcdReportConnectionChanges,
+    hcdAcceptIOChanges,
+    hcdSizeWindow,
+    hcdOffline,
+    hcdOpenFileSelector,
+    hcdCloseFileSelector,
+    hcdStartStopProcess,
+    hcdShellCategory,
+    hcdSendVstMidiEventFlagIsRealtime
+  );
+  THostCanDos = set of THostCanDo;
+
+  // see TPcdStrings
+  TPlugCanDo = (
+    pcdUnknown,
+    pcdSendVstEvents,
+    pcdSendVstMidiEvent,
+    pcdReceiveVstEvents,
+    pcdReceiveVstMidiEvent,
+    pcdReceiveVstTimeInfo,
+    pcdOffline,
+    pcdBypass,
+    pcdMidiProgramNames
+  );
+  TPlugCanDos = set of TPlugCanDo;
+
+function VstString2HostCanDo(const str:ansistring):THostCanDo;overload;
+function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;overload;
+function VstHostCanDo2String(hcd:THostCanDo):ansistring;
+function VstString2PlugCanDo(const str:ansistring):TPlugCanDo;overload;
+function VstString2PlugCanDo(sz:PAnsiChar):TPlugCanDo;overload;
+function VstPlugCanDo2String(pcd:TPlugCanDo):ansistring;
 
 implementation
 
@@ -1541,6 +1583,85 @@ begin
   if (value>9999999) or (value<-999999) then
     Exit('Huge !!');
   Result:=IntToStr(Trunc(value));
+end;
+
+function VstString2HostCanDo(const str:ansistring):THostCanDo;
+begin
+  if str=THcdStrings.cdSendVstEvents                then Result:=hcdSendVstEvents
+  else if str=THcdStrings.cdSendVstMidiEvent        then Result:=hcdSendVstMidiEvent
+  else if str=THcdStrings.cdSendVstTimeInfo         then Result:=hcdSendVstTimeInfo
+  else if str=THcdStrings.cdReceiveVstEvents        then Result:=hcdReceiveVstEvents
+  else if str=THcdStrings.cdReceiveVstMidiEvent     then Result:=hcdReceiveVstMidiEvent
+  else if str=THcdStrings.cdReportConnectionChanges then Result:=hcdReportConnectionChanges
+  else if str=THcdStrings.cdAcceptIOChanges         then Result:=hcdAcceptIOChanges
+  else if str=THcdStrings.cdSizeWindow              then Result:=hcdSizeWindow
+  else if str=THcdStrings.cdOffline                 then Result:=hcdOffline
+  else if str=THcdStrings.cdOpenFileSelector        then Result:=hcdOpenFileSelector
+  else if str=THcdStrings.cdCloseFileSelector       then Result:=hcdCloseFileSelector
+  else if str=THcdStrings.cdStartStopProcess        then Result:=hcdStartStopProcess
+  else if str=THcdStrings.cdShellCategory           then Result:=hcdShellCategory
+  else if str=THcdStrings.cdSendVstMidiEventFlagIsRealtime then Result:=hcdSendVstMidiEventFlagIsRealtime
+  else Result:=hcdUnknown;
+end;
+
+function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;
+begin
+  Result:=VstString2HostCanDo(StrPas(sz));
+end;
+
+function VstHostCanDo2String(hcd:THostCanDo):ansistring;
+begin
+  case hcd of
+    hcdUnknown:                 Result:='';
+    hcdSendVstEvents:           Result:=THcdStrings.cdSendVstEvents;
+    hcdSendVstMidiEvent:        Result:=THcdStrings.cdSendVstMidiEvent;
+    hcdSendVstTimeInfo:         Result:=THcdStrings.cdSendVstTimeInfo;
+    hcdReceiveVstEvents:        Result:=THcdStrings.cdReceiveVstEvents;
+    hcdReceiveVstMidiEvent:     Result:=THcdStrings.cdReceiveVstMidiEvent;
+    hcdReportConnectionChanges: Result:=THcdStrings.cdReportConnectionChanges;
+    hcdAcceptIOChanges:         Result:=THcdStrings.cdAcceptIOChanges;
+    hcdSizeWindow:              Result:=THcdStrings.cdSizeWindow;
+    hcdOffline:                 Result:=THcdStrings.cdOffline;
+    hcdOpenFileSelector:        Result:=THcdStrings.cdOpenFileSelector;
+    hcdCloseFileSelector:       Result:=THcdStrings.cdCloseFileSelector;
+    hcdStartStopProcess:        Result:=THcdStrings.cdStartStopProcess;
+    hcdShellCategory:           Result:=THcdStrings.cdShellCategory;
+    hcdSendVstMidiEventFlagIsRealtime: Result:=THcdStrings.cdSendVstMidiEventFlagIsRealtime;
+  end;
+end;
+
+function VstString2PlugCanDo(const str:ansistring):TPlugCanDo;
+begin
+  if str=TPcdStrings.cdSendVstEvents            then Result:=pcdSendVstEvents
+  else if str=TPcdStrings.cdSendVstMidiEvent    then Result:=pcdSendVstEvents
+  else if str=TPcdStrings.cdReceiveVstEvents    then Result:=pcdReceiveVstEvents
+  else if str=TPcdStrings.cdReceiveVstMidiEvent then Result:=pcdReceiveVstMidiEvent
+  else if str=TPcdStrings.cdReceiveVstTimeInfo  then Result:=pcdReceiveVstTimeInfo
+  else if str=TPcdStrings.cdOffline             then Result:=pcdOffline
+  else if str=TPcdStrings.cdBypass              then Result:=pcdBypass
+  else if str=TPcdStrings.cdMidiProgramNames    then Result:=pcdMidiProgramNames
+  else Result:=pcdUnknown;
+
+end;
+
+function VstString2PlugCanDo(sz:PAnsiChar):TPlugCanDo;
+begin
+  Result:=VstString2PlugCanDo(StrPas(sz));
+end;
+
+function VstPlugCanDo2String(pcd:TPlugCanDo):ansistring;
+begin
+  case pcd of
+    pcdUnknown:             Result:='';
+    pcdSendVstEvents:       Result:=TPcdStrings.cdSendVstEvents;
+    pcdSendVstMidiEvent:    Result:=TPcdStrings.cdSendVstMidiEvent;
+    pcdReceiveVstEvents:    Result:=TPcdStrings.cdReceiveVstEvents;
+    pcdReceiveVstMidiEvent: Result:=TPcdStrings.cdReceiveVstMidiEvent;
+    pcdReceiveVstTimeInfo:  Result:=TPcdStrings.cdReceiveVstTimeInfo;
+    pcdOffline:             Result:=TPcdStrings.cdOffline;
+    pcdBypass:              Result:=TPcdStrings.cdBypass;
+    pcdMidiProgramNames:    Result:=TPcdStrings.cdMidiProgramNames;
+  end;
 end;
 
 { TVstFileType }

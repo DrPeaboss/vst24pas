@@ -161,7 +161,7 @@ type
     procedure SetParameter(index: integer; value: single);
     // Get value of a parameter by index
     function GetParameter(index: integer): single;
-    // Used for effCanDo, see TPlugCanDos strings, check strings in FEffectInfo.CanDos
+    // Used for effCanDo, see TPcdStrings strings, check strings in FEffectInfo.CanDos
     function CanDo(str:PAnsiChar):integer;
     // Used for effGetParamDisplay
     function GetParamDisplay(index:integer):string;
@@ -670,7 +670,7 @@ begin
     effSetSampleRate: FSampleRate := opt;
     effSetBlockSize: FBlockSize := Value;
     effMainsChanged: if value=1 then begin
-                       if (CanDo(TPlugCanDos.cdReceiveVstMidiEvent)=1) or
+                       if (CanDo(TPcdStrings.cdReceiveVstMidiEvent)=1) or
                           (effFlagsIsSynth in FEffect.Flags) then
                           FHost(@FEffect,ord(amWantMidi),0,1,nil,0);
                        if Assigned(FEffTurnOn) then FEffTurnOn;

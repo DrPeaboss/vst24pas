@@ -80,7 +80,7 @@ function DispatcherCb(e:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt
 {$ifdef debug}
   procedure logdbg;
   begin
-    if (opcode>=0) and (opcode<kVstEffOpcodeNum) then
+    if (opcode>=0) and (opcode<kVstAEOpcodeNum) then
     case TAEOpcodes(opcode) of
       effOpen: ;
       effClose: ;
@@ -171,7 +171,7 @@ var
   v:TVPlugin;
 begin
   {$ifdef debug}logdbg;{$endif}
-  if (opcode>=0) and (opcode<kVstEffOpcodeNum) then
+  if (opcode>=0) and (opcode<kVstAEOpcodeNum) then
   begin
     v:=TVPlugin(e^.pObject);
     if opcode <> ord(effClose) then
