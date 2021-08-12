@@ -51,9 +51,11 @@ type
     function GetPreset:IVPreset;
   public
     constructor Create(ABase:IVPlugBase);
-    destructor destroy;override;
+    destructor Destroy;override;
     property Base:IVPlugBase read FBase;
   end;
+
+  TEHandle = PtrUInt;
 
   { TVGuiEditor }
 
@@ -71,9 +73,9 @@ type
     function GetGui:TForm;
   public
     constructor Create(ABase:IVPlugBase);
-    destructor destroy;override;
+    destructor Destroy;override;
     procedure SetGui(GuiClass:TFormClass);
-    procedure Open(const ParentHandle:PtrUInt); // THandle is longint, we use PtrUInt
+    procedure Open(const ParentHandle:TEHandle);
     procedure Close;
     procedure GetRect(const Rect:PPERect);
     procedure Idle;
@@ -89,7 +91,7 @@ type
     function Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;override;
   public
     constructor Create(AHost:THostCallback);//override;
-    destructor destroy;override;
+    destructor Destroy;override;
     property Editor:IVGuiEditor read FEditor implements IVGuiEditor;
   end;
 
@@ -106,7 +108,7 @@ begin
   FBase:=ABase;
 end;
 
-destructor TVEditor.destroy;
+destructor TVEditor.Destroy;
 begin
   //{$ifdef debug}dbgln('TVEditor destroy');{$endif}
   inherited destroy;
@@ -144,7 +146,7 @@ begin
   FOpening:=False;
 end;
 
-destructor TVGuiEditor.destroy;
+destructor TVGuiEditor.Destroy;
 begin
   //{$ifdef debug}dbgln('TVGuiEditor destroy');{$endif}
   FGui.Free;
@@ -188,7 +190,7 @@ begin
   Result:=FOpening;
 end;
 
-procedure TVGuiEditor.Open(const ParentHandle:PtrUInt);
+procedure TVGuiEditor.Open(const ParentHandle:TEHandle);
 begin
   {$ifdef debug}dbgln('Called editor open, handle: %X',[ParentHandle]);{$endif}
   FGui.ParentWindow:=ParentHandle;
@@ -226,7 +228,7 @@ begin
   //{$ifdef debug}dbgln('TVGuiPlugin create');{$endif}
 end;
 
-destructor TVGuiPlugin.destroy;
+destructor TVGuiPlugin.Destroy;
 begin
   //{$ifdef debug}dbgln('TVGuiPlugin destroy');{$endif}
   inherited destroy;

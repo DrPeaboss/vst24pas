@@ -28,7 +28,7 @@ type
   IVPlugBase = interface
     ['{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}']
     function GetEffect:PAEffect;
-    function CallHost(opcode:TAMOpcodes;index:Int32=0;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
+    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
     function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetUniqueID(const str4chars:AnsiString);
@@ -80,7 +80,7 @@ type
   protected
     FEffect:TAEffect;
     function GetEffect:PAEffect;
-    function CallHost(opcode:TAMOpcodes;index:Int32=0;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
+    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
     function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetUniqueID(const str4chars:AnsiString);
@@ -92,7 +92,7 @@ type
     function BlockSize:Integer;
   public
     constructor Create(AHost:THostCallback;Obj:TObject);
-    destructor destroy;override;
+    destructor Destroy;override;
     procedure SetSampleRate(AValue:Single);
     procedure SetBlockSize(AValue:Integer);
     function GetPlugCategory:Integer;
@@ -141,7 +141,7 @@ type
     procedure SetCustomParamDisplay(AProc:TCustomParamDisplayObjFunc);
   public
     constructor Create(AHost:THostCallback;Obj:TObject);
-    destructor destroy;override;
+    destructor Destroy;override;
     function GetParamName(index:integer):AnsiString;
     function GetParamLabel(index:integer):AnsiString;
     function GetParamDisplay(index:integer):AnsiString;
@@ -176,7 +176,7 @@ type
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
   public
     constructor Create(AHost:THostCallback;Obj:TObject);
-    destructor destroy;override;
+    destructor Destroy;override;
     function GetPreset:Integer;
     procedure SetPreset(NewPreset:Integer);
     function GetPresetName:AnsiString;
@@ -262,10 +262,10 @@ begin
   Result:=FHost(@FEffect,Int32(opcode),index,value,ptr,opt);
 end;
 
-destructor TVPlugBase.destroy;
+destructor TVPlugBase.Destroy;
 begin
   //{$ifdef debug}dbgln('TVBase destroy');{$endif}
-  inherited destroy;
+  inherited Destroy;
 end;
 
 function TVPlugBase.GetEffect:PAEffect;
@@ -385,7 +385,7 @@ begin
     Result:=0;
 end;
 
-destructor TVParamBase.destroy;
+destructor TVParamBase.Destroy;
 begin
   //{$ifdef debug}dbgln('TVParamBase destroy');{$endif}
   FParams.Free;
@@ -501,11 +501,11 @@ begin
   end;
 end;
 
-destructor TVPresetBase.destroy;
+destructor TVPresetBase.Destroy;
 begin
   //{$ifdef debug}dbgln('TVPresetBase destroy');{$endif}
   SetLength(FCurParamValues,0);
-  inherited destroy;
+  inherited Destroy;
 end;
 
 function TVPresetBase.GetPreset:Integer;

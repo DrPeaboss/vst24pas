@@ -20,25 +20,27 @@ uses
 type
   { TVPlugin }
 
-  TVPlugin = class(TInterfacedObject,IVPlugBase,IVParam,IVPreset)
+  TVPlugin = class
   private
     FPluginBase:TVPluginBase;
     FBase:IVPlugBase;
     FParam:IVParam;
     FPreset:IVPreset;
   protected
+    function Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;virtual;
+    function GetParameter(index:integer):Single;virtual;
+    procedure SetParameter(index:integer;value:Single);virtual;
     procedure Process(const inputs,outputs:TBuffer32;SampleFrames:Int32);virtual;
     procedure ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);virtual;
 {$ifdef VST_2_4_EXTENSIONS}
     procedure ProcessRep64(const inputs,outputs:TBuffer64;SampleFrames:Int32);virtual;
 {$endif}
-    function Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;virtual;
   public
     constructor Create(AHost:THostCallback);//virtual;
-    destructor destroy;override;
-    property Base:IVPlugBase read FBase implements IVPlugBase;
-    property Param:IVParam read FParam implements IVParam;
-    property Preset:IVPreset read FPreset implements IVPreset;
+    destructor Destroy;override;
+    property Base:IVPlugBase read FBase;
+    property Param:IVParam read FParam;
+    property Preset:IVPreset read FPreset;
   end;
 
   //TVPluginClass = class of TVPlugin;
@@ -194,13 +196,15 @@ end;
 function GetParameterCb(e:PAEffect;index:Int32):single;cdecl;
 begin
   {$ifdef debug}dbgln('GetParameterCb index: %d',[index]);{$endif}
-  Result:=TVPlugin(e^.pObject).Param[index];
+  //Result:=TVPlugin(e^.pObject).Param[index];
+  Result:=TVPlugin(e^.pObject).GetParameter(index);
 end;
 
 procedure SetParameterCb(e:PAEffect;index:Int32;value:single);cdecl;
 begin
   {$ifdef debug}dbgln('SetParameterCb index: %d, value: %.5f',[index,value]);{$endif}
-  TVPlugin(e^.pObject).Param[index]:=value;
+  //TVPlugin(e^.pObject).Param[index]:=value;
+  TVPlugin(e^.pObject).SetParameter(index,value);
 end;
 
 procedure ProcessCb(e:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
@@ -231,7 +235,7 @@ begin
   //{$ifdef debug}dbgln('TVPlugin create');{$endif}
 end;
 
-destructor TVPlugin.destroy;
+destructor TVPlugin.Destroy;
 begin
   //{$ifdef debug}dbgln('TVPlugin destroy');{$endif}
   inherited destroy;
@@ -317,6 +321,16 @@ begin
     effGetNumMidiOutputChannels: ;
     else ;
   end;
+end;
+
+function TVPlugin.GetParameter(index:integer):Single;
+begin
+  Result:=FParam.GetParameter(index);
+end;
+
+procedure TVPlugin.SetParameter(index:integer;value:Single);
+begin
+  FParam.SetParameter(index,value);
 end;
 
 procedure TVPlugin.Process(const inputs,outputs:TBuffer32;SampleFrames:Int32);
