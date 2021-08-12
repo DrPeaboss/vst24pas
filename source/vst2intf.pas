@@ -1115,7 +1115,7 @@ type
     UnixType:  array[0..7] of AnsiChar;   // Unix file extension
     MimeType1: array[0..127] of AnsiChar; // MIME type
     MimeType2: array[0..127] of AnsiChar; // Additional MIME type
-    procedure Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
+    procedure Init(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
   end;
 
   // Command constants used in TVstFileSelect structure.
@@ -1186,9 +1186,9 @@ type
   );
 
 // Convert TAEffectOpcodes to strings
-function VstEffOpcode2Str(opcode:TAEffectOpcodes):string;
+function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
 // Convert TAudioMasterOpcodes to strings
-function VstAmOpcode2Str(opcode:TAudioMasterOpcodes):string;
+function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
 // Convert the amplitude to decibels, value should bigger than 1E-7
 function VstAmp2dB(const value: double): double; inline;
 // Convert the decibels to amplitude, value should bigger than -140
@@ -1285,7 +1285,10 @@ end;
 
 function MakeLong(chrs:ShortString):Longint;
 begin
-  Result:=MakeLong(chrs[1],chrs[2],chrs[3],chrs[4]);
+  if Length(chrs)=4 then
+    Result:=MakeLong(chrs[1],chrs[2],chrs[3],chrs[4])
+  else
+    Result:=0;
 end;
 
 function FromIntPtr(const arg: IntPtr): Pointer;
@@ -1322,7 +1325,7 @@ begin
   Result := Dest;
 end;
 
-function VstEffOpcode2Str(opcode:TAEffectOpcodes):string;
+function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
 begin
   case opcode of
     effOpen:Result:='effOpen';
@@ -1414,7 +1417,7 @@ begin
   end;
 end;
 
-function VstAmOpcode2Str(opcode:TAudioMasterOpcodes):string;
+function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
 begin
   case opcode of
     amAutomate:Result:='amAutomate';
@@ -1542,7 +1545,7 @@ end;
 
 { TVstFileType }
 
-procedure TVstFileType.Create(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
+procedure TVstFileType.Init(_Name, _MacType, _DosType, _UnixType, _MimeType1, _MimeType2: PAnsiChar);
 begin
   FillChar(self, sizeof(self), 0);
   if Assigned(_Name) then vststrncpy(Name, _Name, 127);

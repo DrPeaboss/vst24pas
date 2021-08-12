@@ -249,7 +249,7 @@ end;
 
 function TVPlugBase.CallHost(opcode:TAMOpcodes):IntPtr;
 begin
-  {$ifdef debug}dbgln('Call host with opcode: %s',[VstAmOpcode2Str(opcode)]);{$endif}
+  {$ifdef debug}dbgln('Call host with opcode: %s',[VstAMOpcode2Str(opcode)]);{$endif}
   Result:=FHost(@FEffect,Int32(opcode),0,0,nil,0);
 end;
 
@@ -257,7 +257,7 @@ function TVPlugBase.CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr;co
 begin
 {$ifdef debug}
   dbgln('Call host with opcode: %s, index: %d, value: %d, ptr: %p, opt: %.5f',
-    [VstAmOpcode2Str(opcode),index,value,ptr,opt]);
+    [VstAMOpcode2Str(opcode),index,value,ptr,opt]);
 {$endif}
   Result:=FHost(@FEffect,Int32(opcode),index,value,ptr,opt);
 end;

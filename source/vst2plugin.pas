@@ -241,7 +241,7 @@ function TVPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;co
 begin
   //{$ifdef debug}
   //dbgln('opcode: %s, index: %d, value: %d, ptr: %p, opt: %.5f',
-  //  [VstEffOpcode2Str(opcode),index,value,ptr,opt]);
+  //  [VstAEOpcode2Str(opcode),index,value,ptr,opt]);
   //{$endif}
   Result:=0;
   case opcode of
