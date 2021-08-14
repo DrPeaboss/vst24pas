@@ -3,11 +3,11 @@ library v02xtest1;
 {$mode objfpc}{$H+}
 
 uses
-  vst2intf,umain;
+  vst2entry,umain;
 
   function main(host:THostCallback):PAEffect;cdecl;
   begin
-    Result:=TMyPlugin.Create(host).Base.Effect;
+    Result:=CreateInstance(host,TMyPlugin).GetAEffect;
   end;
 
 exports

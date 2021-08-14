@@ -16,9 +16,9 @@ type
     function GetParamDisplay(index:integer):string;
   protected
     procedure ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);override;
-    function Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;override;
+    function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;override;
   public
-    constructor Create(AHost:THostCallback);//override;
+    constructor Create(AHost:THostCallback);override;
   end;
 
 implementation
@@ -47,7 +47,7 @@ begin
   Editor.SetIdle(@Gui.Idle); // Have to set here
 end;
 
-function TTestPlugin2.Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;
+function TTestPlugin2.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
 var
   gui:TFormTest2;
 begin

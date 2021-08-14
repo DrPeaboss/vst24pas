@@ -3,11 +3,11 @@ library v02xtest3;
 {$mode objfpc}{$H+}
 
 uses
-  vst2intf, v02xtest3main, interfaces, forms;
+  vst2entry, v02xtest3main, interfaces, forms;
 
-  function main(host:THostCallback):PAEffect;
+  function main(host:THostCallback):PAEffect;cdecl;
   begin
-    Result:=TV02XTest3.Create(host).Base.GetEffect;
+    Result:=CreateInstance(host,TV02XTest3).GetAEffect;
   end;
 
 exports

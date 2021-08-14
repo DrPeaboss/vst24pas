@@ -43,7 +43,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
     <Version Minor="2" Release="1"/>
-    <Files Count="13">
+    <Files Count="14">
       <Item1>
         <Filename Value="..\source\vst24pas.inc"/>
         <Type Value="Include"/>
@@ -89,13 +89,17 @@ IN THE SOFTWARE.
         <UnitName Value="vst2plugin"/>
       </Item11>
       <Item12>
-        <Filename Value="..\source\vst2hostbas.pas"/>
-        <UnitName Value="vst2hostbas"/>
+        <Filename Value="..\source\vst2entry.pas"/>
+        <UnitName Value="vst2entry"/>
       </Item12>
       <Item13>
+        <Filename Value="..\source\vst2hostbas.pas"/>
+        <UnitName Value="vst2hostbas"/>
+      </Item13>
+      <Item14>
         <Filename Value="..\source\vst2pluginbaseold.pas"/>
         <UnitName Value="vst2pluginbaseold"/>
-      </Item13>
+      </Item14>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

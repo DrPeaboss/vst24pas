@@ -88,9 +88,9 @@ type
     FGuiEditor:TVGuiEditor;
     FEditor:IVGuiEditor;
   protected
-    function Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;override;
+    function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;override;
   public
-    constructor Create(AHost:THostCallback);//override;
+    constructor Create(AHost:THostCallback);override;
     destructor Destroy;override;
     property Editor:IVGuiEditor read FEditor implements IVGuiEditor;
   end;
@@ -205,10 +205,9 @@ begin
   begin
     FGui:=GuiClass.Create(nil);
     //FGui.Parent:=nil;
-    FGui.Left:=0;
-    FGui.Top:=0;
+    FGui.SetBounds(0,0,FGui.Width,FGui.Height);
     FGui.BorderStyle:=bsNone;
-    Include(Base.Effect.Flags,effFlagsHasEditor);
+    Base.SetFlag(effFlagsHasEditor);
     {$ifdef debug}dbgln('Set gui successfully, class name: %s',[GuiClass.ClassName]);{$endif}
   end;
 end;
@@ -234,7 +233,7 @@ begin
   inherited destroy;
 end;
 
-function TVGuiPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;
+function TVGuiPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
 begin
   Result:=0;
   case opcode of

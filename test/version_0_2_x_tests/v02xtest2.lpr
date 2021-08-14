@@ -4,11 +4,11 @@ library v02xtest2;
 
 uses
   interfaces,forms,
-  vst2intf,v02xtest2main;
+  vst2entry,v02xtest2main;
 
   function main(AHost:THostCallback):PAEffect;cdecl;
   begin
-    Result:=TTestPlugin2.Create(AHost).Base.Effect;
+    Result:=CreateInstance(AHost,TTestPlugin2).GetAEffect;
   end;
 
 exports

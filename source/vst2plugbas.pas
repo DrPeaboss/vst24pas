@@ -27,7 +27,7 @@ type
 
   IVPlugBase = interface
     ['{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}']
-    function GetEffect:PAEffect;
+    //function GetEffect:PAEffect;
     function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
     function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     procedure SetIONumber(InNumber,OutNumber:Int32);
@@ -36,13 +36,14 @@ type
     procedure SetNames(const PlugName,Vendor,Product:string);
     procedure SetVersion(EffVer,VendorVer:Int32);
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
+    procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
+    procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     function SampleRate:Single;
     function BlockSize:Integer;
-    property Effect:PAEffect read GetEffect;
+    //property Effect:PAEffect read GetEffect;
   end;
 
   TCustomParamDisplayObjFunc = function(index:integer):AnsiString of object;
-  TVParameter = class;
 
   IVParam = interface
     ['{4301340C-F67B-48E8-A67F-DD6BFBA6FC2E}']
@@ -71,6 +72,7 @@ type
     FHost:THostCallback;
     FSampleRate:Single;
     FBlockSize:Integer;
+    FPrecision:TVstProcessPrecision;
     FPlugCategory:TVstPlugCategory;
     FPlugName:AnsiString;
     FVendorName:AnsiString;
@@ -79,7 +81,6 @@ type
     FVendorSpecific:TVendorSpecificObjFunc;
   protected
     FEffect:TAEffect;
-    function GetEffect:PAEffect;
     function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
     function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     procedure SetIONumber(InNumber,OutNumber:Int32);
@@ -88,19 +89,24 @@ type
     procedure SetNames(const PlugName,Vendor,Product:AnsiString);
     procedure SetVersion(EffVer,VendorVer:Int32);
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
+    procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
+    procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     function SampleRate:Single;
     function BlockSize:Integer;
   public
     constructor Create(AHost:THostCallback;Obj:TObject);
     destructor Destroy;override;
+    function GetEffect:PAEffect;
     procedure SetSampleRate(AValue:Single);
     procedure SetBlockSize(AValue:Integer);
+    procedure SetProcessPrecision(AValue:Integer);
     function GetPlugCategory:Integer;
     function VendorSpecific(Arg1:Int32;Arg2:IntPtr;Arg3:Pointer;Arg4:Single):IntPtr;
     property PlugName:AnsiString read FPlugName;
     property VendorName:AnsiString read FVendorName;
     property ProductName:AnsiString read FProductName;
     property VendorVersion:Int32 read FVendorVersion;
+    //property Effect:PAEffect read GetEffect;
   end;
 
   { TVParameter }
@@ -147,7 +153,7 @@ type
     function GetParamDisplay(index:integer):AnsiString;
     function CanBeAutomated(index:integer):Integer;
     function GetParameterProperties(index:integer;ptr:PVstParameterProperties):Integer;
-    function GetChunk(const ptr:PArrParams):Integer;
+    function GetChunk(ptr:PArrParams):Integer;
     procedure SetChunk(const arr:TArrParams;ByteSize:Integer);
   end;
 
@@ -180,7 +186,7 @@ type
     function GetPreset:Integer;
     procedure SetPreset(NewPreset:Integer);
     function GetPresetName:AnsiString;
-    procedure SetPresetName(const NewName:AnsiString);
+    procedure SetPresetName(ptr:PAnsiChar);
     function GetPresetNameIndexed(index:Integer;ptr:PAnsiChar):Integer;
   end;
 
@@ -197,7 +203,7 @@ procedure dbgln(const fmt:string;const args:array of const);overload;
 implementation
 
 uses
-  sysutils,vst2plugin;
+  sysutils;
 
 {$ifdef debug}
 procedure dbgln(const log:string);
@@ -222,23 +228,12 @@ begin
   with FEffect do
   begin
     Magic:=MakeLong(kVstMagic);
-    Dispatcher:=VDispatcher;
-    Process:=VProcess;
-    SetParameter:=VSetParameter;
-    GetParameter:=VGetParameter;
-    NumPrograms:=0;
-    NumParams:=0;
     NumInputs:=2;
     NumOutputs:=2;
     IORatio:=1;
     pObject:=Obj;
     UniqueID:=MakeLong('NoEf');
     Version:=1;
-    ProcessReplacing:=VProcessRep;
-{$ifdef VST_2_4_EXTENSIONS}
-    Flags:=[effFlagsCanReplacing,effFlagsProgramChunks];
-    ProcessDoubleReplacing:=VProcessRep64;
-{$endif}
   end;
 end;
 
@@ -288,6 +283,12 @@ begin
   FBlockSize:=AValue;
 end;
 
+procedure TVPlugBase.SetProcessPrecision(AValue:Integer);
+begin
+  if (AValue=0) or (AValue=1) then
+    FPrecision:=TVstProcessPrecision(AValue);
+end;
+
 procedure TVPlugBase.SetIONumber(InNumber,OutNumber:Int32);
 begin
   FEffect.NumInputs:=InNumber;
@@ -323,6 +324,22 @@ begin
   FVendorSpecific:=AVendorSpecificFunc;
 end;
 
+procedure TVPlugBase.SetFlag(AFlag:TVstAEffectFlag;state:Boolean);
+begin
+  if state then
+    Include(FEffect.Flags,AFlag)
+  else
+    Exclude(FEffect.Flags,AFlag);
+end;
+
+procedure TVPlugBase.SetFlags(Flags:TVstAEffectFlags;state:Boolean);
+begin
+  if state then
+    FEffect.Flags:=FEffect.Flags+Flags
+  else
+    FEffect.Flags:=FEffect.Flags-Flags;
+end;
+
 procedure TVPlugBase.SetVersion(EffVer,VendorVer:Int32);
 begin
   FEffect.Version:=EffVer;
@@ -353,6 +370,7 @@ begin
   inherited Create(AHost,Obj);
   FNumParam:=0;
   FParams:=TVParamList.Create(True);
+  SetFlag(effFlagsProgramChunks);
   //{$ifdef debug}dbgln('TVParamBase create');{$endif}
 end;
 
@@ -392,7 +410,7 @@ begin
   inherited destroy;
 end;
 
-function TVParamBase.GetChunk(const ptr:PArrParams):Integer;
+function TVParamBase.GetChunk(ptr:PArrParams):Integer;
 var
   i:integer;
 begin
@@ -422,12 +440,11 @@ end;
 
 function TVParamBase.GetParameterProperties(index:integer;ptr:PVstParameterProperties):Integer;
 begin
-  Result:=0;
   if (index>=0) and (index<FNumParam) and Assigned(FParams.Items[index].ParamProperties) then
   begin
     ptr^:=FParams.Items[index].ParamProperties^;
     Result:=1;
-  end;
+  end else Result:=0;
 end;
 
 function TVParamBase.GetParamLabel(index:integer):AnsiString;
@@ -539,9 +556,9 @@ begin
   end;
 end;
 
-procedure TVPresetBase.SetPresetName(const NewName:AnsiString);
+procedure TVPresetBase.SetPresetName(ptr:PAnsiChar);
 begin
-  FPresets.Items[FCurPreset].Name:=NewName;
+  FPresets.Items[FCurPreset].Name:=StrPas(ptr);
 end;
 
 

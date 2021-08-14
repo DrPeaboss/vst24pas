@@ -15,7 +15,7 @@ type
   protected
     procedure ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);override;
   public
-    constructor Create(AHost:THostCallback);//override;
+    constructor Create(AHost:THostCallback);override;
   end;
 
 implementation

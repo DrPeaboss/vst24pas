@@ -7,6 +7,7 @@
 
 unit vst2pluginbaseold;
 
+{$WARN 5024 off : Parameter "$1" not used}
 {$I vcompiler.inc}
 
 interface

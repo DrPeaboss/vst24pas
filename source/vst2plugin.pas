@@ -27,7 +27,7 @@ type
     FParam:IVParam;
     FPreset:IVPreset;
   protected
-    function Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;virtual;
+    function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;virtual;
     function GetParameter(index:integer):Single;virtual;
     procedure SetParameter(index:integer;value:Single);virtual;
     procedure Process(const inputs,outputs:TBuffer32;SampleFrames:Int32);virtual;
@@ -36,22 +36,15 @@ type
     procedure ProcessRep64(const inputs,outputs:TBuffer64;SampleFrames:Int32);virtual;
 {$endif}
   public
-    constructor Create(AHost:THostCallback);//virtual;
+    constructor Create(AHost:THostCallback);virtual;
     destructor Destroy;override;
+    function GetAEffect:PAEffect;
     property Base:IVPlugBase read FBase;
     property Param:IVParam read FParam;
     property Preset:IVPreset read FPreset;
   end;
 
-  //TVPluginClass = class of TVPlugin;
-
-var
-  VDispatcher:TAEDispatcherCb;
-  VGetParameter:TAEGetParamCb;
-  VSetParameter:TAESetParamCb;
-  VProcess:TAEProcess32Cb;
-  VProcessRep:TAEProcess32Cb;
-  VProcessRep64:TAEProcess64Cb;
+  TVPluginClass = class of TVPlugin;
 
 //function DoVstMain(AHost:THostCallback;PluginClass:TVPluginClass):PAEffect;
 
@@ -196,14 +189,12 @@ end;
 function GetParameterCb(e:PAEffect;index:Int32):single;cdecl;
 begin
   {$ifdef debug}dbgln('GetParameterCb index: %d',[index]);{$endif}
-  //Result:=TVPlugin(e^.pObject).Param[index];
   Result:=TVPlugin(e^.pObject).GetParameter(index);
 end;
 
 procedure SetParameterCb(e:PAEffect;index:Int32;value:single);cdecl;
 begin
   {$ifdef debug}dbgln('SetParameterCb index: %d, value: %.5f',[index,value]);{$endif}
-  //TVPlugin(e^.pObject).Param[index]:=value;
   TVPlugin(e^.pObject).SetParameter(index,value);
 end;
 
@@ -229,6 +220,18 @@ end;
 constructor TVPlugin.Create(AHost:THostCallback);
 begin
   FPluginBase:=TVPluginBase.Create(AHost,self);
+  with FPluginBase.GetEffect^ do
+  begin
+    Dispatcher:=@DispatcherCb;
+    GetParameter:=@GetParameterCb;
+    SetParameter:=@SetParameterCb;
+    Process:=@ProcessCb;
+    ProcessReplacing:=@ProcessRepCb;
+{$ifdef VST_2_4_EXTENSIONS}
+    ProcessDoubleReplacing:=@ProcessRep64Cb;
+    Include(Flags,effFlagsCanReplacing);
+{$endif}
+  end;
   FPluginBase.GetInterface(iidIVBase,FBase);
   FPluginBase.GetInterface(iidIVParam,FParam);
   FPluginBase.GetInterface(iidIVPreset,FPreset);
@@ -238,10 +241,15 @@ end;
 destructor TVPlugin.Destroy;
 begin
   //{$ifdef debug}dbgln('TVPlugin destroy');{$endif}
-  inherited destroy;
+  inherited Destroy;
 end;
 
-function TVPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;const value:IntPtr;const ptr:Pointer;opt:Single):IntPtr;
+function TVPlugin.GetAEffect:PAEffect;
+begin
+  Result:=FPluginBase.GetEffect;
+end;
+
+function TVPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
 begin
   //{$ifdef debug}
   //dbgln('opcode: %s, index: %d, value: %d, ptr: %p, opt: %.5f',
@@ -253,7 +261,7 @@ begin
     effClose: ;
     effSetProgram: FPluginBase.SetPreset(value);
     effGetProgram: Result:=FPluginBase.GetPreset;
-    effSetProgramName: FPluginBase.SetPresetName(StrPas(ptr));
+    effSetProgramName: FPluginBase.SetPresetName(ptr);
     effGetProgramName: VstStrncpy(ptr,FPluginBase.GetPresetName,23);
     effGetParamLabel: VstStrncpy(ptr,FPluginBase.GetParamLabel(index),7);
     effGetParamDisplay: VstStrncpy(ptr,FPluginBase.GetParamDisplay(index),15);
@@ -316,7 +324,7 @@ begin
     effSetPanLaw: ;
     effBeginLoadBank: ;
     effBeginLoadProgram: ;
-    effSetProcessPrecision: ;
+    effSetProcessPrecision: FPluginBase.SetProcessPrecision(Value);
     effGetNumMidiInputChannels: ;
     effGetNumMidiOutputChannels: ;
     else ;
@@ -367,16 +375,6 @@ begin
   end;
 end;
 {$endif}
-
-initialization
-
-//{$ifdef debug}dbgln('Init vst2plugin unit');{$endif}
-VDispatcher:=@DispatcherCb;
-VGetParameter:=@GetParameterCb;
-VSetParameter:=@SetParameterCb;
-VProcess:=@ProcessCb;
-VProcessRep:=@ProcessRepCb;
-VProcessRep64:=@ProcessRep64Cb;
 
 end.
 
