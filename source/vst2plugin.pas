@@ -5,7 +5,8 @@
 // Created by  : PeaZomboss, 2021/07
 
 // Basically have features for plugin except gui
-// Use this unit when developing a non-gui plugin
+// Use this unit can develop a non-gui plugin
+// Or use vst2plugui unit to add gui support
 -------------------------------------------------------------------------------}
 
 unit vst2plugin;
@@ -23,9 +24,11 @@ type
   TVPlugin = class
   private
     FPluginBase:TVPluginBase;
+    FEditorBase:TVEditorBase;
     FBase:IVPlugBase;
     FParam:IVParam;
     FPreset:IVPreset;
+    FEditor:IVEditor;
   protected
     function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;virtual;
     function GetParameter(index:integer):Single;virtual;
@@ -35,6 +38,7 @@ type
 {$ifdef VST_2_4_EXTENSIONS}
     procedure ProcessRep64(const inputs,outputs:TBuffer64;SampleFrames:Int32);virtual;
 {$endif}
+    procedure SetEditor(AEditor:IVEditor);
   public
     constructor Create(AHost:THostCallback);virtual;
     destructor Destroy;override;
@@ -42,31 +46,16 @@ type
     property Base:IVPlugBase read FBase;
     property Param:IVParam read FParam;
     property Preset:IVPreset read FPreset;
+    property Editor:IVEditor read FEditor;
   end;
 
   TVPluginClass = class of TVPlugin;
-
-//function DoVstMain(AHost:THostCallback;PluginClass:TVPluginClass):PAEffect;
 
 implementation
 
 uses
   sysutils;
 
-(*
-// Require virtual constructor
-function DoVstMain(AHost:THostCallback;PluginClass:TVPluginClass):PAEffect;
-begin
-  {$ifdef debug}dbgln('Plugin init start');{$endif}
-  try
-    Result:=PluginClass.Create(AHost).Base.Effect;
-  except
-    on E:Exception do
-    {$ifdef debug}dbgln('%s: %s',[E.ClassName,E.Message]);{$endif}
-  end;
-  {$ifdef debug}dbgln('Plugin init done');{$endif}
-end;
-*)
 
 // Callback methods in TAEffect
 
@@ -75,7 +64,7 @@ function DispatcherCb(e:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt
 {$ifdef debug}
   procedure logdbg;
   begin
-    if (opcode>=0) and (opcode<kVstAEOpcodeNum) then
+    if (opcode>=0) and (opcode<kVstAEOpcodeMax) then
     case TAEOpcodes(opcode) of
       effOpen: ;
       effClose: ;
@@ -166,9 +155,9 @@ var
   v:TVPlugin;
 begin
   {$ifdef debug}logdbg;{$endif}
-  if (opcode>=0) and (opcode<kVstAEOpcodeNum) then
+  if (opcode>=0) and (opcode<kVstAEOpcodeMax) then
   begin
-    v:=TVPlugin(e^.pObject);
+    v:=TVPlugin(e^.Obj);
     if opcode <> ord(effClose) then
       Result:=v.Dispatcher(TAEOpcodes(opcode),index,value,ptr,opt)
     else begin
@@ -189,29 +178,29 @@ end;
 function GetParameterCb(e:PAEffect;index:Int32):single;cdecl;
 begin
   {$ifdef debug}dbgln('GetParameterCb index: %d',[index]);{$endif}
-  Result:=TVPlugin(e^.pObject).GetParameter(index);
+  Result:=TVPlugin(e^.Obj).GetParameter(index);
 end;
 
 procedure SetParameterCb(e:PAEffect;index:Int32;value:single);cdecl;
 begin
   {$ifdef debug}dbgln('SetParameterCb index: %d, value: %.5f',[index,value]);{$endif}
-  TVPlugin(e^.pObject).SetParameter(index,value);
+  TVPlugin(e^.Obj).SetParameter(index,value);
 end;
 
 procedure ProcessCb(e:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
 begin
-  TVPlugin(e^.pObject).Process(inputs,outputs,sampleframes);
+  TVPlugin(e^.Obj).Process(inputs,outputs,sampleframes);
 end;
 
 procedure ProcessRepCb(e:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
 begin
-  TVPlugin(e^.pObject).ProcessRep(inputs,outputs,sampleframes);
+  TVPlugin(e^.Obj).ProcessRep(inputs,outputs,sampleframes);
 end;
 
 {$ifdef VST_2_4_EXTENSIONS}
 procedure ProcessRep64Cb(e:PAEffect;inputs,outputs:PPDouble;sampleFrames:Int32);cdecl;
 begin
-  TVPlugin(e^.pObject).ProcessRep64(inputs,outputs,sampleframes);
+  TVPlugin(e^.Obj).ProcessRep64(inputs,outputs,sampleframes);
 end;
 {$endif}
 
@@ -249,6 +238,15 @@ begin
   Result:=FPluginBase.GetEffect;
 end;
 
+procedure TVPlugin.SetEditor(AEditor:IVEditor);
+begin
+  if Assigned(AEditor) then
+  begin
+    FEditor:=AEditor;
+    FEditorBase:=FEditor as TVEditorBase;
+  end;
+end;
+
 function TVPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
 begin
   //{$ifdef debug}
@@ -270,6 +268,10 @@ begin
     effSetSampleRate: FPluginBase.SetSampleRate(opt);
     effSetBlockSize: FPluginBase.SetBlockSize(value);
     effMainsChanged: ;
+    effEditOpen: if Assigned(FEditorBase) then FEditorBase.Open(ToIntPtr(ptr));
+    effEditClose: if Assigned(FEditorBase) then FEditorBase.Close;
+    effEditIdle: if Assigned(FEditorBase) then FEditorBase.Idle;
+    effEditGetRect: if Assigned(FEditorBase) then FEditorBase.GetRect(ptr);
     effIdentify: ;
     effGetChunk: Result:=FPluginBase.GetChunk(ptr);
     effSetChunk: FPluginBase.SetChunk(ptr,value);
@@ -303,7 +305,7 @@ begin
     effGetProductString: VstStrncpy(ptr,FPluginBase.ProductName,63);
     effGetVendorVersion: Result:=FPluginBase.VendorVersion;
     effVendorSpecific: Result:=FPluginBase.VendorSpecific(index,value,ptr,opt);
-    effCanDo: ;
+    effCanDo: Result:=FPluginBase.CanDo(ptr);
     effGetTailSize: ;
     effSetViewPosition: ;
     effGetParameterProperties: Result:=FPluginBase.GetParameterProperties(index,ptr);

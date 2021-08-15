@@ -9,7 +9,7 @@
 
 unit vst2intf;
 
-{$I vcompiler.inc}{$A8}{$Z1}
+{$I vcompiler.inc}{$A8}{.$Z1}
 
 interface
 
@@ -95,13 +95,13 @@ type
   PAEffect = ^TAEffect; // forward
 
   // Implemented by host, called by plugin, use opcodes in TAudioMasterOpcodes
-  AudioMasterCallback=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
+  AudioMasterCallback=function(effect:PAEffect;opcode,index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;cdecl;
   // Implemented by plugin, called by host, use opcodes in TAEffectOpcodes
-  AEffectDispatcherProc=function(effect:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
-  AEffectProcessProc=procedure(effect:PAEffect;inputs,outputs:PPSingle;sampleFrames:Int32);cdecl;
-  AEffectProcessDoubleProc=procedure(effect:PAEffect;inputs,outputs:PPDouble;sampleFrames:Int32);cdecl;
-  AEffectSetParameterProc=procedure(effect:PAEffect;index:Int32;parameter:single);cdecl;
-  AEffectGetParameterProc=function(effect:PAEffect;index:Int32):single;cdecl;
+  AEffectDispatcherProc=function(effect:PAEffect;opcode,index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;cdecl;
+  AEffectProcessProc=procedure(effect:PAEffect;inputs,outputs:PPSingle;SampleFrames:Int32);cdecl;
+  AEffectProcessDoubleProc=procedure(effect:PAEffect;inputs,outputs:PPDouble;SampleFrames:Int32);cdecl;
+  AEffectSetParameterProc=procedure(effect:PAEffect;index:Int32;parameter:Single);cdecl;
+  AEffectGetParameterProc=function(effect:PAEffect;index:Int32):Single;cdecl;
 
   // Set some alias
 
@@ -150,7 +150,7 @@ type
     RealQualities: Int32;   // deprecated unused member
     OffQualities:  Int32;   // deprecated unused member
     IORatio:       single;  // deprecated unused member
-    pObject:       Pointer; // The plugin class pointer, see vst2pluginbase unit
+    Obj:           Pointer; // The plugin class pointer
     User:          Pointer; // user-defined pointer
     { Registered unique identifier(register it at Steinberg 3rd party support Web).
       This is used to identify a plug-in during save+load of preset and project. }
@@ -342,7 +342,7 @@ type
     amGetTime,
     amProcessEvents, // [ptr]: PVstEvents. Send MIDI events back to Host application. See TVstEvents
     amSetTime, // deprecated. unknown for any
-    amTempoAt, // deprecated. [index]: position [return value]: maybe tempo
+    amTempoAt, // deprecated. [index]: position [return value]: maybe tempo position
     amGetNumAutomatableParameters, // deprecated. [return value]: maybe number of automatable parameters
     amGetParameterQuantization,    // deprecated. [return value]: maybe quantization
     amIOChanged, // [return value]: 1 if supported.
@@ -463,7 +463,7 @@ type
   PVstEvent = ^TVstEvent;
   // A generic timestamped event.
   TVstEvent = record
-    eType:       TVstEventTypes;    // see TVstEventTypes
+    Typ:         TVstEventTypes;    // see TVstEventTypes
     ByteSize:    Int32;             // size of this event, excl. type and byteSize
     DeltaFrames: Int32; // sample frames related to the current block start sample position
     Flags:       Int32;             // generic flags, none defined yet
@@ -490,7 +490,7 @@ type
   PVstMidiEvent = ^TVstMidiEvent;
   // MIDI Event (to be casted from VstEvent).
   TVstMidiEvent = record
-    eType:           TVstEventTypes; // kVstMidiType
+    Typ:             TVstEventTypes; // kVstMidiType
     ByteSize:        Int32; // sizeof (TVstMidiEvent)
     DeltaFrames:     Int32; // sample frames related to the current block start sample position
     Flags:           TVstMidiEventFlags; // see TVstMidiEventFlags
@@ -506,7 +506,7 @@ type
   PVstMidiSysexEvent = ^TVstMidiSysexEvent;
   // MIDI Sysex Event (to be casted from TVstEvent).
   TVstMidiSysexEvent = record
-    eType:       TVstEventTypes; // kVstSysexType
+    Typ:         TVstEventTypes; // kVstSysexType
     ByteSize:    Int32;     // sizeof (TVstMidiSysexEvent)
     DeltaFrames: Int32;     // sample frames related to the current block start sample position
     Flags:       Int32;     // none defined yet (should be zero)
@@ -647,7 +647,7 @@ type
     StepFloat:      single; // float step
     SmallStepFloat: single; // small float step
     LargeStepFloat: single; // large float step
-    sLabel: array[0..63] of AnsiChar;   // parameter label, limit 64
+    Labl: array[0..63] of AnsiChar; // parameter label, limit 64
     Flags:          TVstParameterFlags; // see TVstParameterFlags
     MinInteger:     Int32;  // integer minimum
     MaxInteger:     Int32;  // integer maximum
@@ -723,7 +723,7 @@ type
   PVstPinProperties = ^TVstPinProperties;
   // Pin Properties used in effGetInputProperties and effGetOutputProperties.
   TVstPinProperties = record
-    sLabel: array[0..63] of AnsiChar;            // pin name, limit 64
+    Labl:            array[0..63] of AnsiChar;   // pin name, limit 64
     Flags:           TVstPinPropertiesFlags;     // see TVstPinPropertiesFlags
     ArrangementType: TVstSpeakerArrangementType; // see TVstSpeakerArrangementType
     ShortLabel: array[0..7] of AnsiChar; // short name (recommended: 6 + delimiter), limit 8
@@ -754,6 +754,7 @@ type
   );
   // Flags used in TMidiProgramName.
   TVstMidiProgramNameFlags = set of TVstMidiProgramNameFlag;
+
   PMidiProgramName = ^TMidiProgramName;
   // MIDI Program Description.
   TMidiProgramName = record
@@ -828,7 +829,7 @@ type
     Radius:    single; // unit: meter, exception: 0.f for LFE channel
     Reserved:  single; // zero (reserved for future use)
     Name: array[0..63] of AnsiChar; // for new setups, new names should be given (L/R/C... won't do), limit 64
-    eType:     TVstSpeakerType;      // see TVstSpeakerType
+    Typ:       TVstSpeakerType;      // see TVstSpeakerType
     Future:    array[0..27] of byte; // reserved for future use
   end;
 
@@ -836,7 +837,7 @@ type
   PVstSpeakerArrangement  = ^TVstSpeakerArrangement;
   // Speaker Arrangement.
   TVstSpeakerArrangement = record
-    eType: TVstSpeakerArrangementType; // e.g. kSpeakerArr51 for 5.1, see TVstSpeakerArrangementType
+    Typ: TVstSpeakerArrangementType; // e.g. kSpeakerArr51 for 5.1, see TVstSpeakerArrangementType
     NumChannels: Int32; // number of channels in this speaker arrangement
     Speakers: array[0..7] of TVstSpeakerProperties; // variable sized speaker array
   end;
@@ -900,7 +901,7 @@ type
   TVstOfflineTask = record
     ProcessName: array[0..95] of AnsiChar; // set by plug-in
 
-    // audio access
+    // audio access ------------------------------------------------------------
 
     ReadPosition:       double;           // set by plug-in/Host
     WritePosition:      double;           // set by plug-in/Host
@@ -914,13 +915,13 @@ type
     NumFramesToProcess: double;           // set by Host
     MaxFramesToWrite:   double;           // set by plug-in
 
-    // other data access
+    // other data access -------------------------------------------------------
 
     ExtraBuffer: Pointer;                 // set by plug-in
     Value:       Int32;                   // set by Host or plug-in
     Index:       Int32;                   // set by Host or plug-in
 
-    // file attributes
+    // file attributes ---------------------------------------------------------
 
     NumFramesInSourceFile: double;        // set by Host
     SourceSampleRate: double;             // set by Host or plug-in
@@ -931,7 +932,7 @@ type
     DestinationFormat: Int32;             // set by plug-in
     OutputText: array[0..511] of AnsiChar; // set by plug-in or Host
 
-    // progress notification
+    // progress notification ---------------------------------------------------
 
     Progress:     double;                 // set by plug-in
     ProgressMode: Int32;                  // Reserved for future use
@@ -1001,7 +1002,7 @@ type
   TVstAudioFileMarker = record
     Position: double;               // marker position
     Name: array[0..31] of AnsiChar; // marker name
-    iType:    Int32;                // marker type
+    Typ:      Int32;                // marker type
     ID:       Int32;                // marker identifier
     Reserved: Int32;                // reserved for future use
   end;
@@ -1125,15 +1126,17 @@ type
     kVstMultipleFilesLoad, // for loading multiple files
     kVstDirectorySelect    // for selecting a directory/folder
   );
+
   // Types used in TVstFileSelect structure.
   TVstFileSelectType = (
     kVstFileType = 0 // regular file selector
   );
+
   PVstFileSelect = ^TVstFileSelect;
   // File Selector Description used in amOpenFileSelector.
   TVstFileSelect = record
     Command:        TVstFileSelectCommand;  // see TVstFileSelectCommand
-    eType:          TVstFileSelectType;     // see TVstFileSelectType
+    Typ:            TVstFileSelectType;     // see TVstFileSelectType
     MacCreator:     Int32;                  // optional: 0 = no creator
     NumFileTypes:   Int32;                  // number of fileTypes
     FileTypes:      PVstFileType;           // list of fileTypes  see TVstFileType
@@ -1161,7 +1164,7 @@ type
     Future:         array[0..47] of byte; // Reserved for future use
   end;
 
-  // PanLaw Type.
+  // PanLaw Type used for effSetPanLaw
   TVstPanLawType = (
     kLinearPanLaw,      // L = pan * M; R = (1 - pan) * M;
     kEqualPowerPanLaw   // L = pow (pan, 0.5) * M; R = pow ((1 - pan), 0.5) * M;
@@ -1195,11 +1198,11 @@ function VstAmp2dB(const value: double): double; inline;
 // Convert the decibels to amplitude, value should bigger than -140
 function VstdB2Amp(const value: double): double; inline;
 // Convert the float number to string with length 8
-function VstFloat2String(const value: single): shortstring;
+function VstFloat2String(const value: double): shortstring;
 // Convert the float number to dB string with length 8
-function VstAmp2dBString(const value: single): shortstring;
+function VstAmp2dBString(const value: double): shortstring;
 // Convert the integer part of float number to string with length 8
-function VstInt2String(const value: single): AnsiString;
+function VstInt2String(const value: double): AnsiString;
 
 { FxStore }
 const
@@ -1226,13 +1229,13 @@ type
     FxVersion:  Int32; // fx version
     NumParams:  Int32; // number of parameters
     PrgName:    array[0..27] of AnsiChar; // program name (null-terminated ASCII string)
-    Content: record                   // program content depending on fxMagic
-           case longint of
+    Content: record  // program content depending on fxMagic
+      case longint of
         0: (Params: array[0..0] of single); // variable sized array with parameter values
         1: (Data: record // program chunk data
-            Size: Int32; // size of program data
-            Chunk: array[0..0] of AnsiChar; // variable sized array with opaque program data
-          end);
+              Size: Int32; // size of program data
+              Chunk: array[0..0] of AnsiChar; // variable sized array with opaque program data
+            end);
     end;
   end;
 
@@ -1248,30 +1251,22 @@ type
     NumPrograms:    Int32; // number of programs
     CurrentProgram: Int32; // version 2: current program number
     Future:         array[0..123] of byte; // reserved, should be zero
-    Content: record                        // bank content depending on fxMagic
-           case longint of
+    Content: record  // bank content depending on fxMagic
+      case longint of
         0: (Programs: array[0..0] of TfxProgram); // variable number of programs
         1: (Data: record // bank chunk data
-            Size: Int32; // size of bank data
-            Chunk: array[0..0] of AnsiChar; // variable sized array with opaque bank data
-          end);
+              Size: Int32; // size of bank data
+              Chunk: array[0..0] of AnsiChar; // variable sized array with opaque bank data
+            end);
     end;
   end;
 
 // Some useful additional constants
 const
-  // TAudioMasterOpcodes number
-  kVstAMOpcodeNum = ord(amGetInputSpeakerArrangement)+1;
-  // TAEffectOpcodes number
-{$if defined(VST_2_4_EXTENSIONS)}
-  kVstAEOpcodeNum = ord(effGetNumMidiOutputChannels)+1;
-{$elseif defined(VST_2_3_EXTENSIONS) or defined(VST_2_2_EXTENSIONS)}
-  kVstAEOpcodeNum = ord(effBeginLoadProgram)+1;
-{$elseif defined(VST_2_1_EXTENSIONS)}
-  kVstAEOpcodeNum = ord(effEndSetProgram)+1;
-{$else}
-  kVstAEOpcodeNum = ord(effGetVstVersion)+1;
-{$endif}
+  // TAudioMasterOpcodes max number
+  kVstAMOpcodeMax = ord(amGetInputSpeakerArrangement)+1;
+  // TAEffectOpcodes max number
+  kVstAEOpcodeMax = ord(high(TAEffectOpcodes))+1;
 
 type
   // see THcdStrings
@@ -1531,7 +1526,7 @@ begin
     Result:=0;
 end;
 
-function VstFloat2String(const value:single):shortstring;
+function VstFloat2String(const value:double):shortstring;
 var
   i: integer;
   mantissa: double;
@@ -1573,12 +1568,12 @@ begin
   end;
 end;
 
-function VstAmp2dBString(const value:single):shortstring;
+function VstAmp2dBString(const value:double):shortstring;
 begin
   Result:=VstFloat2String(VstAmp2dB(value));
 end;
 
-function VstInt2String(const value:single):AnsiString;
+function VstInt2String(const value:double):AnsiString;
 begin
   if (value>9999999) or (value<-999999) then
     Exit('Huge !!');

@@ -17,50 +17,12 @@ interface
 uses
   vst2intf,vst2plugbas,vst2plugin,forms;
 
-const
-  iidIVEditor:TGuid='{C34A39C2-8410-41BC-97E0-F473300CF1C5}';
-  iidIVGuiEditor:TGuid='{1AE4F9F1-EBE5-4C4B-8088-C2D3D91ACFDF}';
-
 type
-  IVEditor = interface
-    ['{C34A39C2-8410-41BC-97E0-F473300CF1C5}']
-    function GetParam:IVParam;
-    function GetPreset:IVPreset;
-    property Param:IVParam read GetParam;
-    property Preset:IVPreset read GetPreset;
-  end;
-
-  IVGuiEditor = interface(IVEditor)
-    ['{1AE4F9F1-EBE5-4C4B-8088-C2D3D91ACFDF}']
-    function IsOpen:Boolean;
-    procedure EditBegin(index:integer);
-    procedure EditEnd(index:integer);
-    procedure SetIdle(IdleProc:TObjProc);
-    procedure SetGui(GuiClass:TFormClass);
-    function GetGui:TForm;
-    property Gui:TForm read GetGui;
-  end;
-
   { TVEditor }
 
-  TVEditor = class(TInterfacedObject,IVEditor)
+  TVEditor = class(TVEditorBase,IVEditor)
   private
-    FBase:IVPlugBase;
-  protected
-    function GetParam:IVParam;
-    function GetPreset:IVPreset;
-  public
-    constructor Create(ABase:IVPlugBase);
-    destructor Destroy;override;
-    property Base:IVPlugBase read FBase;
-  end;
-
-  TEHandle = PtrUInt;
-
-  { TVGuiEditor }
-
-  TVGuiEditor = class(TVEditor,IVGuiEditor)
-  private
+    FPlugin:TVPlugin;
     FGui:TForm;
     FRect:TERect;
     FOpening:Boolean;
@@ -70,30 +32,27 @@ type
     procedure EditBegin(index:integer);
     procedure EditEnd(index:integer);
     procedure SetIdle(IdleProc:TObjProc);
-    function GetGui:TForm;
+    procedure SetGui(FrmClass:TClass);
+    function GetGui:TObject;
   public
-    constructor Create(ABase:IVPlugBase);
+    constructor Create(Plugin:TVPlugin;FrmClass:TClass=nil);
     destructor Destroy;override;
-    procedure SetGui(GuiClass:TFormClass);
-    procedure Open(const ParentHandle:TEHandle);
-    procedure Close;
-    procedure GetRect(const Rect:PPERect);
-    procedure Idle;
+    procedure Open(const ParentHandle:PtrUInt);override;
+    procedure Close;override;
+    procedure GetRect(const Rect:PPERect);override;
+    procedure Idle;override;
+    //property Plugin:TVPlugin read FPlugin;
   end;
 
   { TVGuiPlugin }
 
-  TVGuiPlugin = class(TVPlugin,IVGuiEditor)
-  private
-    FGuiEditor:TVGuiEditor;
-    FEditor:IVGuiEditor;
-  protected
-    function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;override;
+  TVGuiPlugin = class(TVPlugin)
   public
     constructor Create(AHost:THostCallback);override;
     destructor Destroy;override;
-    property Editor:IVGuiEditor read FEditor implements IVGuiEditor;
   end;
+
+function NewEditor(Plugin:TVPlugin;FrmClass:TClass=nil):IVEditor;
 
 implementation
 
@@ -102,75 +61,52 @@ uses
 
 { TVEditor }
 
-constructor TVEditor.Create(ABase:IVPlugBase);
+constructor TVEditor.Create(Plugin:TVPlugin;FrmClass:TClass);
 begin
   //{$ifdef debug}dbgln('TVEditor create');{$endif}
-  FBase:=ABase;
+  FPlugin:=Plugin;
+  FOpening:=False;
+  FGui:=nil;
+  SetGui(FrmClass);
 end;
 
 destructor TVEditor.Destroy;
 begin
   //{$ifdef debug}dbgln('TVEditor destroy');{$endif}
+  FGui.Free;
   inherited destroy;
 end;
 
-function TVEditor.GetParam:IVParam;
+procedure TVEditor.SetGui(FrmClass:TClass);
 begin
-  {$ifdef debug}dbgln('Called GetParam');{$endif}
-  FBase.QueryInterface(iidIVParam,Result);
-  FBase._Release;
+  if not Assigned(FGui) and FrmClass.InheritsFrom(TForm) then
+  begin
+    FGui:=TForm(FrmClass.newinstance).Create(nil);
+    //FGui.Parent:=nil;
+    FGui.SetBounds(0,0,FGui.Width,FGui.Height);
+    FGui.BorderStyle:=bsNone;
+    FPlugin.Base.SetFlag(effFlagsHasEditor);
+    {$ifdef debug}dbgln('Set gui successfully, class name: %s',[FrmClass.ClassName]);{$endif}
+  end;
 end;
 
-function TVEditor.GetPreset:IVPreset;
+procedure TVEditor.Open(const ParentHandle:PtrUInt);
 begin
-  {$ifdef debug}dbgln('Called GetPreset');{$endif}
-  FBase.QueryInterface(iidIVPreset,Result);
-  FBase._Release;
+  {$ifdef debug}dbgln('Called editor open, handle: %X',[ParentHandle]);{$endif}
+  FGui.ParentWindow:=ParentHandle;
+  FGui.Show;
+  FPlugin.Base.CallHost(amSizeWindow,FGui.Width,FGui.Height);
+  FOpening:=True;
 end;
 
-{ TVGuiEditor }
-
-constructor TVGuiEditor.Create(ABase:IVPlugBase);
+procedure TVEditor.Close;
 begin
-  inherited Create(ABase);
-  FOpening:=False;
-  FGui:=nil;
-  //{$ifdef debug}dbgln('TVGuiEditor create');{$endif}
-end;
-
-procedure TVGuiEditor.Close;
-begin
-  //{$ifdef debug}dbgln('Called editor close');{$endif}
   FGui.Hide;
   FGui.ParentWindow:=0;
   FOpening:=False;
 end;
 
-destructor TVGuiEditor.Destroy;
-begin
-  //{$ifdef debug}dbgln('TVGuiEditor destroy');{$endif}
-  FGui.Free;
-  inherited destroy;
-end;
-
-procedure TVGuiEditor.EditBegin(index:integer);
-begin
-  {$ifdef debug}dbgln('Called EditBegin, index: %d',[index]);{$endif}
-  Base.CallHost(amBeginEdit,index);
-end;
-
-procedure TVGuiEditor.EditEnd(index:integer);
-begin
-  {$ifdef debug}dbgln('Called EditEnd, index: %d',[index]);{$endif}
-  Base.CallHost(amEndEdit,index);
-end;
-
-function TVGuiEditor.GetGui:TForm;
-begin
-  Result:=FGui;
-end;
-
-procedure TVGuiEditor.GetRect(const Rect:PPERect);
+procedure TVEditor.GetRect(const Rect:PPERect);
 begin
   {$ifdef debug}dbgln('Get rect, w: %d, h: %d',[FGui.Width,FGui.Height]);{$endif}
   FRect.Left:=0;
@@ -180,41 +116,36 @@ begin
   Rect^:=@FRect;
 end;
 
-procedure TVGuiEditor.Idle;
+procedure TVEditor.Idle;
 begin
   if Assigned(FOnIdle) then FOnIdle;
 end;
 
-function TVGuiEditor.IsOpen:Boolean;
+function TVEditor.IsOpen:Boolean;
 begin
   Result:=FOpening;
 end;
 
-procedure TVGuiEditor.Open(const ParentHandle:TEHandle);
+procedure TVEditor.EditBegin(index:integer);
 begin
-  {$ifdef debug}dbgln('Called editor open, handle: %X',[ParentHandle]);{$endif}
-  FGui.ParentWindow:=ParentHandle;
-  FGui.Show;
-  Base.CallHost(amSizeWindow,FGui.Width,FGui.Height);
-  FOpening:=True;
+  {$ifdef debug}dbgln('Called EditBegin, index: %d',[index]);{$endif}
+  FPlugin.Base.CallHost(amBeginEdit,index);
 end;
 
-procedure TVGuiEditor.SetGui(GuiClass:TFormClass);
+procedure TVEditor.EditEnd(index:integer);
 begin
-  if not Assigned(FGui) then
-  begin
-    FGui:=GuiClass.Create(nil);
-    //FGui.Parent:=nil;
-    FGui.SetBounds(0,0,FGui.Width,FGui.Height);
-    FGui.BorderStyle:=bsNone;
-    Base.SetFlag(effFlagsHasEditor);
-    {$ifdef debug}dbgln('Set gui successfully, class name: %s',[GuiClass.ClassName]);{$endif}
-  end;
+  {$ifdef debug}dbgln('Called EditEnd, index: %d',[index]);{$endif}
+  FPlugin.Base.CallHost(amEndEdit,index);
 end;
 
-procedure TVGuiEditor.SetIdle(IdleProc:TObjProc);
+procedure TVEditor.SetIdle(IdleProc:TObjProc);
 begin
   FOnIdle:=IdleProc;
+end;
+
+function TVEditor.GetGui:TObject;
+begin
+  Result:=FGui;
 end;
 
 { TVGuiPlugin }
@@ -222,8 +153,7 @@ end;
 constructor TVGuiPlugin.Create(AHost:THostCallback);
 begin
   inherited Create(AHost);
-  FGuiEditor:=TVGuiEditor.Create(Base);
-  FGuiEditor.GetInterface(iidIVGuiEditor,FEditor);
+  SetEditor(TVEditor.Create(self));
   //{$ifdef debug}dbgln('TVGuiPlugin create');{$endif}
 end;
 
@@ -233,16 +163,9 @@ begin
   inherited destroy;
 end;
 
-function TVGuiPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
+function NewEditor(Plugin:TVPlugin;FrmClass:TClass):IVEditor;
 begin
-  Result:=0;
-  case opcode of
-    effEditOpen:FGuiEditor.Open(ToIntPtr(ptr));
-    effEditClose:FGuiEditor.Close;
-    effEditIdle:FGuiEditor.Idle;
-    effEditGetRect:FGuiEditor.GetRect(ptr);
-    else Result:=inherited Dispatcher(opcode,index,value,ptr,opt);
-  end;
+  Result:=TVEditor.Create(Plugin,FrmClass);
 end;
 
 end.

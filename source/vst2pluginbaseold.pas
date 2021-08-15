@@ -292,7 +292,7 @@ function DispatchEffectCb(e: PAEffect; opcode, index: Int32; Value: IntPtr; ptr:
 var
   v:TPluginComponent;
 begin
-  v:=TPluginComponent(e^.pObject);
+  v:=TPluginComponent(e^.Obj);
   if opcode=ord(effClose) then
   begin
     v.Dispatcher(TAEffectOpcodes(opcode),index,value,ptr,opt);
@@ -304,19 +304,19 @@ end;
 
 function GetParameterCb(e: PAEffect; index: Int32): single; cdecl;
 begin
-  Result:=TPluginComponent(e^.pObject).GetParameter(index);
+  Result:=TPluginComponent(e^.Obj).GetParameter(index);
 end;
 
 procedure SetParameterCb(e: PAEffect; index: Int32; value: single); cdecl;
 begin
   // Simply set the value, see TPluginComponent.SetParameter to get the reason
-  TPluginComponent(e^.pObject).FParamInfos[index].Value := value;
+  TPluginComponent(e^.Obj).FParamInfos[index].Value := value;
 end;
 
 procedure ProcessCb(e: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
 {$ifdef FPC}
 begin
-  TVSTPlugin(e^.pObject).Process(inputs,outputs,sampleframes);
+  TVSTPlugin(e^.Obj).Process(inputs,outputs,sampleframes);
 end;
 {$else}
 var
@@ -342,7 +342,7 @@ end;
 procedure Process32Cb(e: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
 {$ifdef FPC}
 begin
-  TVSTPlugin(e^.pObject).Process32(inputs,outputs,sampleframes);
+  TVSTPlugin(e^.Obj).Process32(inputs,outputs,sampleframes);
 end;
 {$else}
 var
@@ -369,7 +369,7 @@ end;
 procedure Process64Cb(e: PAEffect; inputs, outputs: PPDouble; sampleFrames: Int32); cdecl;
 {$ifdef FPC}
 begin
-  TVSTPlugin(e^.pObject).Process64(inputs,outputs,sampleframes);
+  TVSTPlugin(e^.Obj).Process64(inputs,outputs,sampleframes);
 end;
 {$else}
 var
@@ -590,7 +590,7 @@ begin
   FEffect.NumInputs := 2;  // stereo input
   FEffect.NumOutputs := 2; // stereo output
   FEffect.IORatio := 1;
-  FEffect.pObject := self;
+  FEffect.Obj := self;
   FEffect.UniqueID := MakeLong('N', 'o', 'E', 'f');
   FEffect.Version := 1;
   FEffect.ProcessReplacing := @Process32Cb;

@@ -1,7 +1,7 @@
 {-------------------------------------------------------------------------------
 // This unit is part of vst24pas
 // Unit name   : vst2plugbas
-// Description : Base for vst2 plugin
+// Description : Bases for vst2 plugin
 // Created by  : PeaZomboss, 2021/07
 
 // The base unit for plugin, usually not use directly
@@ -20,6 +20,7 @@ const
   iidIVBase:TGuid='{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}';
   iidIVParam:TGuid='{4301340C-F67B-48E8-A67F-DD6BFBA6FC2E}';
   iidIVPreset:TGuid='{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}';
+  iidIVEditor:TGuid='{C34A39C2-8410-41BC-97E0-F473300CF1C5}';
 
 type
   TObjProc = procedure of object;
@@ -27,7 +28,6 @@ type
 
   IVPlugBase = interface
     ['{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}']
-    //function GetEffect:PAEffect;
     function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
     function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     procedure SetIONumber(InNumber,OutNumber:Int32);
@@ -38,9 +38,9 @@ type
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
+    procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
     function SampleRate:Single;
     function BlockSize:Integer;
-    //property Effect:PAEffect read GetEffect;
   end;
 
   TCustomParamDisplayObjFunc = function(index:integer):AnsiString of object;
@@ -65,6 +65,17 @@ type
 
   end;
 
+  IVEditor = interface
+    ['{C34A39C2-8410-41BC-97E0-F473300CF1C5}']
+    function IsOpen:Boolean;
+    procedure EditBegin(index:integer);
+    procedure EditEnd(index:integer);
+    procedure SetIdle(IdleProc:TObjProc);
+    procedure SetGui(FrmClass:TClass);
+    function GetGui:TObject;
+    property Gui:TObject read GetGui;
+  end;
+
   { TVPlugBase }
 
   TVPlugBase = class(TInterfacedObject,IVPlugBase)
@@ -79,6 +90,7 @@ type
     FProductName:AnsiString;
     FVendorVersion:Int32;
     FVendorSpecific:TVendorSpecificObjFunc;
+    FCanDos:TPlugCanDos;
   protected
     FEffect:TAEffect;
     function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
@@ -91,10 +103,11 @@ type
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
+    procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
     function SampleRate:Single;
     function BlockSize:Integer;
   public
-    constructor Create(AHost:THostCallback;Obj:TObject);
+    constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
     function GetEffect:PAEffect;
     procedure SetSampleRate(AValue:Single);
@@ -102,6 +115,7 @@ type
     procedure SetProcessPrecision(AValue:Integer);
     function GetPlugCategory:Integer;
     function VendorSpecific(Arg1:Int32;Arg2:IntPtr;Arg3:Pointer;Arg4:Single):IntPtr;
+    function CanDo(szcd:PAnsiChar):Integer;
     property PlugName:AnsiString read FPlugName;
     property VendorName:AnsiString read FVendorName;
     property ProductName:AnsiString read FProductName;
@@ -146,7 +160,7 @@ type
       Properties:PVstParameterProperties=nil);
     procedure SetCustomParamDisplay(AProc:TCustomParamDisplayObjFunc);
   public
-    constructor Create(AHost:THostCallback;Obj:TObject);
+    constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
     function GetParamName(index:integer):AnsiString;
     function GetParamLabel(index:integer):AnsiString;
@@ -181,7 +195,7 @@ type
     FNumPreset:Integer;
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
   public
-    constructor Create(AHost:THostCallback;Obj:TObject);
+    constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
     function GetPreset:Integer;
     procedure SetPreset(NewPreset:Integer);
@@ -192,6 +206,14 @@ type
 
   TVPluginBase = class(TVPresetBase)
 
+  end;
+
+  TVEditorBase = class(TInterfacedObject)
+  public
+    procedure Open(const ParentHandle:PtrUInt);dynamic;abstract;
+    procedure Close;dynamic;abstract;
+    procedure GetRect(const Rect:PPERect);virtual;abstract;
+    procedure Idle;virtual;abstract;
   end;
 
 
@@ -220,7 +242,7 @@ end;
 
 { TVPlugBase }
 
-constructor TVPlugBase.Create(AHost:THostCallback;Obj:TObject);
+constructor TVPlugBase.Create(AHost:THostCallback;Plugin:TObject);
 begin
   //{$ifdef debug}dbgln('TVBase start create');{$endif}
   FHost:=AHost;
@@ -231,7 +253,7 @@ begin
     NumInputs:=2;
     NumOutputs:=2;
     IORatio:=1;
-    pObject:=Obj;
+    Obj:=Plugin;
     UniqueID:=MakeLong('NoEf');
     Version:=1;
   end;
@@ -340,6 +362,14 @@ begin
     FEffect.Flags:=FEffect.Flags-Flags;
 end;
 
+procedure TVPlugBase.SetCanDo(pcd:TPlugCanDo;state:Boolean);
+begin
+  if state then
+    Include(FCanDos,pcd)
+  else
+    Exclude(FCanDos,pcd);
+end;
+
 procedure TVPlugBase.SetVersion(EffVer,VendorVer:Int32);
 begin
   FEffect.Version:=EffVer;
@@ -354,6 +384,14 @@ begin
     Result:=0;
 end;
 
+function TVPlugBase.CanDo(szcd:PAnsiChar):Integer;
+begin
+  if VstString2PlugCanDo(szcd) in FCanDos then
+    Result:=1
+  else
+    Result:=-1;;
+end;
+
 
 { TVParameter }
 
@@ -365,9 +403,9 @@ end;
 
 { TVParamBase }
 
-constructor TVParamBase.Create(AHost:THostCallback;Obj:TObject);
+constructor TVParamBase.Create(AHost:THostCallback;Plugin:TObject);
 begin
-  inherited Create(AHost,Obj);
+  inherited Create(AHost,Plugin);
   FNumParam:=0;
   FParams:=TVParamList.Create(True);
   SetFlag(effFlagsProgramChunks);
@@ -499,9 +537,9 @@ end;
 
 { TVPresetBase }
 
-constructor TVPresetBase.Create(AHost:THostCallback;Obj:TObject);
+constructor TVPresetBase.Create(AHost:THostCallback;Plugin:TObject);
 begin
-  inherited Create(AHost,Obj);
+  inherited Create(AHost,Plugin);
   FCurPreset:=0;
   FNumPreset:=0;
   FPresets:=TPresetList.Create(True);
@@ -521,6 +559,7 @@ end;
 destructor TVPresetBase.Destroy;
 begin
   //{$ifdef debug}dbgln('TVPresetBase destroy');{$endif}
+  FPresets.Free;
   SetLength(FCurParamValues,0);
   inherited Destroy;
 end;
