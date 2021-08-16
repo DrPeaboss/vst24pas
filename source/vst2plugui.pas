@@ -37,7 +37,7 @@ type
   public
     constructor Create(Plugin:TVPlugin;FrmClass:TClass=nil);
     destructor Destroy;override;
-    procedure Open(const ParentHandle:PtrUInt);override;
+    procedure Open(ParentHandle:Pointer);override;
     procedure Close;override;
     procedure GetRect(const Rect:PPERect);override;
     procedure Idle;override;
@@ -57,13 +57,12 @@ function NewEditor(Plugin:TVPlugin;FrmClass:TClass=nil):IVEditor;
 implementation
 
 uses
-  controls{$ifdef debug},sysutils{$endif};
+  controls;
 
 { TVEditor }
 
 constructor TVEditor.Create(Plugin:TVPlugin;FrmClass:TClass);
 begin
-  //{$ifdef debug}dbgln('TVEditor create');{$endif}
   FPlugin:=Plugin;
   FOpening:=False;
   FGui:=nil;
@@ -72,7 +71,6 @@ end;
 
 destructor TVEditor.Destroy;
 begin
-  //{$ifdef debug}dbgln('TVEditor destroy');{$endif}
   FGui.Free;
   inherited destroy;
 end;
@@ -90,10 +88,9 @@ begin
   end;
 end;
 
-procedure TVEditor.Open(const ParentHandle:PtrUInt);
+procedure TVEditor.Open(ParentHandle:Pointer);
 begin
-  {$ifdef debug}dbgln('Called editor open, handle: %X',[ParentHandle]);{$endif}
-  FGui.ParentWindow:=ParentHandle;
+  FGui.ParentWindow:=ToIntPtr(ParentHandle);
   FGui.Show;
   FPlugin.Base.CallHost(amSizeWindow,FGui.Width,FGui.Height);
   FOpening:=True;
@@ -108,7 +105,7 @@ end;
 
 procedure TVEditor.GetRect(const Rect:PPERect);
 begin
-  {$ifdef debug}dbgln('Get rect, w: %d, h: %d',[FGui.Width,FGui.Height]);{$endif}
+  //{$ifdef debug}dbgln('Get rect, w: %d, h: %d',[FGui.Width,FGui.Height]);{$endif}
   FRect.Left:=0;
   FRect.Top:=0;
   FRect.Right:=FGui.Width;
@@ -154,12 +151,10 @@ constructor TVGuiPlugin.Create(AHost:THostCallback);
 begin
   inherited Create(AHost);
   SetEditor(TVEditor.Create(self));
-  //{$ifdef debug}dbgln('TVGuiPlugin create');{$endif}
 end;
 
 destructor TVGuiPlugin.Destroy;
 begin
-  //{$ifdef debug}dbgln('TVGuiPlugin destroy');{$endif}
   inherited destroy;
 end;
 

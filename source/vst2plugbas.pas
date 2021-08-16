@@ -120,7 +120,6 @@ type
     property VendorName:AnsiString read FVendorName;
     property ProductName:AnsiString read FProductName;
     property VendorVersion:Int32 read FVendorVersion;
-    //property Effect:PAEffect read GetEffect;
   end;
 
   { TVParameter }
@@ -210,7 +209,7 @@ type
 
   TVEditorBase = class(TInterfacedObject)
   public
-    procedure Open(const ParentHandle:PtrUInt);dynamic;abstract;
+    procedure Open(ParentHandle:Pointer);dynamic;abstract;
     procedure Close;dynamic;abstract;
     procedure GetRect(const Rect:PPERect);virtual;abstract;
     procedure Idle;virtual;abstract;
@@ -225,17 +224,44 @@ procedure dbgln(const fmt:string;const args:array of const);overload;
 implementation
 
 uses
-  sysutils;
+  sysutils
+  {$ifdef debug},classes{$endif};
 
 {$ifdef debug}
 procedure dbgln(const log:string);
+var
+  fn:String;
 begin
   if IsConsole then Writeln('[PlugDbgLog]> ',log);
+  {
+  fn:=GetUserDir+'vst24paslog.log';
+  if not FileExists(fn) then
+    FileClose(FileCreate(fn));
+  with TStringList.Create do
+  begin
+    LoadFromFile(fn);
+    Add('[PlugDbgLog]> '+log);
+    SaveToFile(fn);
+    Free;
+  end; }
 end;
 
 procedure dbgln(const fmt:string;const args:array of const);
+var
+  fn:String;
 begin
   if IsConsole then WriteLn('[PlugDbgLog]> ',Format(fmt,args));
+  {
+  fn:=GetUserDir+'vst24paslog.log';
+  if not FileExists(fn) then
+    FileClose(FileCreate(fn));
+  with TStringList.Create do
+  begin
+    LoadFromFile(fn);
+    Add('[PlugDbgLog]> '+Format(fmt,args));
+    SaveToFile(fn);
+    Free;
+  end; }
 end;
 
 {$endif}
@@ -281,7 +307,6 @@ end;
 
 destructor TVPlugBase.Destroy;
 begin
-  //{$ifdef debug}dbgln('TVBase destroy');{$endif}
   inherited Destroy;
 end;
 
@@ -409,7 +434,6 @@ begin
   FNumParam:=0;
   FParams:=TVParamList.Create(True);
   SetFlag(effFlagsProgramChunks);
-  //{$ifdef debug}dbgln('TVParamBase create');{$endif}
 end;
 
 procedure TVParamBase.AddParameter(AValue:single;const AName,ALabel:AnsiString;CanBeAuto:Boolean;
@@ -443,7 +467,6 @@ end;
 
 destructor TVParamBase.Destroy;
 begin
-  //{$ifdef debug}dbgln('TVParamBase destroy');{$endif}
   FParams.Free;
   inherited destroy;
 end;
@@ -543,7 +566,6 @@ begin
   FCurPreset:=0;
   FNumPreset:=0;
   FPresets:=TPresetList.Create(True);
-  //{$ifdef debug}dbgln('TVPresetBase create');{$endif}
 end;
 
 procedure TVPresetBase.AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
@@ -558,7 +580,6 @@ end;
 
 destructor TVPresetBase.Destroy;
 begin
-  //{$ifdef debug}dbgln('TVPresetBase destroy');{$endif}
   FPresets.Free;
   SetLength(FCurParamValues,0);
   inherited Destroy;

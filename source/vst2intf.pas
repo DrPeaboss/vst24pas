@@ -166,7 +166,6 @@ type
 {$endif}
   end;
 
-
   // Basic dispatcher Opcodes (Host to Plug-in)
   TAEffectOpcodes = (
     effOpen,       // open the plugin, usually be called after loaded the plugin
@@ -440,6 +439,9 @@ type
     Bottom: int16; // bottom coordinate, usually height
     Right:  int16; // right coordinate, usually width
   end;
+
+
+{ VST 2.x extensions }
 
 const
   // String length limits (in characters excl. 0 byte).
@@ -801,7 +803,7 @@ type
     kSpeakerLc,                     // Left of Center (Lc)
     kSpeakerRc,                     // Right of Center (Rc)
     kSpeakerS,                      // Surround (S)
-    kSpeakerCs = kSpeakerS,         // Center of Surround (Cs) = Surround (S)
+    //kSpeakerCs = kSpeakerS,         // Center of Surround (Cs) = Surround (S)
     kSpeakerSl,                     // Side Left (Sl)
     kSpeakerSr,                     // Side Right (Sr)
     kSpeakerTm,                     // Top Middle (Tm)
@@ -814,6 +816,8 @@ type
     kSpeakerLfe2,                   // Subbass 2 (Lfe2)
     kSpeakerUndefined = $7fffffff   // Undefined
   );
+const kSpeakerCs = kSpeakerS;       // Center of Surround (Cs) = Surround (S)
+type
   PVstSpeakerProperties = ^TVstSpeakerProperties;
   { Speaker Properties.
   The origin for azimuth is right (as by math conventions dealing with radians).
@@ -1204,7 +1208,9 @@ function VstAmp2dBString(const value: double): shortstring;
 // Convert the integer part of float number to string with length 8
 function VstInt2String(const value: double): AnsiString;
 
+
 { FxStore }
+
 const
   CMagic           = 'CcnK';
   FMagic           = 'FxCk';
@@ -1261,10 +1267,12 @@ type
     end;
   end;
 
-// Some useful additional constants
+
+{ Some useful additional constants and types }
+
 const
   // TAudioMasterOpcodes max number
-  kVstAMOpcodeMax = ord(amGetInputSpeakerArrangement)+1;
+  kVstAMOpcodeMax = ord(high(TAudioMasterOpcodes))+1;
   // TAEffectOpcodes max number
   kVstAEOpcodeMax = ord(high(TAEffectOpcodes))+1;
 
@@ -1521,7 +1529,7 @@ end;
 function VstdB2Amp(const value: double): double;
 begin
   if value >= -140 then
-    Result:=exp(value*0.1151292546497)
+    Result:=exp(value*0.11512925464970228420)
   else
     Result:=0;
 end;

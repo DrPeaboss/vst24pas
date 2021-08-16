@@ -4,5 +4,16 @@ object Formain: TFormain
   Top = 152
   Width = 640
   Caption = 'Formain'
+  ClientHeight = 480
+  ClientWidth = 640
   DesignTimePPI = 120
+  object BtnGetDir: TButton
+    Left = 264
+    Height = 53
+    Top = 219
+    Width = 112
+    Caption = 'BtnGetDir'
+    OnClick = BtnGetDirClick
+    TabOrder = 0
+  end
 end

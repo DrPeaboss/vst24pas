@@ -31,8 +31,8 @@ type
     FEditor:IVEditor;
   protected
     function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;virtual;
-    function GetParameter(index:integer):Single;virtual;
-    procedure SetParameter(index:integer;value:Single);virtual;
+    function GetParameter(index:Integer):Single;virtual;
+    procedure SetParameter(index:Integer;value:Single);virtual;
     procedure Process(const inputs,outputs:TBuffer32;SampleFrames:Int32);virtual;
     procedure ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);virtual;
 {$ifdef VST_2_4_EXTENSIONS}
@@ -59,94 +59,100 @@ uses
 
 // Callback methods in TAEffect
 
-function DispatcherCb(e:PAEffect;opcode,index:Int32;Value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
+function DispatcherCb(e:PAEffect;opcode,index:Int32;value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
 
 {$ifdef debug}
   procedure logdbg;
   begin
     if (opcode>=0) and (opcode<kVstAEOpcodeMax) then
     case TAEOpcodes(opcode) of
-      effOpen: ;
-      effClose: ;
+      effOpen: dbgln('Host open the plugin');
+      effClose: dbgln('Host close the plugin');
       effSetProgram: dbgln('Host set preset: %d',[value]);
-      effGetProgram: ;
+      effGetProgram: dbgln('Host get preset');
       effSetProgramName: dbgln('Host set preset name: %s',[strpas(ptr)]);
-      effGetProgramName: ;
-      effGetParamLabel: ;
-      effGetParamDisplay: ;
-      effGetParamName: ;
+      effGetProgramName: dbgln('Host get preset name');
+      effGetParamLabel: dbgln('Host get param label, index: %d',[index]);
+      effGetParamDisplay: dbgln('Host get param display, index: %d',[index]);
+      effGetParamName: dbgln('Host get param name, index: %d',[index]);
       effGetVu: ;
-      effSetSampleRate: dbgln('Host set sample rate: %.5f',[opt]);
+      effSetSampleRate: dbgln('Host set sample rate: %.3f',[opt]);
       effSetBlockSize: dbgln('Host set block size: %d',[value]);
       effMainsChanged: if value=0 then dbgln('Host turn off the plugin')
                        else dbgln('Host turn on the plugin');
-      effEditGetRect: ;
-      effEditOpen: ;
-      effEditClose: ;
+      effEditGetRect: dbgln('Host get editor rect');
+      effEditOpen: dbgln('Host open editor, parent: %p',[ptr]);
+      effEditClose: dbgln('Host close editor');
       effEditDraw: ;
       effEditMouse: ;
       effEditKey: ;
-      effEditIdle: ;
+      effEditIdle: ; // lots
       effEditTop: ;
       effEditSleep: ;
       effIdentify: ;
       effGetChunk: dbgln('Host get chunk');
       effSetChunk: dbgln('Host set chunk, size: %d',[value]);
-      effProcessEvents: ;
-      effCanBeAutomated: ;
-      effString2Parameter: ;
+      effProcessEvents: ; // lots
+      effCanBeAutomated: dbgln('Host get can be automated,index: %d',[index]);
+      effString2Parameter: dbgln('Host string 2 parameter, index: %d, str: %s',[index,strpas(ptr)]);
       effGetNumProgramCategories: ;
-      effGetProgramNameIndexed: ;
+      effGetProgramNameIndexed: dbgln('Host get preset name, index: %d',[index]);
       effCopyProgram: ;
       effConnectInput: ;
       effConnectOutput: ;
-      effGetInputProperties: ;
-      effGetOutputProperties: ;
-      effGetPlugCategory: ;
+      effGetInputProperties: dbgln('Host get in properties, index: %d',[index]);
+      effGetOutputProperties: dbgln('Host get out properties, index: %d',[index]);
+      effGetPlugCategory: dbgln('Host get plug category');
       effGetCurrentPosition: ;
       effGetDestinationBuffer: ;
       effOfflineNotify: ;
       effOfflinePrepare: ;
       effOfflineRun: ;
       effProcessVarIO: ;
-      effSetSpeakerArrangement: ;
-      effSetBlockSizeAndSampleRate: ;
+      effSetSpeakerArrangement: dbgln('Host set speaker arrangement');
+      effSetBlockSizeAndSampleRate: dbgln('Host set blocksize %d and samplerate %.3f',[value,opt]);
       effSetBypass: ;
-      effGetEffectName: ;
+      effGetEffectName: dbgln('Host get effect name');
       effGetErrorText: ;
-      effGetVendorString: ;
-      effGetProductString: ;
-      effGetVendorVersion: ;
-      effVendorSpecific: ;
+      effGetVendorString: dbgln('Host get vendor string');
+      effGetProductString: dbgln('Host get product string');
+      effGetVendorVersion: dbgln('Host get vendor version');
+      effVendorSpecific: dbgln('Host vender specific, %x, %x, %p, %.3f',[index,value,ptr,opt]);
       effCanDo: dbgln('Host ask can do: %s',[StrPas(ptr)]);
-      effGetTailSize: ;
+      effGetTailSize: dbgln('Host get tail size');
       effIdle: ;
       effGetIcon: ;
       effSetViewPosition: ;
-      effGetParameterProperties: ;
+      effGetParameterProperties: dbgln('Host get parameter properties, index: %d',[index]);
       effKeysRequired: ;
-      effGetVstVersion: ;
-      effEditKeyDown: ;
-      effEditKeyUp: ;
+      effGetVstVersion: dbgln('Host get vst version');
+{$ifdef VST_2_1_EXTENSIONS}
+      effEditKeyDown: dbgln('Host call key down, %d, %d, %.3f',[index,value,opt]);
+      effEditKeyUp: dbgln('Host call key up, %d, %d, %.3f',[index,value,opt]);
       effSetEditKnobMode: dbgln('Host set edit knob mode: %d',[value]);
-      effGetMidiProgramName: ;
-      effGetCurrentMidiProgram: ;
-      effGetMidiProgramCategory: ;
-      effHasMidiProgramsChanged: ;
-      effGetMidiKeyName: ;
-      effBeginSetProgram: ;
-      effEndSetProgram: ;
-      effGetSpeakerArrangement: ;
-      effShellGetNextPlugin: ;
-      effStartProcess: ;
-      effStopProcess: ;
-      effSetTotalSampleToProcess: ;
-      effSetPanLaw: dbgln('Host set pan law: %d, gain: %.5f',[value,opt]);
-      effBeginLoadBank: ;
-      effBeginLoadProgram: ;
+      effGetMidiProgramName: dbgln('Host get midi program name, channel: %d',[index]);
+      effGetCurrentMidiProgram: dbgln('Host get current midi program, channel: %d',[index]);
+      effGetMidiProgramCategory: dbgln('Host get midi program category, channel: %d',[index]);
+      effHasMidiProgramsChanged: dbgln('Host has midi programs changed, channel: %d',[index]);
+      effGetMidiKeyName: dbgln('Host get midi key name, channel: %d',[index]);
+      effBeginSetProgram: dbgln('Host begin set program');
+      effEndSetProgram: dbgln('Host end set program');
+{$endif}
+{$ifdef VST_2_3_EXTENSIONS}
+      effGetSpeakerArrangement: dbgln('Host get speaker arrangement');
+      effShellGetNextPlugin: dbgln('Host get next plugin');
+      effStartProcess: dbgln('Host start process');
+      effStopProcess: dbgln('Host stop process');
+      effSetTotalSampleToProcess: dbgln('Host set total sample to process, num: %d',[value]);
+      effSetPanLaw: dbgln('Host set pan law: %d, gain: %.3f',[value,opt]);
+      effBeginLoadBank: dbgln('Host begin load bank');
+      effBeginLoadProgram: dbgln('Host begin load program');
+{$endif}
+{$ifdef VST_2_4_EXTENSIONS}
       effSetProcessPrecision: dbgln('Host set process precision: %d',[value]);
-      effGetNumMidiInputChannels: ;
-      effGetNumMidiOutputChannels: ;
+      effGetNumMidiInputChannels: dbgln('Host get midi in channels');
+      effGetNumMidiOutputChannels: dbgln('Host get midi out channels');
+{$endif}
     end;
   end;
 {$endif}
@@ -169,7 +175,7 @@ begin
   end else begin
     Result:=0;
 {$ifdef debug}
-    dbgln('Unknown eff opcode: %d, index: %d, value: %d, ptr: %p or str: %s, opt: %.5f',
+    dbgln('Unknown eff opcode: %d, index: %d, value: %d, ptr: %p or str: %s, opt: %.3f',
       [opcode,index,value,ptr,strpas(ptr),opt]);
 {$endif}
   end;
@@ -183,7 +189,7 @@ end;
 
 procedure SetParameterCb(e:PAEffect;index:Int32;value:single);cdecl;
 begin
-  {$ifdef debug}dbgln('SetParameterCb index: %d, value: %.5f',[index,value]);{$endif}
+  {$ifdef debug}dbgln('SetParameterCb index: %d, value: %.3f',[index,value]);{$endif}
   TVPlugin(e^.Obj).SetParameter(index,value);
 end;
 
@@ -224,12 +230,10 @@ begin
   FPluginBase.GetInterface(iidIVBase,FBase);
   FPluginBase.GetInterface(iidIVParam,FParam);
   FPluginBase.GetInterface(iidIVPreset,FPreset);
-  //{$ifdef debug}dbgln('TVPlugin create');{$endif}
 end;
 
 destructor TVPlugin.Destroy;
 begin
-  //{$ifdef debug}dbgln('TVPlugin destroy');{$endif}
   inherited Destroy;
 end;
 
@@ -240,7 +244,7 @@ end;
 
 procedure TVPlugin.SetEditor(AEditor:IVEditor);
 begin
-  if Assigned(AEditor) then
+  if Assigned(AEditor) and not Assigned(FEditor) then
   begin
     FEditor:=AEditor;
     FEditorBase:=FEditor as TVEditorBase;
@@ -249,10 +253,6 @@ end;
 
 function TVPlugin.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
 begin
-  //{$ifdef debug}
-  //dbgln('opcode: %s, index: %d, value: %d, ptr: %p, opt: %.5f',
-  //  [VstAEOpcode2Str(opcode),index,value,ptr,opt]);
-  //{$endif}
   Result:=0;
   case opcode of
     effOpen: ;
@@ -268,7 +268,7 @@ begin
     effSetSampleRate: FPluginBase.SetSampleRate(opt);
     effSetBlockSize: FPluginBase.SetBlockSize(value);
     effMainsChanged: ;
-    effEditOpen: if Assigned(FEditorBase) then FEditorBase.Open(ToIntPtr(ptr));
+    effEditOpen: if Assigned(FEditorBase) then FEditorBase.Open(ptr);
     effEditClose: if Assigned(FEditorBase) then FEditorBase.Close;
     effEditIdle: if Assigned(FEditorBase) then FEditorBase.Idle;
     effEditGetRect: if Assigned(FEditorBase) then FEditorBase.GetRect(ptr);
@@ -311,6 +311,7 @@ begin
     effGetParameterProperties: Result:=FPluginBase.GetParameterProperties(index,ptr);
     effKeysRequired: ;
     effGetVstVersion: Result:=kVstVersion;
+{$ifdef VST_2_1_EXTENSIONS}
     effGetMidiProgramName: ;
     effGetCurrentMidiProgram: ;
     effGetMidiProgramCategory: ;
@@ -318,6 +319,8 @@ begin
     effGetMidiKeyName: ;
     effBeginSetProgram: ;
     effEndSetProgram: ;
+{$endif}
+{$ifdef VST_2_3_EXTENSIONS}
     effGetSpeakerArrangement: ;
     effShellGetNextPlugin: ;
     effStartProcess: ;
@@ -326,19 +329,22 @@ begin
     effSetPanLaw: ;
     effBeginLoadBank: ;
     effBeginLoadProgram: ;
+{$endif}
+{$ifdef VST_2_4_EXTENSIONS}
     effSetProcessPrecision: FPluginBase.SetProcessPrecision(Value);
     effGetNumMidiInputChannels: ;
     effGetNumMidiOutputChannels: ;
+{$endif}
     else ;
   end;
 end;
 
-function TVPlugin.GetParameter(index:integer):Single;
+function TVPlugin.GetParameter(index:Integer):Single;
 begin
   Result:=FParam.GetParameter(index);
 end;
 
-procedure TVPlugin.SetParameter(index:integer;value:Single);
+procedure TVPlugin.SetParameter(index:Integer;value:Single);
 begin
   FParam.SetParameter(index,value);
 end;
