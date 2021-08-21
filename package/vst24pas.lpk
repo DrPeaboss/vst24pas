@@ -8,8 +8,8 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <IncludeFiles Value="..\source"/>
-        <OtherUnitFiles Value="..\source"/>
+        <IncludeFiles Value="..\source;..\source\old"/>
+        <OtherUnitFiles Value="..\source;..\source\old"/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Parsing>
@@ -42,63 +42,63 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
-    <Version Minor="2" Release="1"/>
+    <Version Minor="2" Release="2"/>
     <Files Count="14">
       <Item1>
-        <Filename Value="..\source\vst24pas.inc"/>
+        <Filename Value="..\source\vcompiler.inc"/>
         <Type Value="Include"/>
       </Item1>
       <Item2>
-        <Filename Value="..\source\vst24pas.base.pas"/>
-        <UnitName Value="vst24pas.base"/>
-      </Item2>
-      <Item3>
-        <Filename Value="..\source\vst24pas.core.pas"/>
-        <UnitName Value="vst24pas.core"/>
-      </Item3>
-      <Item4>
-        <Filename Value="..\source\vst24pas.utils.pas"/>
-        <UnitName Value="vst24pas.utils"/>
-      </Item4>
-      <Item5>
-        <Filename Value="..\source\vst24pas.gui.pas"/>
-        <UnitName Value="vst24pas.gui"/>
-      </Item5>
-      <Item6>
-        <Filename Value="..\source\vst24pas.new.pas"/>
-        <UnitName Value="vst24pas.new"/>
-      </Item6>
-      <Item7>
-        <Filename Value="..\source\vcompiler.inc"/>
-        <Type Value="Include"/>
-      </Item7>
-      <Item8>
         <Filename Value="..\source\vst2intf.pas"/>
         <UnitName Value="vst2intf"/>
-      </Item8>
-      <Item9>
+      </Item2>
+      <Item3>
         <Filename Value="..\source\vst2plugbas.pas"/>
         <UnitName Value="vst2plugbas"/>
-      </Item9>
-      <Item10>
-        <Filename Value="..\source\vst2plugui.pas"/>
-        <UnitName Value="vst2plugui"/>
-      </Item10>
-      <Item11>
+      </Item3>
+      <Item4>
         <Filename Value="..\source\vst2plugin.pas"/>
         <UnitName Value="vst2plugin"/>
-      </Item11>
-      <Item12>
+      </Item4>
+      <Item5>
+        <Filename Value="..\source\vst2plugui.pas"/>
+        <UnitName Value="vst2plugui"/>
+      </Item5>
+      <Item6>
         <Filename Value="..\source\vst2entry.pas"/>
         <UnitName Value="vst2entry"/>
-      </Item12>
-      <Item13>
+      </Item6>
+      <Item7>
         <Filename Value="..\source\vst2hostbas.pas"/>
         <UnitName Value="vst2hostbas"/>
-      </Item13>
-      <Item14>
+      </Item7>
+      <Item8>
         <Filename Value="..\source\vst2pluginbaseold.pas"/>
         <UnitName Value="vst2pluginbaseold"/>
+      </Item8>
+      <Item9>
+        <Filename Value="..\source\old\vst24pas.inc"/>
+        <Type Value="Include"/>
+      </Item9>
+      <Item10>
+        <Filename Value="..\source\old\vst24pas.core.pas"/>
+        <UnitName Value="vst24pas.core"/>
+      </Item10>
+      <Item11>
+        <Filename Value="..\source\old\vst24pas.base.pas"/>
+        <UnitName Value="vst24pas.base"/>
+      </Item11>
+      <Item12>
+        <Filename Value="..\source\old\vst24pas.gui.pas"/>
+        <UnitName Value="vst24pas.gui"/>
+      </Item12>
+      <Item13>
+        <Filename Value="..\source\old\vst24pas.utils.pas"/>
+        <UnitName Value="vst24pas.utils"/>
+      </Item13>
+      <Item14>
+        <Filename Value="..\source\old\vst24pas.new.pas"/>
+        <UnitName Value="vst24pas.new"/>
       </Item14>
     </Files>
     <CompatibilityMode Value="True"/>

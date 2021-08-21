@@ -229,8 +229,8 @@ uses
 
 {$ifdef debug}
 procedure dbgln(const log:string);
-var
-  fn:String;
+//var
+//  fn:String;
 begin
   if IsConsole then Writeln('[PlugDbgLog]> ',log);
   {
@@ -247,8 +247,8 @@ begin
 end;
 
 procedure dbgln(const fmt:string;const args:array of const);
-var
-  fn:String;
+//var
+//  fn:String;
 begin
   if IsConsole then WriteLn('[PlugDbgLog]> ',Format(fmt,args));
   {

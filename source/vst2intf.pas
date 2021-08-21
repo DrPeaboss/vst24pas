@@ -9,7 +9,10 @@
 
 unit vst2intf;
 
-{$I vcompiler.inc}{$A8}{.$Z1}
+{$I vcompiler.inc}{$A8}
+{$ifdef FPC}
+  {$WARN 4055 off : Conversion between ordinals and pointers is not portable}
+{$endif}
 
 interface
 
@@ -423,11 +426,11 @@ function FromIntPtr(const arg: IntPtr):Pointer; inline;
 // Cast IntPtr to Pointer.
 function ToIntPtr(const ptr: Pointer):IntPtr; inline;
 // String copy taking care of null terminator.
-function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;overload;
+function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: SizeInt):PAnsiChar;overload;
 // Copy pascal AnsiString to AnsiChar array string
-function VstStrncpy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: longword):PAnsiChar;overload;
+function VstStrncpy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: SizeInt):PAnsiChar;overload;
 // String concatenation taking care of null terminator.
-function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword):PAnsiChar;
+//function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: SizeInt):PAnsiChar;
 
 type
   PPERect = ^PERect;
@@ -462,6 +465,7 @@ type
     kVstTriggerType,   // deprecated
     kVstSysExType      // MIDI system exclusive, see TVstMidiSysexEvent
   );
+
   PVstEvent = ^TVstEvent;
   // A generic timestamped event.
   TVstEvent = record
@@ -817,6 +821,7 @@ type
     kSpeakerUndefined = $7fffffff   // Undefined
   );
 const kSpeakerCs = kSpeakerS;       // Center of Surround (Cs) = Surround (S)
+
 type
   PVstSpeakerProperties = ^TVstSpeakerProperties;
   { Speaker Properties.
@@ -1197,16 +1202,18 @@ type
 function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
 // Convert TAudioMasterOpcodes to strings
 function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
-// Convert the amplitude to decibels, value should bigger than 1E-7
-function VstAmp2dB(const value: double): double; inline;
-// Convert the decibels to amplitude, value should bigger than -140
-function VstdB2Amp(const value: double): double; inline;
+// Convert the amplitude to decibels
+function VstAmp2dB(const value: double): double; inline; overload;
+function VstAmp2dB(const value: single): single; inline; overload;
+// Convert the decibels to amplitude
+function VstdB2Amp(const value: double): double; inline; overload;
+function VstdB2Amp(const value: single): single; inline; overload;
 // Convert the float number to string with length 8
-function VstFloat2String(const value: double): shortstring;
+function VstFloat2String(const value: single): shortstring;
 // Convert the float number to dB string with length 8
-function VstAmp2dBString(const value: double): shortstring;
+function VstAmp2dBString(const value: single): shortstring;
 // Convert the integer part of float number to string with length 8
-function VstInt2String(const value: double): AnsiString;
+function VstInt2String(const value: single): AnsiString;
 
 
 { FxStore }
@@ -1236,12 +1243,12 @@ type
     NumParams:  Int32; // number of parameters
     PrgName:    array[0..27] of AnsiChar; // program name (null-terminated ASCII string)
     Content: record  // program content depending on fxMagic
-      case longint of
-        0: (Params: array[0..0] of single); // variable sized array with parameter values
-        1: (Data: record // program chunk data
-              Size: Int32; // size of program data
-              Chunk: array[0..0] of AnsiChar; // variable sized array with opaque program data
-            end);
+    case longint of
+      0: (Params: array[0..0] of single); // variable sized array with parameter values
+      1: (Data: record // program chunk data
+            Size: Int32; // size of program data
+            Chunk: array[0..0] of AnsiChar; // variable sized array with opaque program data
+          end);
     end;
   end;
 
@@ -1258,12 +1265,12 @@ type
     CurrentProgram: Int32; // version 2: current program number
     Future:         array[0..123] of byte; // reserved, should be zero
     Content: record  // bank content depending on fxMagic
-      case longint of
-        0: (Programs: array[0..0] of TfxProgram); // variable number of programs
-        1: (Data: record // bank chunk data
-              Size: Int32; // size of bank data
-              Chunk: array[0..0] of AnsiChar; // variable sized array with opaque bank data
-            end);
+    case longint of
+      0: (Programs: array[0..0] of TfxProgram); // variable number of programs
+      1: (Data: record // bank chunk data
+            Size: Int32; // size of bank data
+            Chunk: array[0..0] of AnsiChar; // variable sized array with opaque bank data
+          end);
     end;
   end;
 
@@ -1338,37 +1345,37 @@ end;
 
 function FromIntPtr(const arg: IntPtr): Pointer;
 begin
-  Result := PPointer(@arg)^;
+  Result:=Pointer(arg);
 end;
 
 function ToIntPtr(const ptr: Pointer): IntPtr;
 begin
-  Result := PIntPtr(@ptr)^;
+  Result:=IntPtr(ptr);
 end;
 
-function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
+function VstStrncpy(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: SizeInt): PAnsiChar;
 begin
   Move(Source^, Dest^, maxlen);
   Dest[maxlen] := #0;
   Result := Dest;
 end;
 
-function VstStrncpy(Dest:PAnsiChar;const Source:AnsiString;MaxLen:longword):PAnsiChar;
+function VstStrncpy(Dest:PAnsiChar;const Source:AnsiString;MaxLen:SizeInt):PAnsiChar;
 begin
   Move(PAnsiChar(Source)^, Dest^, maxlen);
   Dest[maxlen] := #0;
   Result := Dest;
 end;
 
-function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: longword): PAnsiChar;
-var
-  Len: longword;
-begin
-  Len := StrLen(Dest);
-  Move(Source^, (Dest + Len)^, maxLen - Len);
-  Dest[maxLen] := #0;
-  Result := Dest;
-end;
+//function VstStrncat(Dest: PAnsiChar; Source: PAnsiChar; MaxLen: SizeInt): PAnsiChar;
+//var
+//  Len: SizeInt;
+//begin
+//  Len := StrLen(Dest);
+//  Move(Source^, (Dest + Len)^, maxLen - Len);
+//  Dest[maxLen] := #0;
+//  Result := Dest;
+//end;
 
 function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
 begin
@@ -1520,7 +1527,15 @@ end;
 
 function VstAmp2dB(const value: double): double;
 begin
-  if value>=1E-7 then
+  if value>=1E-50 then
+    Result:=20*Log10(value)
+  else
+    Result:=NegInfinity;
+end;
+
+function VstAmp2dB(const value:single):single;
+begin
+  if value>=1E-25 then
     Result:=20*Log10(value)
   else
     Result:=NegInfinity;
@@ -1528,16 +1543,24 @@ end;
 
 function VstdB2Amp(const value: double): double;
 begin
-  if value >= -140 then
+  if value >= -1000 then
     Result:=exp(value*0.11512925464970228420)
   else
     Result:=0;
 end;
 
-function VstFloat2String(const value:double):shortstring;
+function VstdB2Amp(const value:single):single;
+begin
+  if value >= -500 then
+    Result:=exp(value*0.11512925464970228420)
+  else
+    Result:=0;
+end;
+
+function VstFloat2String(const value:single):shortstring;
 var
   i: integer;
-  mantissa: double;
+  mantissa: single;
 begin
   if value=NegInfinity then Exit('-Inf'); // Cooperate with VstAmp2dB
   if (Value > 999999) or (Value < -99999) then
@@ -1561,8 +1584,8 @@ begin
     Result := Result + AnsiChar(Trunc(mantissa) + 48);
     Inc(i);
   end;
-  mantissa := Frac(mantissa) * 10;
-  if mantissa >= 5 then // Similar reason, see above
+  mantissa := Frac(mantissa);
+  if mantissa >= 0.5 then // Similar reason, see above
   begin
     while Result[i] = '9' do
     begin
@@ -1576,12 +1599,12 @@ begin
   end;
 end;
 
-function VstAmp2dBString(const value:double):shortstring;
+function VstAmp2dBString(const value:single):shortstring;
 begin
   Result:=VstFloat2String(VstAmp2dB(value));
 end;
 
-function VstInt2String(const value:double):AnsiString;
+function VstInt2String(const value:single):AnsiString;
 begin
   if (value>9999999) or (value<-999999) then
     Exit('Huge !!');

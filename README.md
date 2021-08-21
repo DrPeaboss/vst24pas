@@ -4,7 +4,7 @@ vst2.4 for pascal
 
 The pascal implementation of VST 2.4
 
-You can use it to develop a vst2 plugin with lcl or vcl for win32, win64 and even native linux. Though in linux is not stable.
+You can use it to develop a vst2 plugin with lcl or vcl for win32, win64 and even native linux. Though in linux is not stable for gui.
 
 I recommend not use lcl if you want to build linux plugin.
 
@@ -16,17 +16,17 @@ Both fpc and delphi are supported.
 
 Hint:
 
-- FPC 3.2.0 and 3.3.1 are tested.
+- FPC 3.2.2 and 3.3.1 are tested. (version 0.1 and 0.2)
 
-- Delphi 10.3.3 community is tested.
+- Delphi 10.3.3 community is tested. (version 0.1)
 
 Please see examples.
 
 ### lazarus
 
-Open vst24pas.lpk, compile.
+Open vst24pas.lpk, then 'Use - Add to Project'
 
-Then new project-library, add required package, find vst24pas.
+In the future, you only need to 'New Project - Library', open 'Project Inspector', find 'Add - New Requirement', search 'vst24pas' and add to project.
 
 ### delphi
 
