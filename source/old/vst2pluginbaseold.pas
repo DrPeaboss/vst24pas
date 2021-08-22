@@ -1,21 +1,24 @@
 {-------------------------------------------------------------------------------
 // This unit is part of vst24pas
-// Unit name   : vst2pluginbase
+// Unit name   : vst2pluginbaseold
 // Description : Classes for vst2 plugin (old)
 // Created by  : PeaZomboss, 2021/07
 -------------------------------------------------------------------------------}
 
 unit vst2pluginbaseold;
 
-{$WARN 5024 off : Parameter "$1" not used}
-{$I vcompiler.inc}
+{$I vst24pas.inc}
 
 interface
 
 uses
-  vst2intf,forms,sysutils;
+  vst24pas.core,forms,sysutils;
 
 type
+{$ifndef FPC}
+  TStringArray = array of string;
+  TProcedureOfObject = procedure of object;
+{$endif}
   // Vendor specific function for effVendorSpecific and amVendorSpecific
   TVendorSpecific = function(lArg1, lArg2: Int32; ptrArg: Pointer; floatArg: single):IntPtr of object;
 
@@ -287,12 +290,19 @@ implementation
 uses
   Controls,Math;
 
+{$ifndef FPC}
+function StrPas(P:Pointer):String;
+begin
+  Result:=StrPas(PAnsiChar(P));
+end;
+{$endif}
+
 function DispatchEffectCb(e: PAEffect; opcode, index: Int32; Value: IntPtr; ptr: Pointer;
   opt: single): IntPtr; cdecl;
 var
   v:TPluginComponent;
 begin
-  v:=TPluginComponent(e^.Obj);
+  v:=TPluginComponent(e^._Object);
   if opcode=ord(effClose) then
   begin
     v.Dispatcher(TAEffectOpcodes(opcode),index,value,ptr,opt);
@@ -304,19 +314,19 @@ end;
 
 function GetParameterCb(e: PAEffect; index: Int32): single; cdecl;
 begin
-  Result:=TPluginComponent(e^.Obj).GetParameter(index);
+  Result:=TPluginComponent(e^._Object).GetParameter(index);
 end;
 
 procedure SetParameterCb(e: PAEffect; index: Int32; value: single); cdecl;
 begin
   // Simply set the value, see TPluginComponent.SetParameter to get the reason
-  TPluginComponent(e^.Obj).FParamInfos[index].Value := value;
+  TPluginComponent(e^._Object).FParamInfos[index].Value := value;
 end;
 
 procedure ProcessCb(e: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
 {$ifdef FPC}
 begin
-  TVSTPlugin(e^.Obj).Process(inputs,outputs,sampleframes);
+  TVSTPlugin(e^._Object).Process(inputs,outputs,sampleframes);
 end;
 {$else}
 var
@@ -335,14 +345,14 @@ begin
     OutputsArr[i] := Pointer(outputs^);
     Inc(outputs);
   end;
-  TVSTPlugin(e^.pObject).Process(InputsArr, OutputsArr, SampleFrames);
+  TVSTPlugin(e^._Object).Process(InputsArr, OutputsArr, SampleFrames);
 end;
 {$endif}
 
 procedure Process32Cb(e: PAEffect; inputs, outputs: PPSingle; sampleFrames: Int32); cdecl;
 {$ifdef FPC}
 begin
-  TVSTPlugin(e^.Obj).Process32(inputs,outputs,sampleframes);
+  TVSTPlugin(e^._Object).Process32(inputs,outputs,sampleframes);
 end;
 {$else}
 var
@@ -361,7 +371,7 @@ begin
     OutputsArr[i] := Pointer(outputs^);
     Inc(outputs);
   end;
-  TVSTPlugin(e^.pObject).Process32(InputsArr, OutputsArr, SampleFrames);
+  TVSTPlugin(e^._Object).Process32(InputsArr, OutputsArr, SampleFrames);
 end;
 {$endif}
 
@@ -369,7 +379,7 @@ end;
 procedure Process64Cb(e: PAEffect; inputs, outputs: PPDouble; sampleFrames: Int32); cdecl;
 {$ifdef FPC}
 begin
-  TVSTPlugin(e^.Obj).Process64(inputs,outputs,sampleframes);
+  TVSTPlugin(e^._Object).Process64(inputs,outputs,sampleframes);
 end;
 {$else}
 var
@@ -388,7 +398,7 @@ begin
     OutputsArr[i] := Pointer(outputs^);
     Inc(outputs);
   end;
-  TVSTPlugin(e^.pObject).Process64(InputsArr, OutputsArr, SampleFrames);
+  TVSTPlugin(e^._Object).Process64(InputsArr, OutputsArr, SampleFrames);
 end;
 {$endif}
 {$endif}
@@ -590,8 +600,8 @@ begin
   FEffect.NumInputs := 2;  // stereo input
   FEffect.NumOutputs := 2; // stereo output
   FEffect.IORatio := 1;
-  FEffect.Obj := self;
-  FEffect.UniqueID := MakeLong('N', 'o', 'E', 'f');
+  FEffect._Object := self;
+  FEffect.UniqueID := CCONST('N', 'o', 'E', 'f');
   FEffect.Version := 1;
   FEffect.ProcessReplacing := @Process32Cb;
 {$ifdef VST_2_4_EXTENSIONS}
@@ -671,9 +681,9 @@ begin
     effSetSampleRate: FSampleRate := opt;
     effSetBlockSize: FBlockSize := Value;
     effMainsChanged: if value=1 then begin
-                       if (CanDo(TPcdStrings.cdReceiveVstMidiEvent)=1) or
+                       if (CanDo(CanDoReceiveVstMidiEvent)=1) or
                           (effFlagsIsSynth in FEffect.Flags) then
-                          FHost(@FEffect,ord(amWantMidi),0,1,nil,0);
+                          FHost(@FEffect,amWantMidi,0,1,nil,0);
                        if Assigned(FEffTurnOn) then FEffTurnOn;
                      end else if Assigned(FEffTurnOff) then FEffTurnOff;
     effEditGetRect: Result:=FEditor.GetRect(ptr);
@@ -747,14 +757,14 @@ begin
 {$ifdef VST_2_1_EXTENSIONS}
     effEditKeyDown: begin
                       KeyCode.Character := index;
-                      KeyCode.modifier := TVstModifierKeys(Value);
-                      KeyCode.virt := TVstVirtualKey(Trunc(opt));
+                      KeyCode.modifier := Byte(Value);
+                      KeyCode.virt := Byte(Trunc(opt));
                       Result := FEditor.OnKeyDown(KeyCode);
                     end;
     effEditKeyUp: begin
                     KeyCode.Character := index;
-                    KeyCode.modifier := TVstModifierKeys(Value);
-                    KeyCode.virt := TVstVirtualKey(Trunc(opt));
+                    KeyCode.modifier := Byte(Value);
+                    KeyCode.virt := Byte(Trunc(opt));
                     Result := FEditor.OnKeyUp(KeyCode);
                   end;
     effSetEditKnobMode: Result:=FEditor.SetKnobMode(Value);
@@ -792,7 +802,7 @@ begin
     FParamInfos[index].Value:=value;
     if FCurProgram>0 then FPresetInfos[FCurProgram].Params[index]:=value;
     if FParamInfos[index].CanBeAutomated then
-      FHost(@FEffect,ord(amAutomate),index,0,nil,value); // Can be called only once !
+      FHost(@FEffect,amAutomate,index,0,nil,value); // Can be called only once !
       // This will tell host this parameter can be automated
       // If you called it twice, the automation will stop
   end;
@@ -937,7 +947,7 @@ end;
 
 procedure TPluginComponent.SetUniqueID(A, B, C, D: AnsiChar);
 begin
-  FEffect.UniqueID := MakeLong(A,B,C,D);
+  FEffect.UniqueID := CCONST(A,B,C,D);
 end;
 
 procedure TPluginComponent.SetUniqueID(ID: Integer);

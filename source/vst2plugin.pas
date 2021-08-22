@@ -57,6 +57,14 @@ uses
   sysutils;
 
 
+{$if defined(debug) and not defined(FPC)}
+function StrPas(P:Pointer):AnsiString;
+begin
+  Result:=StrPas(PAnsiChar(P));
+end;
+{$endif}
+
+
 // Callback methods in TAEffect
 
 function DispatcherCb(e:PAEffect;opcode,index:Int32;value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;

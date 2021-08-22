@@ -73,32 +73,32 @@ IN THE SOFTWARE.
         <UnitName Value="vst2hostbas"/>
       </Item7>
       <Item8>
-        <Filename Value="..\source\vst2pluginbaseold.pas"/>
-        <UnitName Value="vst2pluginbaseold"/>
-      </Item8>
-      <Item9>
         <Filename Value="..\source\old\vst24pas.inc"/>
         <Type Value="Include"/>
-      </Item9>
-      <Item10>
+      </Item8>
+      <Item9>
         <Filename Value="..\source\old\vst24pas.core.pas"/>
         <UnitName Value="vst24pas.core"/>
-      </Item10>
-      <Item11>
+      </Item9>
+      <Item10>
         <Filename Value="..\source\old\vst24pas.base.pas"/>
         <UnitName Value="vst24pas.base"/>
-      </Item11>
-      <Item12>
+      </Item10>
+      <Item11>
         <Filename Value="..\source\old\vst24pas.gui.pas"/>
         <UnitName Value="vst24pas.gui"/>
-      </Item12>
-      <Item13>
+      </Item11>
+      <Item12>
         <Filename Value="..\source\old\vst24pas.utils.pas"/>
         <UnitName Value="vst24pas.utils"/>
-      </Item13>
-      <Item14>
+      </Item12>
+      <Item13>
         <Filename Value="..\source\old\vst24pas.new.pas"/>
         <UnitName Value="vst24pas.new"/>
+      </Item13>
+      <Item14>
+        <Filename Value="..\source\old\vst2pluginbaseold.pas"/>
+        <UnitName Value="vst2pluginbaseold"/>
       </Item14>
     </Files>
     <CompatibilityMode Value="True"/>

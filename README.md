@@ -18,7 +18,7 @@ Hint:
 
 - FPC 3.2.2 and 3.3.1 are tested. (version 0.1 and 0.2)
 
-- Delphi 10.3.3 community is tested. (version 0.1)
+- Delphi 10.3.3 community is tested. (version 0.1 and 0.2)
 
 Please see examples.
 

@@ -33,7 +33,7 @@ type
     procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetUniqueID(const str4chars:AnsiString);
     procedure SetPlugCategory(APlugCateg:TVstPlugCategory);
-    procedure SetNames(const PlugName,Vendor,Product:string);
+    procedure SetNames(const PlugName,Vendor,Product:AnsiString);
     procedure SetVersion(EffVer,VendorVer:Int32);
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
@@ -167,7 +167,7 @@ type
     function CanBeAutomated(index:integer):Integer;
     function GetParameterProperties(index:integer;ptr:PVstParameterProperties):Integer;
     function GetChunk(ptr:PArrParams):Integer;
-    procedure SetChunk(const arr:TArrParams;ByteSize:Integer);
+    procedure SetChunk(const arr:Pointer;ByteSize:Integer);
   end;
 
   { TVPreset }
@@ -524,13 +524,13 @@ begin
     Result:='';
 end;
 
-procedure TVParamBase.SetChunk(const arr:TArrParams;ByteSize:Integer);
+procedure TVParamBase.SetChunk(const arr:Pointer;ByteSize:Integer);
 var
   num,i:Integer;
 begin
   num:=ByteSize div SizeOf(Single);
   for i:=0 to num-1 do
-    SetParameter(i,arr[i]);
+    SetParameter(i,TArrParams(arr)[i]);
 end;
 
 procedure TVParamBase.SetCustomParamDisplay(AProc:TCustomParamDisplayObjFunc);
@@ -601,6 +601,7 @@ begin
   if (index>=0) and (index<FNumPreset) then
   begin
     VstStrncpy(ptr,FPresets.Items[index].Name,23);
+    Result:=1;
   end else Result:=0;
 end;
 

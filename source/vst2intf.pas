@@ -78,21 +78,13 @@ type
   PPSingle   = ^PSingle;
   PPDouble   = ^PDouble;
 
+  TBuffer32 = PPSingle;
+  TBuffer64 = PPDouble;
+
 {$ifndef FPC}
   PInt32  = ^Int32;
   PIntPtr = ^IntPtr;
-  { Array for process }
-  TArrSingle  = array[0..0] of single;
-  PArrSingle  = ^TArrSingle;
-  TArrDouble  = array[0..0] of double;
-  PArrDouble  = ^TArrDouble;
-  TArrPSingle = array of PArrSingle;
-  TArrPDouble = array of PArrDouble;
-  TBuffer32 = TArrPSingle;
-  TBuffer64 = TArrPDouble;
-{$else}
-  TBuffer32 = PPSingle;
-  TBuffer64 = PPDouble;
+  SizeInt = IntPtr;
 {$endif}
 
   PAEffect = ^TAEffect; // forward
@@ -1209,9 +1201,9 @@ function VstAmp2dB(const value: single): single; inline; overload;
 function VstdB2Amp(const value: double): double; inline; overload;
 function VstdB2Amp(const value: single): single; inline; overload;
 // Convert the float number to string with length 8
-function VstFloat2String(const value: single): shortstring;
+function VstFloat2String(const value: single): AnsiString;
 // Convert the float number to dB string with length 8
-function VstAmp2dBString(const value: single): shortstring;
+function VstAmp2dBString(const value: single): AnsiString;
 // Convert the integer part of float number to string with length 8
 function VstInt2String(const value: single): AnsiString;
 
@@ -1557,7 +1549,7 @@ begin
     Result:=0;
 end;
 
-function VstFloat2String(const value:single):shortstring;
+function VstFloat2String(const value:single):AnsiString;
 var
   i: integer;
   mantissa: single;
@@ -1565,7 +1557,11 @@ begin
   if value=NegInfinity then Exit('-Inf'); // Cooperate with VstAmp2dB
   if (Value > 999999) or (Value < -99999) then
     Exit('Huge !!');
+{$ifdef UNICODE}
+  Result := AnsiString(IntToStr(Trunc(Value)));
+{$else}
   Result := IntToStr(Trunc(Value));
+{$endif}
   mantissa := Abs(Frac(Value));
   if Length(Result) = 6 then
   begin
@@ -1599,7 +1595,7 @@ begin
   end;
 end;
 
-function VstAmp2dBString(const value:single):shortstring;
+function VstAmp2dBString(const value:single):AnsiString;
 begin
   Result:=VstFloat2String(VstAmp2dB(value));
 end;
@@ -1608,7 +1604,11 @@ function VstInt2String(const value:single):AnsiString;
 begin
   if (value>9999999) or (value<-999999) then
     Exit('Huge !!');
+{$ifdef UNICODE}
+  Result:=AnsiString(IntToStr(Trunc(value)));
+{$else}
   Result:=IntToStr(Trunc(value));
+{$endif}
 end;
 
 function VstString2HostCanDo(const str:ansistring):THostCanDo;

@@ -11,7 +11,7 @@ Pascal 语言实现的 VST 2.4
 
 ## 安装和使用
 
-支持 Free Pascal 和 Delphi (当前版本不一定完全适配 Delphi)
+支持 Free Pascal 和 Delphi
 
 具体请看例子
 

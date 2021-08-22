@@ -2,11 +2,14 @@
 
 {$ifdef FPC}
   {$mode delphi}
-  {$PointerMath on} // In delphi mode, FPC default close
   {$ifopt D+}
     {$define debug}
   {$endif}
 {$endif}
+
+// In fpc delphi mode, FPC default close
+// In delphi, supported after delphi 2009
+{$PointerMath on}
 
 // Define VST Version extensions
 {$define VST_2_1_EXTENSIONS} // 2.1 (2000/06/08)

@@ -8,8 +8,8 @@ unit vst24pas;
 interface
 
 uses
-  vst2intf, vst2plugbas, vst2plugin, vst2plugui, vst2entry, vst2hostbas, vst2pluginbaseold, vst24pas.core, 
-  vst24pas.base, vst24pas.gui, vst24pas.utils, vst24pas.new;
+  vst2intf, vst2plugbas, vst2plugin, vst2plugui, vst2entry, vst2hostbas, vst24pas.core, vst24pas.base, 
+  vst24pas.gui, vst24pas.utils, vst24pas.new, vst2pluginbaseold;
 
 implementation
 

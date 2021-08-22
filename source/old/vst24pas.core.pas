@@ -395,6 +395,7 @@ type
   { set some alias }
 
   TVstHostCallback = AudioMasterCallback;
+  THostCallback    = AudioMasterCallback;
   TAEDispatcher    = AEffectDispatcherProc;
   TAEProcess       = AEffectProcessProc;
   TAEProcessDouble = AEffectProcessDoubleProc;
