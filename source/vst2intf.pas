@@ -458,15 +458,7 @@ type
     kVstSysExType      // MIDI system exclusive, see TVstMidiSysexEvent
   );
 
-  PVstEvent = ^TVstEvent;
-  // A generic timestamped event.
-  TVstEvent = record
-    Typ:         TVstEventTypes;    // see TVstEventTypes
-    ByteSize:    Int32;             // size of this event, excl. type and byteSize
-    DeltaFrames: Int32; // sample frames related to the current block start sample position
-    Flags:       Int32;             // generic flags, none defined yet
-    Data:        array[0..15] of AnsiChar; // data size may vary, depending on event type
-  end;
+  PVstEvent = ^TVstEvent; // forward
 
   PVstEvents = ^TVstEvents;
   // A block of events for the current processed audio block.
@@ -512,6 +504,18 @@ type
     Resvd1:      IntPtr;    // zero (Reserved for future use)
     SysexDump:   PAnsiChar; // sysex dump
     Resvd2:      IntPtr;    // zero (Reserved for future use)
+  end;
+
+  // A generic timestamped event.
+  TVstEvent = record
+    Typ:         TVstEventTypes;    // see TVstEventTypes
+    ByteSize:    Int32;             // size of this event, excl. type and byteSize
+    DeltaFrames: Int32; // sample frames related to the current block start sample position
+    Flags:       Int32;             // generic flags, none defined yet
+    //Data:        array[0..15] of Byte; // data size may vary, depending on event type
+    case Byte of
+      0:(MidiEvent:TVstMidiEvent);
+      1:(MidiSysex:TVstMidiSysexEvent);
   end;
 
   // SMPTE Frame Rates.
@@ -1191,9 +1195,11 @@ type
 
 
 // Convert TAEffectOpcodes to strings
-function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
+function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;overload;
+function VstAEOpcode2Str(opcode:Int32):string;overload;
 // Convert TAudioMasterOpcodes to strings
-function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
+function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;overload;
+function VstAMOpcode2Str(opcode:Int32):string;overload;
 // Convert the amplitude to decibels
 function VstAmp2dB(const value: double): double; inline; overload;
 function VstAmp2dB(const value: single): single; inline; overload;
@@ -1457,8 +1463,15 @@ begin
     effGetNumMidiInputChannels:Result:='effGetNumMidiInputChannels';
     effGetNumMidiOutputChannels:Result:='effGetNumMidiOutputChannels';
 {$endif}
-  else Result:='Unknown opcode '+IntToStr(Integer(opcode));
   end;
+end;
+
+function VstAEOpcode2Str(opcode:Int32):string;
+begin
+  if (opcode>=0) and (opcode<kVstAEOpcodeMax) then
+    Result:=VstAEOpcode2Str(TAEOpcodes(opcode))
+  else
+    Result:='Unknown opcode '+IntToStr(opcode);
 end;
 
 function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
@@ -1515,6 +1528,14 @@ begin
     amGetInputSpeakerArrangement:Result:='amGetInputSpeakerArrangement';
   else Result:='Unknown opcode '+IntToStr(Integer(opcode));
   end;
+end;
+
+function VstAMOpcode2Str(opcode:Int32):string;
+begin
+  if (opcode>=0) and (opcode<kVstAMOpcodeMax) then
+    Result:=VstAMOpcode2Str(TAMOpcodes(opcode))
+  else
+    Result:='Unknown opcode '+IntToStr(opcode);
 end;
 
 function VstAmp2dB(const value: double): double;

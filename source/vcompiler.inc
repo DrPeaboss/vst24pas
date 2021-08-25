@@ -7,10 +7,6 @@
   {$endif}
 {$endif}
 
-// In fpc delphi mode, FPC default close
-// In delphi, supported after delphi 2009
-{$PointerMath on}
-
 // Define VST Version extensions
 {$define VST_2_1_EXTENSIONS} // 2.1 (2000/06/08)
 {$define VST_2_2_EXTENSIONS} // 2.2 (2001/06/08)

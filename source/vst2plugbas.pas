@@ -39,6 +39,7 @@ type
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
+    procedure SetAsSynth;
     function SampleRate:Single;
     function BlockSize:Integer;
   end;
@@ -91,6 +92,7 @@ type
     FVendorVersion:Int32;
     FVendorSpecific:TVendorSpecificObjFunc;
     FCanDos:TPlugCanDos;
+    FDefaultIO:Boolean;
   protected
     FEffect:TAEffect;
     function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
@@ -104,6 +106,7 @@ type
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
+    procedure SetAsSynth;
     function SampleRate:Single;
     function BlockSize:Integer;
   public
@@ -120,6 +123,7 @@ type
     property VendorName:AnsiString read FVendorName;
     property ProductName:AnsiString read FProductName;
     property VendorVersion:Int32 read FVendorVersion;
+    property DefaultIO:Boolean read FDefaultIO;
   end;
 
   { TVParameter }
@@ -165,9 +169,9 @@ type
     function GetParamLabel(index:integer):AnsiString;
     function GetParamDisplay(index:integer):AnsiString;
     function CanBeAutomated(index:integer):Integer;
-    function GetParameterProperties(index:integer;ptr:PVstParameterProperties):Integer;
-    function GetChunk(ptr:PArrParams):Integer;
-    procedure SetChunk(const arr:Pointer;ByteSize:Integer);
+    function GetParameterProperties(index:integer;const ptr:PVstParameterProperties):Integer;
+    function GetChunk(const ptr:PArrParams):Integer;
+    procedure SetChunk(arr:Pointer;ByteSize:Integer);
   end;
 
   { TVPreset }
@@ -200,7 +204,7 @@ type
     procedure SetPreset(NewPreset:Integer);
     function GetPresetName:AnsiString;
     procedure SetPresetName(ptr:PAnsiChar);
-    function GetPresetNameIndexed(index:Integer;ptr:PAnsiChar):Integer;
+    function GetPresetNameIndexed(index:Integer;const ptr:PAnsiChar):Integer;
   end;
 
   TVPluginBase = class(TVPresetBase)
@@ -283,6 +287,9 @@ begin
     UniqueID:=MakeLong('NoEf');
     Version:=1;
   end;
+  FSampleRate:=44100;
+  FBlockSize:=1024;
+  FDefaultIO:=True;
 end;
 
 function TVPlugBase.BlockSize:Integer;
@@ -340,6 +347,7 @@ procedure TVPlugBase.SetIONumber(InNumber,OutNumber:Int32);
 begin
   FEffect.NumInputs:=InNumber;
   FEffect.NumOutputs:=OutNumber;
+  FDefaultIO:=(InNumber=2) and (OutNumber=2);
 end;
 
 procedure TVPlugBase.SetNames(const PlugName,Vendor,Product:AnsiString);
@@ -395,6 +403,13 @@ begin
     Exclude(FCanDos,pcd);
 end;
 
+procedure TVPlugBase.SetAsSynth;
+begin
+  SetFlag(effFlagsIsSynth);
+  SetPlugCategory(kPlugCategSynth);
+  SetIONumber(0,2);
+end;
+
 procedure TVPlugBase.SetVersion(EffVer,VendorVer:Int32);
 begin
   FEffect.Version:=EffVer;
@@ -414,7 +429,7 @@ begin
   if VstString2PlugCanDo(szcd) in FCanDos then
     Result:=1
   else
-    Result:=-1;;
+    Result:=-1;
 end;
 
 
@@ -471,7 +486,7 @@ begin
   inherited destroy;
 end;
 
-function TVParamBase.GetChunk(ptr:PArrParams):Integer;
+function TVParamBase.GetChunk(const ptr:PArrParams):Integer;
 var
   i:integer;
 begin
@@ -499,7 +514,7 @@ begin
     Result:=0;
 end;
 
-function TVParamBase.GetParameterProperties(index:integer;ptr:PVstParameterProperties):Integer;
+function TVParamBase.GetParameterProperties(index:integer;const ptr:PVstParameterProperties):Integer;
 begin
   if (index>=0) and (index<FNumParam) and Assigned(FParams.Items[index].ParamProperties) then
   begin
@@ -524,7 +539,7 @@ begin
     Result:='';
 end;
 
-procedure TVParamBase.SetChunk(const arr:Pointer;ByteSize:Integer);
+procedure TVParamBase.SetChunk(arr:Pointer;ByteSize:Integer);
 var
   num,i:Integer;
 begin
@@ -596,7 +611,7 @@ begin
     Result:=FPresets.Items[FCurPreset].Name;
 end;
 
-function TVPresetBase.GetPresetNameIndexed(index:Integer;ptr:PAnsiChar):Integer;
+function TVPresetBase.GetPresetNameIndexed(index:Integer;const ptr:PAnsiChar):Integer;
 begin
   if (index>=0) and (index<FNumPreset) then
   begin

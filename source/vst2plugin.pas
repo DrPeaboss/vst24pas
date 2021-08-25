@@ -12,6 +12,9 @@
 unit vst2plugin;
 
 {$I vcompiler.inc}
+// In fpc delphi mode, FPC default closed
+// In delphi, supported after delphi 2009
+{$PointerMath on}
 
 interface
 
@@ -361,22 +364,24 @@ procedure TVPlugin.Process(const inputs,outputs:TBuffer32;SampleFrames:Int32);
 var
   i:integer;
 begin
-  for i:=0 to SampleFrames-1 do
-  begin
-    outputs[0,i]:=inputs[0,i];
-    outputs[1,i]:=inputs[1,i];
-  end;
+  if FPluginBase.DefaultIO then
+    for i:=0 to SampleFrames-1 do
+    begin
+      outputs[0,i]:=inputs[0,i];
+      outputs[1,i]:=inputs[1,i];
+    end;
 end;
 
 procedure TVPlugin.ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);
 var
   i:integer;
 begin
-  for i:=0 to SampleFrames-1 do
-  begin
-    outputs[0,i]:=inputs[0,i];
-    outputs[1,i]:=inputs[1,i];
-  end;
+  if FPluginBase.DefaultIO then
+    for i:=0 to SampleFrames-1 do
+    begin
+      outputs[0,i]:=inputs[0,i];
+      outputs[1,i]:=inputs[1,i];
+    end;
 end;
 
 {$ifdef VST_2_4_EXTENSIONS}
@@ -384,11 +389,12 @@ procedure TVPlugin.ProcessRep64(const inputs,outputs:TBuffer64;SampleFrames:Int3
 var
   i:integer;
 begin
-  for i:=0 to SampleFrames-1 do
-  begin
-    outputs[0,i]:=inputs[0,i];
-    outputs[1,i]:=inputs[1,i];
-  end;
+  if FPluginBase.DefaultIO then
+    for i:=0 to SampleFrames-1 do
+    begin
+      outputs[0,i]:=inputs[0,i];
+      outputs[1,i]:=inputs[1,i];
+    end;
 end;
 {$endif}
 
