@@ -1,0 +1,19 @@
+object Formain: TFormain
+  Left = 322
+  Height = 385
+  Top = 250
+  Width = 633
+  Caption = 'Formain'
+  ClientHeight = 385
+  ClientWidth = 633
+  DesignTimePPI = 120
+  object LogMemo: TMemo
+    Left = 20
+    Height = 310
+    Top = 55
+    Width = 587
+    ReadOnly = True
+    ScrollBars = ssAutoBoth
+    TabOrder = 0
+  end
+end
