@@ -71,7 +71,8 @@ end;
 
 destructor TVEditor.Destroy;
 begin
-  FGui.Free;
+  if Assigned(FGui) then
+    FGui.Free;
   inherited destroy;
 end;
 
@@ -155,7 +156,7 @@ end;
 
 destructor TVGuiPlugin.Destroy;
 begin
-  inherited destroy;
+  inherited Destroy;
 end;
 
 function NewEditor(Plugin:TVPlugin;FrmClass:TClass):IVEditor;

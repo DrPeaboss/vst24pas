@@ -20,6 +20,7 @@ const
   iidIVBase:TGuid='{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}';
   iidIVParam:TGuid='{4301340C-F67B-48E8-A67F-DD6BFBA6FC2E}';
   iidIVPreset:TGuid='{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}';
+  iidIVMidi:TGUid='{18FA3F13-B878-4B3D-B390-EAE022FAC248}';
   iidIVEditor:TGuid='{C34A39C2-8410-41BC-97E0-F473300CF1C5}';
 
 type
@@ -28,18 +29,18 @@ type
 
   IVPlugBase = interface
     ['{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}']
-    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
-    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
-    procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetUniqueID(const str4chars:AnsiString);
-    procedure SetPlugCategory(APlugCateg:TVstPlugCategory);
     procedure SetNames(const PlugName,Vendor,Product:AnsiString);
     procedure SetVersion(EffVer,VendorVer:Int32);
+    procedure SetPlugCategory(APlugCateg:TVstPlugCategory);
+    procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
     procedure SetAsSynth;
+    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
+    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     function SampleRate:Single;
     function BlockSize:Integer;
   end;
@@ -64,6 +65,18 @@ type
     ['{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}']
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
 
+  end;
+
+  TMidiStatus = packed record
+    IsNew:Boolean;
+    Command:Byte;
+    Note:Byte;
+    Velocity:Byte;
+  end;
+
+  IVMidi = interface
+    ['{18FA3F13-B878-4B3D-B390-EAE022FAC248}']
+    function QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
   end;
 
   IVEditor = interface
@@ -95,18 +108,18 @@ type
     FDefaultIO:Boolean;
   protected
     FEffect:TAEffect;
-    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
-    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
-    procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetUniqueID(const str4chars:AnsiString);
-    procedure SetPlugCategory(APlugCateg:TVstPlugCategory);
     procedure SetNames(const PlugName,Vendor,Product:AnsiString);
     procedure SetVersion(EffVer,VendorVer:Int32);
+    procedure SetPlugCategory(APlugCateg:TVstPlugCategory);
+    procedure SetIONumber(InNumber,OutNumber:Int32);
     procedure SetVendorSpecific(AVendorSpecificFunc:TVendorSpecificObjFunc);
     procedure SetFlag(AFlag:TVstAEffectFlag;state:Boolean=True);
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
     procedure SetAsSynth;
+    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
+    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     function SampleRate:Single;
     function BlockSize:Integer;
   public
@@ -207,7 +220,19 @@ type
     function GetPresetNameIndexed(index:Integer;const ptr:PAnsiChar):Integer;
   end;
 
-  TVPluginBase = class(TVPresetBase)
+  { TVMidiBase }
+
+  TVMidiBase = class(TVPresetBase,IVMidi)
+  private
+    FMidiStatus:TMidiStatus;
+    procedure ProcessMidiEvent(const Event:TVstMidiEvent);
+  protected
+    function QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
+  public
+    procedure ProcessEvents(Events:PVstEvents);
+  end;
+
+  TVPluginBase = class(TVMidiBase)
 
   end;
 
@@ -407,6 +432,7 @@ procedure TVPlugBase.SetAsSynth;
 begin
   SetFlag(effFlagsIsSynth);
   SetPlugCategory(kPlugCategSynth);
+  SetCanDo(pcdReceiveVstMidiEvent);
   SetIONumber(0,2);
 end;
 
@@ -635,6 +661,40 @@ end;
 procedure TVPresetBase.SetPresetName(ptr:PAnsiChar);
 begin
   FPresets.Items[FCurPreset].Name:=StrPas(ptr);
+end;
+
+{ TVMidiBase }
+
+procedure TVMidiBase.ProcessMidiEvent(const Event:TVstMidiEvent);
+begin
+  FMidiStatus.IsNew:=True;
+  FMidiStatus.Command:=Event.MidiData[0];
+  FMidiStatus.Note:=Event.MidiData[1];
+  FMidiStatus.Velocity:=Event.MidiData[2];
+end;
+
+function TVMidiBase.QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
+begin
+  if not FMidiStatus.IsNew then Exit(False);
+  Result:=FMidiStatus.IsNew;
+  if Result then FMidiStatus.IsNew:=False;
+  Command:=FMidiStatus.Command;
+  Note:=FMidiStatus.Note;
+  Velocity:=FMidiStatus.Velocity;
+end;
+
+procedure TVMidiBase.ProcessEvents(Events:PVstEvents);
+var
+  i:Integer;
+begin
+  if Assigned(Events) then
+    for i:=0 to Events^.NumEvents-1 do
+    with Events^ do
+      case Events[i]^.Typ of
+        kVstMidiType: ProcessMidiEvent(PVstMidiEvent(Events[i])^);
+        kVstSysExType: ;
+        else ;
+      end;
 end;
 
 

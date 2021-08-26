@@ -31,6 +31,7 @@ type
     FBase:IVPlugBase;
     FParam:IVParam;
     FPreset:IVPreset;
+    FMidi:IVMidi;
     FEditor:IVEditor;
   protected
     function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;virtual;
@@ -49,6 +50,7 @@ type
     property Base:IVPlugBase read FBase;
     property Param:IVParam read FParam;
     property Preset:IVPreset read FPreset;
+    property MIDI:IVMidi read FMidi;
     property Editor:IVEditor read FEditor;
   end;
 
@@ -241,6 +243,7 @@ begin
   FPluginBase.GetInterface(iidIVBase,FBase);
   FPluginBase.GetInterface(iidIVParam,FParam);
   FPluginBase.GetInterface(iidIVPreset,FPreset);
+  FPluginBase.GetInterface(iidIVMidi,FMidi);
 end;
 
 destructor TVPlugin.Destroy;
@@ -286,7 +289,7 @@ begin
     effIdentify: ;
     effGetChunk: Result:=FPluginBase.GetChunk(ptr);
     effSetChunk: FPluginBase.SetChunk(ptr,value);
-    effProcessEvents: ;
+    effProcessEvents: FPluginBase.ProcessEvents(ptr);
     effCanBeAutomated: Result:=FPluginBase.CanBeAutomated(index);
     effString2Parameter: ;
     effGetNumProgramCategories: ;

@@ -199,11 +199,10 @@ type
                  //<Host stores plug-in state.
     effSetChunk, // [ptr]: chunk data [value]: byte size [index]: 0 for bank, 1 for program
                  //<Host restores plug-in state.
-    //effNumOpcodes, // Number of VST 1.0 opcodes
 
     // VST 2.x extensions
 
-    effProcessEvents = Ord(effSetChunk) + 1, // [ptr]: PVstEvents. Called when new MIDI events come in
+    effProcessEvents, // [ptr]: PVstEvents. Called when new MIDI events come in
     {[index]: parameter index [return value]: 1=true, 0=false. Whether the parameter can be automated }
     effCanBeAutomated,
     {[index]: parameter index [ptr]: parameter string [return value]: true for success.
@@ -327,9 +326,10 @@ type
     //<[index] input [value] 0 [return value] 0 if connected
     //<[index] output [value] 1 [return value] 0 if connected
 
+    amUnused,
     // VST 2.x dispatcher Opcodes (Plug-in to Host)
 
-    amWantMidi = Ord(amPinConnected) + 2, // deprecated. [value]: unknown, set 1. Tell host want to receive midi
+    amWantMidi, // deprecated. [value]: unknown, set 1. Tell host want to receive midi
     {[return value]: PVstTimeInfo or null if not supported
      [value]: request mask see TVstTimeInfoFlags.
      Get time information from Host }
@@ -458,7 +458,15 @@ type
     kVstSysExType      // MIDI system exclusive, see TVstMidiSysexEvent
   );
 
-  PVstEvent = ^TVstEvent; // forward
+  PVstEvent = ^TVstEvent;
+  // A generic timestamped event.
+  TVstEvent = record
+    Typ:         TVstEventTypes;    // see TVstEventTypes
+    ByteSize:    Int32;             // size of this event, excl. type and byteSize
+    DeltaFrames: Int32; // sample frames related to the current block start sample position
+    Flags:       Int32;             // generic flags, none defined yet
+    Data:        array[0..15] of Byte; // data size may vary, depending on event type
+  end;
 
   PVstEvents = ^TVstEvents;
   // A block of events for the current processed audio block.
@@ -504,18 +512,6 @@ type
     Resvd1:      IntPtr;    // zero (Reserved for future use)
     SysexDump:   PAnsiChar; // sysex dump
     Resvd2:      IntPtr;    // zero (Reserved for future use)
-  end;
-
-  // A generic timestamped event.
-  TVstEvent = record
-    Typ:         TVstEventTypes;    // see TVstEventTypes
-    ByteSize:    Int32;             // size of this event, excl. type and byteSize
-    DeltaFrames: Int32; // sample frames related to the current block start sample position
-    Flags:       Int32;             // generic flags, none defined yet
-    //Data:        array[0..15] of Byte; // data size may vary, depending on event type
-    case Byte of
-      0:(MidiEvent:TVstMidiEvent);
-      1:(MidiSysex:TVstMidiSysexEvent);
   end;
 
   // SMPTE Frame Rates.
@@ -1315,6 +1311,7 @@ type
     pcdMidiProgramNames
   );
   TPlugCanDos = set of TPlugCanDo;
+
 
 function VstString2HostCanDo(const str:ansistring):THostCanDo;overload;
 function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;overload;
