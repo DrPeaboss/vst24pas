@@ -1,19 +1,104 @@
 object Formain: TFormain
   Left = 341
-  Height = 480
+  Height = 276
   Top = 152
-  Width = 640
+  Width = 611
   Caption = 'Formain'
-  ClientHeight = 480
-  ClientWidth = 640
+  ClientHeight = 276
+  ClientWidth = 611
   DesignTimePPI = 120
-  object BtnGetDir: TButton
-    Left = 264
-    Height = 53
-    Top = 219
-    Width = 112
-    Caption = 'BtnGetDir'
-    OnClick = BtnGetDirClick
+  OnCreate = FormCreate
+  object rgWav: TRadioGroup
+    Left = 16
+    Height = 224
+    Top = 24
+    Width = 204
+    AutoFill = True
+    Caption = 'Wave Form'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 2
+    ClientHeight = 199
+    ClientWidth = 200
+    Columns = 2
+    ItemIndex = 0
+    Items.Strings = (
+      'Sine'
+      'Saw'
+      'Square'
+      'Triangle'
+    )
+    OnClick = rgWavClick
     TabOrder = 0
+  end
+  object BtnPlayAShot: TButton
+    Left = 256
+    Height = 48
+    Top = 40
+    Width = 152
+    Caption = 'PlayAShot'
+    OnClick = BtnPlayAShotClick
+    TabOrder = 1
+  end
+  object tbPlayPause: TToggleBox
+    Left = 432
+    Height = 48
+    Top = 40
+    Width = 152
+    Caption = 'Play / Pause'
+    OnChange = tbPlayPauseChange
+    TabOrder = 2
+  end
+  object tbFreq: TTrackBar
+    Left = 256
+    Height = 31
+    Top = 144
+    Width = 328
+    Frequency = 200
+    LineSize = 100
+    Max = 22000
+    Min = 1
+    OnChange = tbFreqChange
+    PageSize = 200
+    Position = 440
+    ShowSelRange = False
+    TickStyle = tsManual
+    TabOrder = 3
+  end
+  object lblFreq: TLabel
+    Left = 256
+    Height = 20
+    Top = 104
+    Width = 76
+    Caption = 'Frequency'
+  end
+  object lblGain: TLabel
+    Left = 256
+    Height = 20
+    Top = 185
+    Width = 32
+    Caption = 'Gain'
+  end
+  object tbGain: TTrackBar
+    Left = 256
+    Height = 31
+    Top = 216
+    Width = 328
+    Frequency = 1000
+    Max = 20000
+    OnChange = tbGainChange
+    Position = 10000
+    ShowSelRange = False
+    TabOrder = 4
+  end
+  object Timer: TTimer
+    Interval = 16
+    OnTimer = TimerTimer
+    Left = 160
+    Top = 48
   end
 end
