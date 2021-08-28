@@ -17,6 +17,9 @@ type
   TEasySynth = class(TVGuiPlugin)
   private
     FOsc:TSingleOsc;
+    FNum:Integer;
+    FGain:Single;
+    procedure OnMidiIn(cmd,note,velo:Byte);
   protected
     procedure ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);override;
   public
@@ -32,25 +35,25 @@ uses
 
 { TEasySynth }
 
+procedure TEasySynth.OnMidiIn(cmd,note,velo:Byte);
+begin
+  if cmd=$90 then
+  begin
+    Inc(FNum);
+    FOsc.Freq:=NoteToFrequency(note);
+    FOsc.Gain:=velo / 127;
+  end else if cmd=$80 then
+    Dec(FNum);
+  FOsc.IsMuted:=FNum=0;
+end;
+
 procedure TEasySynth.ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);
 var
   i:Integer;
-  Command,Note,Velocity:Byte;
 begin
   for i:=0 to SampleFrames-1 do
   begin
-    if MIDI.QueryNewMidiData(Command,Note,Velocity) then
-    begin
-      if Command=$90 then
-      begin
-        FOsc.IsMuted:=False;
-        FOsc.Gain:=Velocity / 127;
-        FOsc.Freq:=NoteToFrequency(Note);
-      end
-      else if Command=$80 then
-        FOsc.IsMuted:=True;
-    end;
-    outputs[0,i]:=FOsc.NextSample;
+    outputs[0,i]:=FOsc.NextSample*FGain*2;
     outputs[1,i]:=outputs[0,i];
   end;
 end;
@@ -62,9 +65,12 @@ begin
   Base.SetNames('EasySynth','PeaZomboss','vst24pas: v02xtest4');
   Base.SetVersion($020006,$020006);
   Base.SetAsSynth;
+  Param.AddParameter(0.5,'Gain','');
+  Param.BindLastParameter(FGain);
   Editor.SetGui(TFormain);
   FOsc:=TSingleOsc.Create(omSine);
   TFormain(Editor.Gui).Plug:=self;
+  MIDI.SetOnMidiIn(@OnMidiIn);
 end;
 
 destructor TEasySynth.Destroy;
