@@ -13,7 +13,7 @@ unit vst2plugin;
 
 {$I vcompiler.inc}
 // In fpc delphi mode, FPC default closed
-// In delphi, supported after delphi 2009
+// In delphi, supported since delphi 2009
 {$PointerMath on}
 
 interface
@@ -43,6 +43,7 @@ type
     procedure ProcessRep64(const inputs,outputs:TBuffer64;SampleFrames:Int32);virtual;
 {$endif}
     procedure SetEditor(AEditor:IVEditor);
+    //procedure ProcessMidiEvent(const Event:TVstMidiEvent);virtual;
   public
     constructor Create(AHost:THostCallback);virtual;
     destructor Destroy;override;

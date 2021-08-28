@@ -54,6 +54,8 @@ type
     procedure SetParamAutomated(index:integer;value:Single);
     procedure AddParameter(AValue:single;const AName,ALabel:AnsiString;CanBeAuto:Boolean=True;
       Properties:PVstParameterProperties=nil);
+    procedure BindParameter(index:Integer;var BindVar:Single);
+    procedure BindLastParameter(var BindVar:Single);
     procedure SetCustomParamDisplay(AProc:TCustomParamDisplayObjFunc);
     property Items[index:integer]:Single read GetParameter write SetParameter; default;
   end;
@@ -74,9 +76,12 @@ type
     Velocity:Byte;
   end;
 
+  TOnMidiInProc = procedure(Command,Note,Velocity:Byte) of object;
+
   IVMidi = interface
     ['{18FA3F13-B878-4B3D-B390-EAE022FAC248}']
     function QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
+    procedure SetOnMidiIn(MidiInProc:TOnMidiInProc);
   end;
 
   IVEditor = interface
@@ -142,15 +147,25 @@ type
   { TVParameter }
 
   TVParameter = class
+  private type
+    TValue = record
+    case Byte of
+      0:(Addr:PSingle);
+      1:(Value:Single);
+    end;
   private
-    FValue:single;
+    FIsBind:Boolean;
+    FValue:TValue;
     FName:AnsiString;
     FLabel:AnsiString;
     FCanBeAutomated:Boolean;
     FParamProperties:PVstParameterProperties;
+    function GetValue:Single;
+    procedure SetValue(AValue:Single);
   public
     constructor Create;
-    property Value:single read FValue write FValue;
+    procedure BindValue(var BindVar:Single);
+    property Value:single read GetValue write SetValue;
     property Name:AnsiString read FName write FName;
     property sLabel:AnsiString read FLabel write FLabel;
     property CanBeAutomated:Boolean read FCanBeAutomated write FCanBeAutomated;
@@ -174,6 +189,8 @@ type
     procedure SetParamAutomated(index:integer;value:Single);
     procedure AddParameter(AValue:single;const AName,ALabel:AnsiString;CanBeAuto:Boolean=True;
       Properties:PVstParameterProperties=nil);
+    procedure BindParameter(index:Integer;var BindVar:Single);
+    procedure BindLastParameter(var BindVar:Single);
     procedure SetCustomParamDisplay(AProc:TCustomParamDisplayObjFunc);
   public
     constructor Create(AHost:THostCallback;Plugin:TObject);
@@ -225,9 +242,11 @@ type
   TVMidiBase = class(TVPresetBase,IVMidi)
   private
     FMidiStatus:TMidiStatus;
+    FOnMidiIn:TOnMidiInProc;
     procedure ProcessMidiEvent(const Event:TVstMidiEvent);
   protected
     function QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
+    procedure SetOnMidiIn(MidiInProc:TOnMidiInProc);
   public
     procedure ProcessEvents(Events:PVstEvents);
   end;
@@ -461,9 +480,32 @@ end;
 
 { TVParameter }
 
+function TVParameter.GetValue:Single;
+begin
+  if FIsBind then
+    Result:=FValue.Addr^
+  else
+    Result:=FValue.Value;
+end;
+
+procedure TVParameter.SetValue(AValue:Single);
+begin
+  if FIsBind then
+    FValue.Addr^:=AValue
+  else
+    FValue.Value:=AValue;
+end;
+
 constructor TVParameter.Create;
 begin
 
+end;
+
+procedure TVParameter.BindValue(var BindVar:Single);
+begin
+  FIsBind:=True;
+  BindVar:=FValue.Value;
+  FValue.Addr:=@BindVar;
 end;
 
 
@@ -488,6 +530,17 @@ begin
     CanBeAutomated:=CanBeAuto;
     ParamProperties:=Properties;
   end;
+end;
+
+procedure TVParamBase.BindParameter(index:Integer;var BindVar:Single);
+begin
+  if (index>=0) and (index<FNumParam) then
+    FParams.Items[index].BindValue(BindVar);
+end;
+
+procedure TVParamBase.BindLastParameter(var BindVar:Single);
+begin
+  FParams.Last.BindValue(BindVar);
 end;
 
 function TVParamBase.AddOne:TVParameter;
@@ -667,6 +720,8 @@ end;
 
 procedure TVMidiBase.ProcessMidiEvent(const Event:TVstMidiEvent);
 begin
+  if Assigned(FOnMidiIn) then
+    FOnMidiIn(Event.MidiData[0],Event.MidiData[1],Event.MidiData[2]);
   FMidiStatus.IsNew:=True;
   FMidiStatus.Command:=Event.MidiData[0];
   FMidiStatus.Note:=Event.MidiData[1];
@@ -675,12 +730,20 @@ end;
 
 function TVMidiBase.QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
 begin
-  if not FMidiStatus.IsNew then Exit(False);
-  Result:=FMidiStatus.IsNew;
-  if Result then FMidiStatus.IsNew:=False;
-  Command:=FMidiStatus.Command;
-  Note:=FMidiStatus.Note;
-  Velocity:=FMidiStatus.Velocity;
+  Result:=False;
+  if FMidiStatus.IsNew then
+  begin
+    Result:=True;
+    Command:=FMidiStatus.Command;
+    Note:=FMidiStatus.Note;
+    Velocity:=FMidiStatus.Velocity;
+    FMidiStatus.IsNew:=False;
+  end;
+end;
+
+procedure TVMidiBase.SetOnMidiIn(MidiInProc:TOnMidiInProc);
+begin
+  FOnMidiIn:=MidiInProc;
 end;
 
 procedure TVMidiBase.ProcessEvents(Events:PVstEvents);
@@ -688,13 +751,12 @@ var
   i:Integer;
 begin
   if Assigned(Events) then
-    for i:=0 to Events^.NumEvents-1 do
     with Events^ do
-      case Events[i]^.Typ of
-        kVstMidiType: ProcessMidiEvent(PVstMidiEvent(Events[i])^);
-        kVstSysExType: ;
-        else ;
-      end;
+    for i:=0 to NumEvents-1 do
+      if Events[i]^.Typ=kVstMidiType then
+        ProcessMidiEvent(PVstMidiEvent(Events[i])^)
+      else if Events[i]^.Typ=kVstSysExType then
+        ;
 end;
 
 
