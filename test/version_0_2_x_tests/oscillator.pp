@@ -51,22 +51,13 @@ function NoteToFrequency(Note:Int8):Single;
 
 implementation
 
-uses
-  math;
-
 function NoteToFrequency(Note:Int8):Single;
 const
   StandardA4 = 440.0;
-  NoteA4 = 60;
-var
-  Offsets:Int8;
-  OctaveOffset:Int8;
-  NoteOffset:Int8;
+  NoteA4 = 69;
 begin
-  Offsets:=Note-NoteA4;
-  OctaveOffset:=Offsets div 12;
-  NoteOffset:=Offsets mod 12;
-  Result:=StandardA4*Power(2,NoteOffset/12)*Power(2,OctaveOffset);
+  // Power(2,(Note-NoteA4)/12) = Exp((Note-NoteA4)/12*Ln(2))
+  Result:=StandardA4*Exp((Note-NoteA4)*0.0577622650466621);
 end;
 
 { TOscillator }
