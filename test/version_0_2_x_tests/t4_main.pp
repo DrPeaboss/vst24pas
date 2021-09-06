@@ -22,6 +22,7 @@ type
     procedure OnMidiIn(cmd,note,velo:Byte);
   protected
     procedure ProcessRep(const inputs,outputs:TBuffer32;SampleFrames:Int32);override;
+    function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;override;
   public
     constructor Create(AHost:THostCallback);override;
     destructor Destroy;override;
@@ -56,6 +57,13 @@ begin
     outputs[0,i]:=FOsc.NextSample*FGain*2;
     outputs[1,i]:=outputs[0,i];
   end;
+end;
+
+function TEasySynth.Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
+begin
+  if opcode=effSetSampleRate then
+    FOsc.SampleRate:=opt;
+  Result:=inherited Dispatcher(opcode,index,value,ptr,opt);
 end;
 
 constructor TEasySynth.Create(AHost:THostCallback);
