@@ -32,7 +32,7 @@ type
 implementation
 
 uses
-  vst2intf;
+  vst2utils;
 
 {$R *.lfm}
 

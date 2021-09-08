@@ -272,7 +272,7 @@ procedure dbgln(const fmt:string;const args:array of const);overload;
 implementation
 
 uses
-  sysutils
+  sysutils,vst2utils
   {$ifdef debug},classes{$endif};
 
 {$ifdef debug}

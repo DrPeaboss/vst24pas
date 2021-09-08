@@ -8,7 +8,7 @@ object FormTest2: TFormTest2
   ClientWidth = 771
   DesignTimePPI = 120
   OnCreate = FormCreate
-  LCLVersion = '2.2.0.1'
+  LCLVersion = '2.2.0.2'
   object TrackBarGain: TTrackBar
     Left = 16
     Height = 31

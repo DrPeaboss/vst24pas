@@ -119,7 +119,7 @@ begin
     Writeln('Process address is ', PtrToHex(effect^.Process));
     Writeln('ProcessReplacing address is ', PtrToHex(effect^.ProcessReplacing));
     Writeln('ProcessDoubleReplacing address is ', PtrToHex(effect^.ProcessDoubleReplacing));
-    Writeln('Object address is ', PtrToHex(effect^.pObject));
+    Writeln('Object address is ', PtrToHex(effect^.Obj));
     Writeln('User address is ', PtrToHex(effect^.User));
     Writeln('Number of programs is ', effect^.NumPrograms);
     Writeln('Number of params is ', effect^.NumParams);

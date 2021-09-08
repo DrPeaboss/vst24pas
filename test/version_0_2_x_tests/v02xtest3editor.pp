@@ -38,7 +38,7 @@ type
 implementation
 
 uses
-  vst2intf,oscillator;
+  vst2utils,oscillator;
 
 {$R *.lfm}
 

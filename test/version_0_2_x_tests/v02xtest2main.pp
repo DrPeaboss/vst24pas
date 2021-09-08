@@ -24,7 +24,7 @@ type
 implementation
 
 uses
-  v02xtest2editor,sysutils;
+  v02xtest2editor,sysutils,vst2utils;
 
 { TTestPlugin2 }
 
