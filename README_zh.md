@@ -19,14 +19,16 @@ PS:
 
 - FPC 3.2.2 和 3.3.1 测试 OK
 
-- Delphi 10.3.3 社区版测试 OK
+- Delphi 10.3.3 和 10.4.2 社区版测试 OK
 
 ### lazarus
 
-打开 vst24pas.lpk, 选择 使用 - 添加到工程
+打开 vst24pas.lpk, 选择 `使用 - 添加到工程`
 
-以后只需要 新建工程-库, 打开工程查看器, 选择 添加 - 新建需要, 搜索 vst24pas, 找到后选择并确定
+以后只需要 `新建工程-库`, 打开`工程查看器`, 选择 `添加 - 新建需要`, 搜索 `vst24pas`, 找到后选择并确定
 
 ### delphi
 
-添加 source 目录到 search path
+在主菜单点击 `Project - Options`, 在工程选项里点击 `Building - Delphi Compiler` 项，在右边的 `Search path` 里添加你电脑里的 `vst24pas\source` 目录
+
+注意上面的 `Target` 选项

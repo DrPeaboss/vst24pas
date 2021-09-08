@@ -18,16 +18,18 @@ Hint:
 
 - FPC 3.2.2 and 3.3.1 are tested. (version 0.1 and 0.2)
 
-- Delphi 10.3.3 community is tested. (version 0.1 and 0.2)
+- Delphi 10.3.3 and 10.4.2 community edition is tested. (version 0.1 and 0.2)
 
 Please see examples.
 
 ### lazarus
 
-Open vst24pas.lpk, then 'Use - Add to Project'
+Open vst24pas.lpk, then `Use - Add to Project`
 
-In the future, you only need to 'New Project - Library', open 'Project Inspector', find 'Add - New Requirement', search 'vst24pas' and add to project.
+In the future, you only need to `New Project - Library`, open `Project Inspector`, find `Add - New Requirement`, search `vst24pas` and add to project.
 
 ### delphi
 
-Add source directory to search path.
+In main menu, click `Project - Options`, in the dialog click `Building - Delphi Compiler` item, you can see `Search path` in the right, find and add `vst24pas\source` in your disk.
+
+Attention to the `Target` option above.
