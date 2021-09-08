@@ -66,7 +66,7 @@ uses
 {$if defined(debug) and not defined(FPC)}
 function StrPas(P:Pointer):AnsiString;
 begin
-  Result:=StrPas(PAnsiChar(P));
+  Result:=PAnsiChar(P);
 end;
 {$endif}
 

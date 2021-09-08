@@ -330,7 +330,7 @@ end;
 
 function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;
 begin
-  Result:=VstString2HostCanDo(StrPas(sz));
+  Result:=VstString2HostCanDo(sz);
 end;
 
 function VstHostCanDo2String(hcd:THostCanDo):ansistring;
@@ -370,7 +370,7 @@ end;
 
 function VstString2PlugCanDo(sz:PAnsiChar):TPlugCanDo;
 begin
-  Result:=VstString2PlugCanDo(StrPas(sz));
+  Result:=VstString2PlugCanDo(sz);
 end;
 
 function VstPlugCanDo2String(pcd:TPlugCanDo):ansistring;

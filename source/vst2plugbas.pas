@@ -713,7 +713,7 @@ end;
 
 procedure TVPresetBase.SetPresetName(ptr:PAnsiChar);
 begin
-  FPresets.Items[FCurPreset].Name:=StrPas(ptr);
+  FPresets.Items[FCurPreset].Name:=ptr;
 end;
 
 { TVMidiBase }
