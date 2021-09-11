@@ -8,7 +8,6 @@
 backup/
 lib/
 bin/
-!examples/lazarus/bin/README.txt
 *.lps
 *.ppu
 *.compiled
