@@ -16,13 +16,6 @@ interface
 uses
   vst2intf,Generics.Collections;
 
-const
-  iidIVBase:TGuid='{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}';
-  iidIVParam:TGuid='{4301340C-F67B-48E8-A67F-DD6BFBA6FC2E}';
-  iidIVPreset:TGuid='{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}';
-  iidIVMidi:TGUid='{18FA3F13-B878-4B3D-B390-EAE022FAC248}';
-  iidIVEditor:TGuid='{C34A39C2-8410-41BC-97E0-F473300CF1C5}';
-
 type
   TObjProc = procedure of object;
   TVendorSpecificObjFunc = function(Arg1:Int32;Arg2:IntPtr;Arg3:Pointer;Arg4:Single):IntPtr of object;
@@ -94,6 +87,12 @@ type
     function GetGui:TObject;
     property Gui:TObject read GetGui;
   end;
+
+  iidIVPlugBase   = IVPlugBase;
+  iidIVParam  = IVParam;
+  iidIVPreset = IVPreset;
+  iidIVMidi   = IVMidi;
+  //iidIVEditor = IVEditor;
 
   { TVPlugBase }
 

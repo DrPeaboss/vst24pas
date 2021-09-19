@@ -241,7 +241,7 @@ begin
     Include(Flags,effFlagsCanReplacing);
 {$endif}
   end;
-  FPluginBase.GetInterface(iidIVBase,FBase);
+  FPluginBase.GetInterface(iidIVPlugBase,FBase);
   FPluginBase.GetInterface(iidIVParam,FParam);
   FPluginBase.GetInterface(iidIVPreset,FPreset);
   FPluginBase.GetInterface(iidIVMidi,FMidi);
