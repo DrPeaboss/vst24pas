@@ -21,6 +21,7 @@ type
   // Classes in this unit
   TVst2Wrapper = class;
   TVst2Editor = class;
+  TVst2WrapperClass = class of TVst2Wrapper;
 
   { TVst2Wrapper }
 
@@ -187,7 +188,7 @@ type
     procedure CanDoubleReplacing;
 {$endif}
   public
-    constructor Create(AHost:THostCallback;NumPresets,NumParams:Int32);
+    constructor Create(AHost:THostCallback;NumPresets,NumParams:Int32);virtual;
     destructor Destroy;override;
     function GetEffect:PAEffect;
   public // Methods which call host
@@ -282,9 +283,17 @@ type
   end;
 
 
+// Utility function for VSTPluginMain
+function DoVst2Main(AHost:THostCallback;AClass:TVst2WrapperClass;NumPresets,NumParams:Int32):PAEffect;
+
 implementation
 
 {$Hints off}
+
+function DoVst2Main(AHost:THostCallback; AClass:TVst2WrapperClass; NumPresets,NumParams:Int32):PAEffect;
+begin
+  Result:=AClass.Create(AHost,NumPresets,NumParams).GetEffect;
+end;
 
 function DispatcherCb(e:PAEffect;opcode,index:Int32;value:IntPtr;ptr:Pointer;opt:single):IntPtr;cdecl;
 var
@@ -866,6 +875,7 @@ end;
 
 destructor TVst2Wrapper.Destroy;
 begin
+  if Assigned(FEditor) then FEditor.Free;
   inherited Destroy;
 end;
 
