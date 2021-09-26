@@ -10,7 +10,7 @@
 
 unit vst2plugui;
 
-{$I vcompiler.inc}
+{$I vst2def.inc}
 
 interface
 

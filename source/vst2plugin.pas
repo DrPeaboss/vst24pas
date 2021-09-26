@@ -11,7 +11,7 @@
 
 unit vst2plugin;
 
-{$I vcompiler.inc}
+{$I vst2def.inc}
 // In fpc delphi mode, FPC default closed
 // In delphi, supported since delphi 2009
 {$PointerMath on}

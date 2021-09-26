@@ -9,7 +9,7 @@
 
 unit vst2utils;
 
-{$I vcompiler.inc}
+{$I vst2def.inc}
 
 interface
 

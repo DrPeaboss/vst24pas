@@ -43,9 +43,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 "/>
     <Version Minor="2" Release="2"/>
-    <Files Count="15">
+    <Files Count="16">
       <Item1>
-        <Filename Value="..\source\vcompiler.inc"/>
+        <Filename Value="..\source\vst2def.inc"/>
         <Type Value="Include"/>
       </Item1>
       <Item2>
@@ -57,53 +57,57 @@ IN THE SOFTWARE.
         <UnitName Value="vst2utils"/>
       </Item3>
       <Item4>
-        <Filename Value="..\source\vst2plugbas.pas"/>
-        <UnitName Value="vst2plugbas"/>
+        <Filename Value="..\source\vst2wrapper.pas"/>
+        <UnitName Value="vst2wrapper"/>
       </Item4>
       <Item5>
-        <Filename Value="..\source\vst2plugin.pas"/>
-        <UnitName Value="vst2plugin"/>
+        <Filename Value="..\source\vst2plugbas.pas"/>
+        <UnitName Value="vst2plugbas"/>
       </Item5>
       <Item6>
-        <Filename Value="..\source\vst2plugui.pas"/>
-        <UnitName Value="vst2plugui"/>
+        <Filename Value="..\source\vst2plugin.pas"/>
+        <UnitName Value="vst2plugin"/>
       </Item6>
       <Item7>
-        <Filename Value="..\source\vst2entry.pas"/>
-        <UnitName Value="vst2entry"/>
+        <Filename Value="..\source\vst2plugui.pas"/>
+        <UnitName Value="vst2plugui"/>
       </Item7>
       <Item8>
-        <Filename Value="..\source\vst2hostbas.pas"/>
-        <UnitName Value="vst2hostbas"/>
+        <Filename Value="..\source\vst2entry.pas"/>
+        <UnitName Value="vst2entry"/>
       </Item8>
       <Item9>
-        <Filename Value="..\source\old\vst24pas.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="..\source\vst2hostbas.pas"/>
+        <UnitName Value="vst2hostbas"/>
       </Item9>
       <Item10>
-        <Filename Value="..\source\old\vst24pas.core.pas"/>
-        <UnitName Value="vst24pas.core"/>
+        <Filename Value="..\source\old\vst24pas.inc"/>
+        <Type Value="Include"/>
       </Item10>
       <Item11>
-        <Filename Value="..\source\old\vst24pas.base.pas"/>
-        <UnitName Value="vst24pas.base"/>
+        <Filename Value="..\source\old\vst24pas.core.pas"/>
+        <UnitName Value="vst24pas.core"/>
       </Item11>
       <Item12>
-        <Filename Value="..\source\old\vst24pas.gui.pas"/>
-        <UnitName Value="vst24pas.gui"/>
+        <Filename Value="..\source\old\vst24pas.base.pas"/>
+        <UnitName Value="vst24pas.base"/>
       </Item12>
       <Item13>
-        <Filename Value="..\source\old\vst24pas.utils.pas"/>
-        <UnitName Value="vst24pas.utils"/>
+        <Filename Value="..\source\old\vst24pas.gui.pas"/>
+        <UnitName Value="vst24pas.gui"/>
       </Item13>
       <Item14>
-        <Filename Value="..\source\old\vst24pas.new.pas"/>
-        <UnitName Value="vst24pas.new"/>
+        <Filename Value="..\source\old\vst24pas.utils.pas"/>
+        <UnitName Value="vst24pas.utils"/>
       </Item14>
       <Item15>
+        <Filename Value="..\source\old\vst24pas.new.pas"/>
+        <UnitName Value="vst24pas.new"/>
+      </Item15>
+      <Item16>
         <Filename Value="..\source\old\vst2pluginbaseold.pas"/>
         <UnitName Value="vst2pluginbaseold"/>
-      </Item15>
+      </Item16>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

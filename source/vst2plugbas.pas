@@ -9,7 +9,7 @@
 
 unit vst2plugbas;
 
-{$I vcompiler.inc}
+{$I vst2def.inc}
 
 interface
 

@@ -10,7 +10,7 @@
 
 unit vst2intf;
 
-{$I vcompiler.inc}{$A8}
+{$I vst2def.inc}{$A8}
 {$ifdef FPC}
   {$WARN 4055 off : Conversion between ordinals and pointers is not portable}
 {$endif}
@@ -36,44 +36,6 @@ const
   kVstMagic = 'VstP'; // Little endian str
 
 type
-  // HostCanDos strings Plug-in
-  THcdStrings = record
-  const
-    cdSendVstEvents  = 'sendVstEvents'; // Host supports send of Vst events to plug-in
-    cdSendVstMidiEvent = 'sendVstMidiEvent'; // Host supports send of MIDI events to plug-in
-    cdSendVstTimeInfo = 'sendVstTimeInfo'; // Host supports send of VstTimeInfo to plug-in
-    cdReceiveVstEvents = 'receiveVstEvents'; // Host can receive Vst events from plug-in
-    cdReceiveVstMidiEvent = 'receiveVstMidiEvent'; // Host can receive MIDI events from plug-in
-    // Host will indicates the plug-in when something change in plug-in's
-    // routing/connections with suspend/resume/setSpeakerArrangement
-    cdReportConnectionChanges = 'reportConnectionChanges';
-    cdAcceptIOChanges = 'acceptIOChanges'; // Host supports ioChanged ()
-    cdSizeWindow = 'sizeWindow'; // used by VSTGUI
-    cdOffline = 'offline'; // Host supports offline feature
-    cdOpenFileSelector = 'openFileSelector'; // Host supports function openFileSelector ()
-    cdCloseFileSelector = 'closeFileSelector'; // Host supports function closeFileSelector ()
-    cdStartStopProcess = 'startStopProcess'; // Host supports functions startProcess () and stopProcess ()
-    // 'shell' handling via uniqueID.
-    // If supported by the Host and the Plug-in has the category kPlugCategShell
-    cdShellCategory = 'shellCategory';
-    cdSendVstMidiEventFlagIsRealtime = 'sendVstMidiEventFlagIsRealtime'; // Host supports flags for TVstMidiEvent
-  end;
-
-  // PlugCanDos strings Host
-  TPcdStrings = record
-  const
-    cdSendVstEvents = 'sendVstEvents'; // plug-in will send Vst events to Host
-    cdSendVstMidiEvent = 'sendVstMidiEvent'; // plug-in will send MIDI events to Host
-    cdReceiveVstEvents = 'receiveVstEvents'; // plug-in can receive MIDI events from Host
-    cdReceiveVstMidiEvent = 'receiveVstMidiEvent'; // plug-in can receive MIDI events from Host
-    cdReceiveVstTimeInfo = 'receiveVstTimeInfo'; // plug-in can receive Time info from Host
-    cdOffline = 'offline'; // plug-in supports offline functions (offlineNotify, offlinePrepare, offlineRun)
-    cdBypass = 'bypass'; // plug-in supports function setBypass ()
-    cdMidiProgramNames = 'midiProgramNames'; // plug-in supports function getMidiProgramName ()
-    // Found in FL Studio 20
-    cdSupportsViewDpiScaling = 'supportsViewDpiScaling'; // plug-in's editor support DPI scaling
-  end;
-
   // Basic types
 
   PPSingle   = ^PSingle;
@@ -547,7 +509,8 @@ type
     kVstCyclePosValid,        // 1<<12 TVstTimeInfo.CycleStartPos and TVstTimeInfo.CycleEndPos valid
     kVstTimeSigValid,         // 1<<13 TVstTimeInfo.TimeSigNumerator and TVstTimeInfo.TimeSigDenominator valid
     kVstSmpteValid,           // 1<<14 TVstTimeInfo.SmpteOffset and TVstTimeInfo.SmpteFrameRate valid
-    kVstClockValid            // 1<<15 TVstTimeInfo.SamplesToNextClock valid
+    kVstClockValid,           // 1<<15 TVstTimeInfo.SamplesToNextClock valid
+    kVstTimeInfoMax={$ifdef CPUX86}31{$else}63{$endif}
   );
   // Flags used in TVstTimeInfo.
   TVstTimeInfoFlags = set of TVstTimeInfoFlag;
@@ -1190,6 +1153,44 @@ type
     kVstAutomationReadWrite    // read and write
   );
 
+  // HostCanDos strings Plug-in
+  THcdStrings = class
+  public const
+    cdSendVstEvents  = 'sendVstEvents'; // Host supports send of Vst events to plug-in
+    cdSendVstMidiEvent = 'sendVstMidiEvent'; // Host supports send of MIDI events to plug-in
+    cdSendVstTimeInfo = 'sendVstTimeInfo'; // Host supports send of VstTimeInfo to plug-in
+    cdReceiveVstEvents = 'receiveVstEvents'; // Host can receive Vst events from plug-in
+    cdReceiveVstMidiEvent = 'receiveVstMidiEvent'; // Host can receive MIDI events from plug-in
+    // Host will indicates the plug-in when something change in plug-in's
+    // routing/connections with suspend/resume/setSpeakerArrangement
+    cdReportConnectionChanges = 'reportConnectionChanges';
+    cdAcceptIOChanges = 'acceptIOChanges'; // Host supports ioChanged ()
+    cdSizeWindow = 'sizeWindow'; // used by VSTGUI
+    cdOffline = 'offline'; // Host supports offline feature
+    cdOpenFileSelector = 'openFileSelector'; // Host supports function openFileSelector ()
+    cdCloseFileSelector = 'closeFileSelector'; // Host supports function closeFileSelector ()
+    cdStartStopProcess = 'startStopProcess'; // Host supports functions startProcess () and stopProcess ()
+    // 'shell' handling via uniqueID.
+    // If supported by the Host and the Plug-in has the category kPlugCategShell
+    cdShellCategory = 'shellCategory';
+    cdSendVstMidiEventFlagIsRealtime = 'sendVstMidiEventFlagIsRealtime'; // Host supports flags for TVstMidiEvent
+  end;
+
+  // PlugCanDos strings Host
+  TPcdStrings = class
+  public const
+    cdSendVstEvents = 'sendVstEvents'; // plug-in will send Vst events to Host
+    cdSendVstMidiEvent = 'sendVstMidiEvent'; // plug-in will send MIDI events to Host
+    cdReceiveVstEvents = 'receiveVstEvents'; // plug-in can receive MIDI events from Host
+    cdReceiveVstMidiEvent = 'receiveVstMidiEvent'; // plug-in can receive MIDI events from Host
+    cdReceiveVstTimeInfo = 'receiveVstTimeInfo'; // plug-in can receive Time info from Host
+    cdOffline = 'offline'; // plug-in supports offline functions (offlineNotify, offlinePrepare, offlineRun)
+    cdBypass = 'bypass'; // plug-in supports function setBypass ()
+    cdMidiProgramNames = 'midiProgramNames'; // plug-in supports function getMidiProgramName ()
+    // Found in FL Studio 20
+    cdSupportsViewDpiScaling = 'supportsViewDpiScaling'; // plug-in's editor support DPI scaling
+  end;
+
 
 { FxStore }
 
@@ -1303,7 +1304,7 @@ end;
 
 function MakeLong(chrs:ShortString):Longint;
 begin
-  if Length(chrs)=4 then
+  if Length(chrs)>=4 then
     Result:=MakeLong(chrs[1],chrs[2],chrs[3],chrs[4])
   else
     Result:=0;
