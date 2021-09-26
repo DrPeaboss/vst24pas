@@ -106,6 +106,7 @@ begin
     effGetProductString:Result:='effGetProductString';
     effGetVendorVersion:Result:='effGetVendorVersion';
     effVendorSpecific:Result:='effVendorSpecific';
+    effCanDo:Result:='effCanDo';
     effGetTailSize:Result:='effGetTailSize';
     effIdle:Result:='effIdle';
     effGetIcon:Result:='effGetIcon';
@@ -159,6 +160,7 @@ begin
     amCurrentId:Result:='amCurrentId';
     amIdle:Result:='amIdle';
     amPinConnected:Result:='amPinConnected';
+    amUnused:Result:='';
     amWantMidi:Result:='amWantMidi';
     amGetTime:Result:='amGetTime';
     amProcessEvents:Result:='amProcessEvents';
@@ -203,7 +205,6 @@ begin
     amEditFile:Result:='amEditFile';
     amGetChunkFile:Result:='amGetChunkFile';
     amGetInputSpeakerArrangement:Result:='amGetInputSpeakerArrangement';
-  else Result:='Unknown opcode '+IntToStr(Integer(opcode));
   end;
 end;
 
