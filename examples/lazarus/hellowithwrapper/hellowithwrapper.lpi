@@ -11,7 +11,7 @@
       </Flags>
       <SessionStorage Value="InProjectDir"/>
       <MainUnit Value="0"/>
-      <Title Value="hello"/>
+      <Title Value="hellowithwrapper"/>
       <UseAppBundle Value="False"/>
       <ResourceType Value="res"/>
     </General>
@@ -22,7 +22,7 @@
           <Version Value="11"/>
           <PathDelim Value="\"/>
           <Target>
-            <Filename Value="hello64"/>
+            <Filename Value="hellowithwrapper64"/>
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
@@ -56,11 +56,11 @@
     </RequiredPackages>
     <Units Count="2">
       <Unit0>
-        <Filename Value="hello.lpr"/>
+        <Filename Value="hellowithwrapper.lpr"/>
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="main.pas"/>
+        <Filename Value="main.pp"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
     </Units>
@@ -69,7 +69,7 @@
     <Version Value="11"/>
     <PathDelim Value="\"/>
     <Target>
-      <Filename Value="hello"/>
+      <Filename Value="hellowithwrapper"/>
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
