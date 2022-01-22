@@ -39,7 +39,7 @@ type
     procedure SetEditor(AEditor:TVst2Editor);
     function CallHost(opcode:TAMOpcodes;index:Int32;value:IntPtr=0;ptr:Pointer=nil;opt:Single=0):IntPtr;overload;
     function CallHost(opcode:TAMOpcodes):IntPtr;overload;
-    procedure ProcessEvents(events:PVstEvents);
+    procedure ProcessEvents(VstEvents:PVstEvents);
     procedure EditGetRect(rect:PPERect);
     procedure EditOpen(parent:Pointer);
     procedure EditClose;
@@ -74,17 +74,17 @@ type
     procedure SetPreset(preset:Int32);virtual;
     // Get current preset
     function GetPreset:Int32;virtual;
-    // Set current preset name
+    // Set current preset name, read from buffer
     procedure SetPresetName(name:PAnsiChar);virtual;
-    // Get current preset name
+    // Get current preset name, fill the buffer
     procedure GetPresetName(name:PAnsiChar);virtual;
-    // Get preset name by index
+    // Get preset name by index, fill the buffer
     function GetPresetNameIndexed(index:Int32;text:PAnsiChar):Boolean;virtual;
-    // Get parameter label (dB, % ..) by index
+    // Get parameter label (dB, % ..) by index, fill the buffer
     procedure GetParamLabel(index:Int32;text:PAnsiChar);virtual;
-    // Get parameter display by index
+    // Get parameter display by index, fill the buffer
     procedure GetParamDisplay(index:Int32;text:PAnsiChar);virtual;
-    // Get parameter name (Gain, Pan ..) by index
+    // Get parameter name (Gain, Pan ..) by index, fill the buffer
     procedure GetParamName(index:Int32;text:PAnsiChar);virtual;
     // Get parameters array
     function GetChunk(Data:PPointer;IsPreset:Boolean=False):Int32;virtual;
@@ -96,25 +96,25 @@ type
     procedure ProcessMidiSysexEvent(const event:TVstMidiSysexEvent);virtual;
     // Query a parameter can be automated
     function ParamCanBeAutomated(index:Int32):Boolean;virtual;
-    // Convert a string to parameter
+    // Convert a string to parameter, fill the buffer
     function String2Parameter(index:Int32;str:PAnsiChar):Boolean;virtual;
     // Set bypass
     procedure SetBypass(OnOff:Boolean);virtual;
     // Get plugin category, see TVstPlugCategory
     function GetPlugCategory:TVstPlugCategory;virtual;
-    // Get plugin name
+    // Get plugin name, fill the buffer
     procedure GetEffectName(text:PAnsiChar);virtual;
-    // Get vendor name
+    // Get vendor name, fill the buffer
     procedure GetVendorString(text:PAnsiChar);virtual;
-    // Get product name
+    // Get product name, fill the buffer
     procedure GetProductString(text:PAnsiChar);virtual;
     // Get vendor version
     function GetVendorVersion:Int32;virtual;
     // Defined by vendor
     function VendorSpecific(index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;virtual;
-    // Query plugin can do, see TPcdStrings
+    // Query plugin can do, see TPcdStrings and effCanDo
     function CanDo(text:PAnsiChar):Int32;virtual;
-    // Get tail size
+    // Get tail size, see effGetTailSize
     function GetTailSize:Int32;virtual;
     // See TVstPinProperties
     function GetInputProperties(index:Int32;properties:PVstPinProperties):Int32;virtual;
@@ -188,8 +188,13 @@ type
     procedure CanDoubleReplacing;
 {$endif}
   public
+    // All the subclasses must call this Create first !!!
+    // inherited Create(AHost,NumPresets,NumParams);
     constructor Create(AHost:THostCallback;NumPresets,NumParams:Int32);virtual;
+    // And all the subclasses must call this Destroy last !!!
+    // inherited Destroy;
     destructor Destroy;override;
+    // Only be called in VSTPluginMain or main
     function GetEffect:PAEffect;
   public // Methods which call host
     // Set a parameter and tell host the parameter can be automated
@@ -205,7 +210,7 @@ type
     // Tell host NumInputs and/or NumOutputs and/or InitialDelay have changed
     function IOChanged:Boolean;
     // Let host process events
-    procedure HostProcessEvents(events:PVstEvents);
+    procedure HostProcessEvents(const events:TVstEvents);
     // Tell host to change plugin editor window size
     procedure SizeWindow(Width,Height:Integer);
     // Get and update sample rate
@@ -216,15 +221,19 @@ type
     function GetCurrentProcessLevel:Int32;
     // Get automation state, see TVstAutomationStates
     function GetAutomationState:Int32;
-    function OfflineStart(AudioFiles:PVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32):Boolean;
-    function OfflineRead(task:PVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean):Boolean;
-    function OfflineWrite(task:PVstOfflineTask;option:TVstOfflineOption):Boolean;
+    function OfflineStart(const AudioFiles:TVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32):Boolean;
+    function OfflineRead(const task:TVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean):Boolean;
+    function OfflineWrite(const task:TVstOfflineTask;option:TVstOfflineOption):Boolean;
     function OfflineGetCurrentPass:Int32;
     function OfflineGetCurrentMetaPass:Int32;
     // Get host's vendor name
-    procedure GetHostVendorString(text:PAnsiChar);
+    function GetHostVendorString:AnsiString;overload;
+    // Create buffer by yourself, recommend length >= 64
+    procedure GetHostVendorString(text:PAnsiChar);overload;
     // Get host's product name
-    procedure GetHostProductString(text:PAnsiChar);
+    function GetHostProductString:AnsiString;overload;
+    // Create buffer by yourself, recommend length >= 64
+    procedure GetHostProductString(text:PAnsiChar);overload;
     // Get host's vendor version
     function GetHostVendorVersion:Int32;
     // Defined by vendor
@@ -233,8 +242,8 @@ type
     function HostCanDo(text:PAnsiChar):Boolean;
     // Get host languate, see TVstHostLanguage
     function GetHostLanguage:Int32;
-    // Get plugin library file's directory
-    function GetDirectory:PAnsiChar;
+    // Get plugin library file's directory, use this to locate res files
+    function GetDirectory:PAnsiChar;overload;
     // Something has changed in plugin, request an update display like preset (MIDI too) and parameters list in host
     function UpdateDisplay:Boolean;
     // To be called before SetParamAutomated (on Mouse Down), host can do something
@@ -242,9 +251,9 @@ type
     // To be called after SetParamAutomated (on Mouse Up)
     function EndEdit(index:Int32):Boolean;
     // Tell host open file selector, see TVstFileSelect
-    function HostOpenFileSelector(FileSelect:PVstFileSelect):Boolean;
-    // Tell host close file selector
-    function HostCloseFileSelector(FileSelect:PVstFileSelect):Boolean;
+    function HostOpenFileSelector(const FileSelect:TVstFileSelect):Boolean;
+    // Tell host close file selector, see TVstFileSelect
+    function HostCloseFileSelector(const FileSelect:TVstFileSelect):Boolean;
   public // Properties
     property Parameter[index:Int32]:Single read GetParameter write SetParameter;
     property SampleRate:Single read FSampleRate;
@@ -263,7 +272,7 @@ type
   public
     constructor Create(APlugin:TVst2Wrapper);
     // Get editor's rect, return address of FERect
-    procedure GetRect(rect:PPERect);virtual;
+    procedure GetRect(var rect:PERect);virtual;
     // Open the editor
     procedure Open(parent:Pointer);virtual;
     // Close the editor
@@ -368,27 +377,31 @@ begin
     Result:=0;
 end;
 
-procedure TVst2Wrapper.ProcessEvents(events:PVstEvents);
+procedure TVst2Wrapper.ProcessEvents(VstEvents:PVstEvents);
 var
   i:Integer;
+  Event:TVstEvent;
 begin
-  if Assigned(events) then
-    with events^ do
+  if Assigned(VstEvents) then
+    with VstEvents^ do
     for i:=0 to NumEvents-1 do
-      if events[i]^.Typ=kVstMidiType then
-        ProcessMidiEvent(PVstMidiEvent(events[i])^)
-      else if events[i]^.Typ=kVstSysExType then
-        ProcessMidiSysexEvent(PVstMidiSysexEvent(events[i])^);
+    begin
+      Event:=Events[i]^;
+      if Event.Typ=kVstMidiType then
+        ProcessMidiEvent(TVstMidiEvent(Event))
+      else if Event.Typ=kVstSysExType then
+        ProcessMidiSysexEvent(TVstMidiSysexEvent(Event));
+    end;
 end;
 
 procedure TVst2Wrapper.EditGetRect(rect:PPERect);
 begin
-  if Assigned(FEditor) then FEditor.GetRect(rect);
+  if Assigned(FEditor) and Assigned(rect) then FEditor.GetRect(rect^);
 end;
 
 procedure TVst2Wrapper.EditOpen(parent:Pointer);
 begin
-  if Assigned(FEditor) then FEditor.Open(parent);
+  if Assigned(FEditor) and Assigned(parent) then FEditor.Open(parent);
 end;
 
 procedure TVst2Wrapper.EditClose;
@@ -915,9 +928,9 @@ begin
   Result:=CallHost(amIOChanged)<>0;
 end;
 
-procedure TVst2Wrapper.HostProcessEvents(events:PVstEvents);
+procedure TVst2Wrapper.HostProcessEvents(const events:TVstEvents);
 begin
-  CallHost(amProcessEvents,0,0,events);
+  CallHost(amProcessEvents,0,0,@events);
 end;
 
 procedure TVst2Wrapper.SizeWindow(Width,Height:Integer);
@@ -953,19 +966,21 @@ begin
   Result:=CallHost(amGetAutomationState);
 end;
 
-function TVst2Wrapper.OfflineStart(AudioFiles:PVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32):Boolean;
+function TVst2Wrapper.OfflineStart(const AudioFiles:TVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32
+  ):Boolean;
 begin
-  Result:=CallHost(amOfflineStart,NewAudioFilesNum,AudioFileNum,AudioFiles)<>0;
+  Result:=CallHost(amOfflineStart,NewAudioFilesNum,AudioFileNum,@AudioFiles)<>0;
 end;
 
-function TVst2Wrapper.OfflineRead(task:PVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean):Boolean;
+function TVst2Wrapper.OfflineRead(const task:TVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean
+  ):Boolean;
 begin
-  Result:=CallHost(amOfflineRead,Int32(ReadSource),IntPtr(option),task)<>0;
+  Result:=CallHost(amOfflineRead,Int32(ReadSource),IntPtr(option),@task)<>0;
 end;
 
-function TVst2Wrapper.OfflineWrite(task:PVstOfflineTask;option:TVstOfflineOption):Boolean;
+function TVst2Wrapper.OfflineWrite(const task:TVstOfflineTask;option:TVstOfflineOption):Boolean;
 begin
-  Result:=CallHost(amOfflineWrite,0,IntPtr(option),task)<>0;
+  Result:=CallHost(amOfflineWrite,0,IntPtr(option),@task)<>0;
 end;
 
 function TVst2Wrapper.OfflineGetCurrentPass:Int32;
@@ -978,9 +993,27 @@ begin
   Result:=CallHost(amOfflineGetCurrentMetaPass);
 end;
 
+function TVst2Wrapper.GetHostVendorString:AnsiString;
+var
+  buffer:array[1..kVstMaxVendorStrLen] of AnsiChar;
+begin
+  CallHost(amGetVendorString,0,0,@buffer);
+  buffer[kVstMaxVendorStrLen]:=#0;
+  Result:=buffer;
+end;
+
 procedure TVst2Wrapper.GetHostVendorString(text:PAnsiChar);
 begin
   CallHost(amGetVendorString,0,0,text);
+end;
+
+function TVst2Wrapper.GetHostProductString:AnsiString;
+var
+  buffer:array[1..kVstMaxProductStrLen] of AnsiChar;
+begin
+  CallHost(amGetVendorString,0,0,@buffer);
+  buffer[kVstMaxProductStrLen]:=#0;
+  Result:=buffer;
 end;
 
 procedure TVst2Wrapper.GetHostProductString(text:PAnsiChar);
@@ -1028,14 +1061,14 @@ begin
   Result:=CallHost(amEndEdit,index)<>0;
 end;
 
-function TVst2Wrapper.HostOpenFileSelector(FileSelect:PVstFileSelect):Boolean;
+function TVst2Wrapper.HostOpenFileSelector(const FileSelect:TVstFileSelect):Boolean;
 begin
-  Result:=CallHost(amOpenFileSelector,0,0,FileSelect)<>0;
+  Result:=CallHost(amOpenFileSelector,0,0,@FileSelect)<>0;
 end;
 
-function TVst2Wrapper.HostCloseFileSelector(FileSelect:PVstFileSelect):Boolean;
+function TVst2Wrapper.HostCloseFileSelector(const FileSelect:TVstFileSelect):Boolean;
 begin
-  Result:=CallHost(amCloseFileSelector,0,0,FileSelect)<>0;
+  Result:=CallHost(amCloseFileSelector,0,0,@FileSelect)<>0;
 end;
 
 { TVst2Editor }
@@ -1045,16 +1078,14 @@ begin
   FPlugin:=APlugin;
 end;
 
-procedure TVst2Editor.GetRect(rect:PPERect);
+procedure TVst2Editor.GetRect(var rect:PERect);
 begin
-  if Assigned(rect) then
-    rect^:=@FERect;
+  rect:=@FERect;
 end;
 
 procedure TVst2Editor.Open(parent:Pointer);
 begin
-  if Assigned(parent) then
-    FParentWindow:=parent;
+  FParentWindow:=parent;
 end;
 
 procedure TVst2Editor.Close;
