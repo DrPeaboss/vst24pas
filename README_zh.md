@@ -4,7 +4,8 @@ vst2.4 for pascal
 
 Pascal 语言实现的 VST 2.4
 
-你可以用它创建一个同时支持 win32, win64 甚至是原生 linux 的 vst2 插件,
+你可以用它创建一个同时支持 win32, win64 甚至是原生 linux 的 vst2 插件
+
 但是不推荐在 linux 下使用 lcl, 因为 lcl 并不稳定, 所以最好不要开发 GUI 插件
 
 由于本人水平有限, 可能存在 bug
@@ -32,3 +33,15 @@ PS:
 在主菜单点击 `Project - Options`, 在工程选项里点击 `Building - Delphi Compiler` 项，在右边的 `Search path` 里添加你电脑里的 `vst24pas\source` 目录
 
 注意上面的 `Target` 选项
+
+## 不再支持 VST 2
+
+详见 https://forums.steinberg.net/t/vst-2-discontinued/761383 (2022/01/19 发布)
+
+未来更多的 DAW 会取消对 VST 2 的支持
+
+是时候应该升级到 VST 3 了
+
+## 关于 VST 3
+
+对于 FPC 和 Delphi 来说，兼容 VST 3 困难重重

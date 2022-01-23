@@ -33,3 +33,15 @@ In the future, you only need to `New Project - Library`, open `Project Inspector
 In main menu, click `Project - Options`, in the dialog click `Building - Delphi Compiler` item, you can see `Search path` in the right, find and add `vst24pas\source` in your disk.
 
 Attention to the `Target` option above.
+
+## VST 2 discontinued
+
+See https://forums.steinberg.net/t/vst-2-discontinued/761383 (Posted at 2022/01/19)
+
+In the future, more and more DAW will discontinue VST 2.
+
+So, it's time to use VST 3
+
+## About VST 3
+
+Yes, there are many difficulties for FPC/Delphi to compatible VST 3.
