@@ -38,6 +38,7 @@ begin
   Base.SetNames('v02xtest2','PeaZomboss','vst24pas: v02xtest2');
   Param.AddParameter(0.5,'Gain','dB');
   Param.SetCustomParamDisplay(@GetParamDisplay);
+  Preset.SetDefaultPreset([0.5]);
   Preset.AddPreset('Preset 0: default',[0.5]);
   Preset.AddPreset('Preset 1: doubled',[1.0]);
   Preset.AddPreset('Preset 2: silence',[0.0]);

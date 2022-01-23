@@ -58,8 +58,12 @@ type
 
   IVPreset = interface
     ['{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}']
+    procedure DiasableDAWPreset;
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
-
+    procedure SetDefaultPreset(const ParamValues:TArrParams);
+    procedure InitPreset;
+    procedure RenamePreset(const AName:AnsiString);
+    procedure DeletePreset;
   end;
 
   TMidiStatus = packed record
@@ -209,8 +213,10 @@ type
   private
     FName:AnsiString;
     FValues:TArrParams;
+    FLength:Integer;
   public
-    constructor Create(const AName:AnsiString;const ParamValues:TArrParams);
+    constructor Create(const AName:AnsiString;const ParamValues:TArrParams;Len:Integer);
+    procedure CopyParams(const Params:TArrParams);
     property Name:AnsiString read FName write FName;
     property Values:TArrParams read FValues;
   end;
@@ -223,9 +229,17 @@ type
   private
     FPresets:TPresetList;
     FCurPreset:Integer;
+    FDefaultPreset:TArrParams;
+    FDisableDAWPreset:Boolean;
+    procedure InternalLoadPreset(const Params:TArrParams);
   protected
     FNumPreset:Integer;
+    procedure DiasableDAWPreset;
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
+    procedure SetDefaultPreset(const ParamValues:TArrParams);
+    procedure InitPreset;
+    procedure RenamePreset(const AName:AnsiString);
+    procedure DeletePreset;
   public
     constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
@@ -333,6 +347,7 @@ begin
   FSampleRate:=44100;
   FBlockSize:=1024;
   FDefaultIO:=True;
+  //FCanDos:=[pcdTemp];
 end;
 
 function TVPlugBase.BlockSize:Integer;
@@ -621,9 +636,12 @@ procedure TVParamBase.SetChunk(arr:Pointer;ByteSize:Integer);
 var
   num,i:Integer;
 begin
-  num:=ByteSize div SizeOf(Single);
-  for i:=0 to num-1 do
-    SetParameter(i,TArrParams(arr)[i]);
+  if Assigned(arr) then
+  begin
+    num:=ByteSize div SizeOf(Single);
+    for i:=0 to num-1 do
+      SetParameter(i,TArrParams(arr)[i]);
+  end;
 end;
 
 procedure TVParamBase.SetCustomParamDisplay(AProc:TCustomParamDisplayObjFunc);
@@ -645,10 +663,20 @@ end;
 
 { TVPreset }
 
-constructor TVPreset.Create(const AName:AnsiString;const ParamValues:TArrParams);
+constructor TVPreset.Create(const AName:AnsiString;const ParamValues:TArrParams;Len:Integer);
 begin
   FName:=AName;
-  FValues:=ParamValues;
+  FLength:=Len;
+  SetLength(FValues,Len);
+  CopyParams(ParamValues);
+end;
+
+procedure TVPreset.CopyParams(const Params:TArrParams);
+var
+  i:Integer;
+begin
+  for i:=0 to FLength-1 do
+    FValues[i]:=Params[i];
 end;
 
 { TVPresetBase }
@@ -661,20 +689,72 @@ begin
   FPresets:=TPresetList.Create(True);
 end;
 
+procedure TVPresetBase.InternalLoadPreset(const Params:TArrParams);
+var
+  i:Integer;
+begin
+  for i:=0 to FNumParam-1 do
+    SetParameter(i,Params[i]);
+end;
+
+procedure TVPresetBase.DiasableDAWPreset;
+begin
+  FDisableDAWPreset:=True;
+end;
+
 procedure TVPresetBase.AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
 begin
   if Length(ParamValues)=FNumParam then
   begin
-    FPresets.Add(TVPreset.Create(AName,ParamValues));
+    FPresets.Add(TVPreset.Create(AName,ParamValues,FNumParam));
     Inc(FNumPreset);
-    FEffect.NumPrograms:=FNumPreset;
+    if not FDisableDAWPreset then
+      FEffect.NumPrograms:=FNumPreset;
+  end;
+end;
+
+procedure TVPresetBase.SetDefaultPreset(const ParamValues:TArrParams);
+begin
+  if Length(ParamValues)=FNumParam then
+  begin
+    FDefaultPreset:=ParamValues;
+  end;
+end;
+
+procedure TVPresetBase.InitPreset;
+begin
+  if FPresets.Count>0 then
+  begin
+    if not Assigned(FDefaultPreset) then
+      SetLength(FDefaultPreset,FNumParam);
+    FPresets.Items[FCurPreset].CopyParams(FDefaultPreset);
+    FPresets.Items[FCurPreset].Name:='Init';
+    InternalLoadPreset(FDefaultPreset);
+  end;
+end;
+
+procedure TVPresetBase.RenamePreset(const AName:AnsiString);
+begin
+  if (AName<>'') and (FPresets.Count>0) then
+    FPresets.Items[FCurPreset].Name:=AName;
+end;
+
+procedure TVPresetBase.DeletePreset;
+begin
+  if FPresets.Count>0 then
+  begin
+    FPresets.Delete(FCurPreset);
+    Dec(FNumPreset);
+    if FCurPreset=FNumPreset then
+      Dec(FCurPreset);
+    if FPresets.Count>0 then
+      InternalLoadPreset(FPresets.Items[FCurPreset].Values);
   end;
 end;
 
 destructor TVPresetBase.Destroy;
 begin
   FPresets.Free;
-  SetLength(FCurParamValues,0);
   inherited Destroy;
 end;
 
@@ -699,20 +779,18 @@ begin
 end;
 
 procedure TVPresetBase.SetPreset(NewPreset:Integer);
-var
-  i:Integer;
 begin
   if (NewPreset>=0) and (NewPreset<FNumPreset) then
   begin
-    for i:=0 to FNumParam-1 do
-      SetParameter(i,FPresets.Items[NewPreset].Values[i]);
+    InternalLoadPreset(FPresets.Items[NewPreset].Values);
     FCurPreset:=NewPreset;
   end;
 end;
 
 procedure TVPresetBase.SetPresetName(ptr:PAnsiChar);
 begin
-  FPresets.Items[FCurPreset].Name:=ptr;
+  if FPresets.Count>0 then
+    FPresets.Items[FCurPreset].Name:=ptr;
 end;
 
 { TVMidiBase }

@@ -1290,7 +1290,8 @@ type
     pcdReceiveVstTimeInfo,
     pcdOffline,
     pcdBypass,
-    pcdMidiProgramNames
+    pcdMidiProgramNames,
+    pcdTemp
   );
   TPlugCanDos = set of TPlugCanDo;
 

@@ -366,12 +366,14 @@ begin
   else if str=TPcdStrings.cdBypass              then Result:=pcdBypass
   else if str=TPcdStrings.cdMidiProgramNames    then Result:=pcdMidiProgramNames
   else Result:=pcdUnknown;
-
 end;
 
 function VstString2PlugCanDo(sz:PAnsiChar):TPlugCanDo;
+var
+  s:ansistring;
 begin
-  Result:=VstString2PlugCanDo(sz);
+  s:=sz;
+  Result:=VstString2PlugCanDo(s);
 end;
 
 function VstPlugCanDo2String(pcd:TPlugCanDo):ansistring;

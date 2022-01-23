@@ -390,7 +390,7 @@ begin
       if Event.Typ=kVstMidiType then
         ProcessMidiEvent(TVstMidiEvent(Event))
       else if Event.Typ=kVstSysExType then
-        ProcessMidiSysexEvent(TVstMidiSysexEvent(Event));
+        ProcessMidiSysexEvent(PVstMidiSysexEvent(@Event)^);
     end;
 end;
 

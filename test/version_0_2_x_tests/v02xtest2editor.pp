@@ -13,9 +13,11 @@ type
   { TFormTest2 }
 
   TFormTest2 = class(TForm)
+    ButtonInitPreset:TButton;
     LabelGain:TLabel;
     MemoLog:TMemo;
     TrackBarGain:TTrackBar;
+    procedure ButtonInitPresetClick(Sender:TObject);
     procedure FormCreate(Sender:TObject);
     procedure TrackBarGainChange(Sender:TObject);
     procedure TrackBarGainMouseDown(Sender:TObject;Button:TMouseButton;Shift:TShiftState;X,Y:Integer);
@@ -44,6 +46,11 @@ begin
   LabelGain.Caption:=Format('Gain: %.2fdB  %.2f',[VstAmp2dB(1.0),0.5]);
   // Cannot access Plugin here !
   // Plugin.Editor.SetIdle(@Idle); //< It's not allowed
+end;
+
+procedure TFormTest2.ButtonInitPresetClick(Sender:TObject);
+begin
+  Plugin.Preset.InitPreset;
 end;
 
 procedure TFormTest2.Idle;
