@@ -243,7 +243,7 @@ type
     // Get host languate, see TVstHostLanguage
     function GetHostLanguage:Int32;
     // Get plugin library file's directory, use this to locate res files
-    function GetDirectory:PAnsiChar;overload;
+    function GetDirectory:PAnsiChar;
     // Something has changed in plugin, request an update display like preset (MIDI too) and parameters list in host
     function UpdateDisplay:Boolean;
     // To be called before SetParamAutomated (on Mouse Down), host can do something

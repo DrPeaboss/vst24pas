@@ -20,6 +20,38 @@ type
   TObjProc = procedure of object;
   TVendorSpecificObjFunc = function(Arg1:Int32;Arg2:IntPtr;Arg3:Pointer;Arg4:Single):IntPtr of object;
 
+  IVHost = interface
+    ['{E2865726-6113-4C71-B5FF-8D9F2F944EDD}']
+    function GetHostVersion:Int32;
+    function GetCurrentUniqueID:Int32;
+    procedure HostIdle;
+    function GetTimeInfo(flags:TVstTimeInfoFlags):PVstTimeInfo;
+    function IOChanged:Boolean;
+    procedure HostProcessEvents(const events:TVstEvents);
+    procedure SizeWindow(Width,Height:Integer);
+    function UpdateSampleRate:Single;
+    function UpdateBlockSize:Int32;
+    function GetCurrentProcessLevel:Int32;
+    function GetAutomationState:Int32;
+    function OfflineStart(const AudioFiles:TVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32):Boolean;
+    function OfflineRead(const task:TVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean):Boolean;
+    function OfflineWrite(const task:TVstOfflineTask;option:TVstOfflineOption):Boolean;
+    function OfflineGetCurrentPass:Int32;
+    function OfflineGetCurrentMetaPass:Int32;
+    function GetHostVendorString:AnsiString;
+    function GetHostProductString:AnsiString;
+    function GetHostVendorVersion:Int32;
+    function HostVendorSpecific(index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
+    function HostCanDo(text:AnsiString):Boolean;
+    function GetHostLanguage:Int32;
+    function GetDirectory:AnsiString;
+    function UpdateDisplay:Boolean;
+    function BeginEdit(index:Int32):Boolean;
+    function EndEdit(index:Int32):Boolean;
+    function HostOpenFileSelector(const FileSelect:TVstFileSelect):Boolean;
+    function HostCloseFileSelector(const FileSelect:TVstFileSelect):Boolean;
+  end;
+
   IVPlugBase = interface
     ['{E6F6397F-1816-47D0-AF2C-E56DAD4DEAEC}']
     procedure SetUniqueID(const str4chars:AnsiString);
@@ -32,8 +64,6 @@ type
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
     procedure SetAsSynth;
-    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
-    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     function SampleRate:Single;
     function BlockSize:Integer;
   end;
@@ -59,11 +89,23 @@ type
   IVPreset = interface
     ['{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}']
     procedure DiasableDAWPreset;
-    procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
+    function GetCurPreset:Integer;
+    function GetPresetNum:Integer;
+    function GetPresetName:AnsiString;
     procedure SetDefaultPreset(const ParamValues:TArrParams);
-    procedure InitPreset;
+    procedure SetPreset(index:Integer);
+    procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
     procedure RenamePreset(const AName:AnsiString);
+    procedure InitPreset;
+    procedure InsertPreset;
     procedure DeletePreset;
+    procedure RandomPreset;
+    procedure NextPreset;
+    procedure PrevPreset;
+    procedure CopyPreset;
+    procedure PastePreset;
+    //procedure LoadFromFile;
+    //procedure SaveToFile;
   end;
 
   TMidiStatus = packed record
@@ -92,15 +134,16 @@ type
     property Gui:TObject read GetGui;
   end;
 
-  iidIVPlugBase   = IVPlugBase;
-  iidIVParam  = IVParam;
-  iidIVPreset = IVPreset;
-  iidIVMidi   = IVMidi;
+  iidIVHost     = IVHost;
+  iidIVPlugBase = IVPlugBase;
+  iidIVParam    = IVParam;
+  iidIVPreset   = IVPreset;
+  iidIVMidi     = IVMidi;
   //iidIVEditor = IVEditor;
 
   { TVPlugBase }
 
-  TVPlugBase = class(TInterfacedObject,IVPlugBase)
+  TVPlugBase = class(TInterfacedObject,IVPlugBase,IVHost)
   private
     FHost:THostCallback;
     FSampleRate:Single;
@@ -114,6 +157,8 @@ type
     FVendorSpecific:TVendorSpecificObjFunc;
     FCanDos:TPlugCanDos;
     FDefaultIO:Boolean;
+    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
+    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
   protected
     FEffect:TAEffect;
     procedure SetUniqueID(const str4chars:AnsiString);
@@ -126,10 +171,37 @@ type
     procedure SetFlags(Flags:TVstAEffectFlags;state:Boolean=True);
     procedure SetCanDo(pcd:TPlugCanDo;state:Boolean=True);
     procedure SetAsSynth;
-    function CallHost(opcode:TAMOpcodes;index:Int32;const value:IntPtr=0;const ptr:Pointer=nil;opt:single=0):IntPtr;overload;
-    function CallHost(opcode:TAMOpcodes):IntPtr;overload;
     function SampleRate:Single;
     function BlockSize:Integer;
+  protected
+    function GetHostVersion:Int32;
+    function GetCurrentUniqueID:Int32;
+    procedure HostIdle;
+    function GetTimeInfo(flags:TVstTimeInfoFlags):PVstTimeInfo;
+    function IOChanged:Boolean;
+    procedure HostProcessEvents(const events:TVstEvents);
+    procedure SizeWindow(Width,Height:Integer);
+    function UpdateSampleRate:Single;
+    function UpdateBlockSize:Int32;
+    function GetCurrentProcessLevel:Int32;
+    function GetAutomationState:Int32;
+    function OfflineStart(const AudioFiles:TVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32):Boolean;
+    function OfflineRead(const task:TVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean):Boolean;
+    function OfflineWrite(const task:TVstOfflineTask;option:TVstOfflineOption):Boolean;
+    function OfflineGetCurrentPass:Int32;
+    function OfflineGetCurrentMetaPass:Int32;
+    function GetHostVendorString:AnsiString;
+    function GetHostProductString:AnsiString;
+    function GetHostVendorVersion:Int32;
+    function HostVendorSpecific(index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
+    function HostCanDo(text:AnsiString):Boolean;
+    function GetHostLanguage:Int32;
+    function GetDirectory:AnsiString;
+    function UpdateDisplay:Boolean;
+    function BeginEdit(index:Int32):Boolean;
+    function EndEdit(index:Int32):Boolean;
+    function HostOpenFileSelector(const FileSelect:TVstFileSelect):Boolean;
+    function HostCloseFileSelector(const FileSelect:TVstFileSelect):Boolean;
   public
     constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
@@ -230,21 +302,35 @@ type
     FPresets:TPresetList;
     FCurPreset:Integer;
     FDefaultPreset:TArrParams;
+    FClipboard:TArrParams;
     FDisableDAWPreset:Boolean;
     procedure InternalLoadPreset(const Params:TArrParams);
+    function InternalStorePreset:TArrParams;inline;
+    procedure InternalSavePreset;
+    procedure GenerateDefaultPreset;
+    procedure LoadDefaultPreset;
   protected
     FNumPreset:Integer;
     procedure DiasableDAWPreset;
-    procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
+    function GetPresetNum:Integer;
     procedure SetDefaultPreset(const ParamValues:TArrParams);
-    procedure InitPreset;
+    procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
     procedure RenamePreset(const AName:AnsiString);
+    procedure InitPreset;
+    procedure InsertPreset;
     procedure DeletePreset;
+    procedure RandomPreset;
+    procedure NextPreset;
+    procedure PrevPreset;
+    procedure CopyPreset;
+    procedure PastePreset;
+    //procedure LoadFromFile;
+    //procedure SaveToFile;
   public
     constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
-    function GetPreset:Integer;
-    procedure SetPreset(NewPreset:Integer);
+    function GetCurPreset:Integer;
+    procedure SetPreset(index:Integer);
     function GetPresetName:AnsiString;
     procedure SetPresetName(ptr:PAnsiChar);
     function GetPresetNameIndexed(index:Integer;const ptr:PAnsiChar):Integer;
@@ -353,6 +439,163 @@ end;
 function TVPlugBase.BlockSize:Integer;
 begin
   Result:=FBlockSize;
+end;
+
+function TVPlugBase.GetHostVersion:Int32;
+begin
+  Result:=CallHost(amVersion);
+end;
+
+function TVPlugBase.GetCurrentUniqueID:Int32;
+begin
+  Result:=CallHost(amCurrentId);
+end;
+
+procedure TVPlugBase.HostIdle;
+begin
+  CallHost(amIdle);
+end;
+
+function TVPlugBase.GetTimeInfo(flags:TVstTimeInfoFlags):PVstTimeInfo;
+begin
+  Result:=FromIntPtr(CallHost(amGetTime,0,IntPtr(flags)));
+end;
+
+function TVPlugBase.IOChanged:Boolean;
+begin
+  Result:=CallHost(amIOChanged)<>0;
+end;
+
+procedure TVPlugBase.HostProcessEvents(const events:TVstEvents);
+begin
+  CallHost(amProcessEvents,0,0,@events);
+end;
+
+procedure TVPlugBase.SizeWindow(Width,Height:Integer);
+begin
+  CallHost(amSizeWindow,Width,Height);
+end;
+
+function TVPlugBase.UpdateSampleRate:Single;
+var
+  res:IntPtr;
+begin
+  res:=CallHost(amGetSampleRate);
+  if res>0 then FSampleRate:=res;
+  Result:=FSampleRate;
+end;
+
+function TVPlugBase.UpdateBlockSize:Int32;
+var
+  res:IntPtr;
+begin
+  res:=CallHost(amGetBlockSize);
+  if res>0 then FBlockSize:=res;
+  Result:=FBlockSize;
+end;
+
+function TVPlugBase.GetCurrentProcessLevel:Int32;
+begin
+  Result:=CallHost(amGetCurrentProcessLevel);
+end;
+
+function TVPlugBase.GetAutomationState:Int32;
+begin
+  Result:=CallHost(amGetAutomationState);
+end;
+
+function TVPlugBase.OfflineStart(const AudioFiles:TVstAudioFile;AudioFileNum,NewAudioFilesNum:Int32):Boolean;
+begin
+  Result:=CallHost(amOfflineStart,NewAudioFilesNum,AudioFileNum,@AudioFiles)<>0;
+end;
+
+function TVPlugBase.OfflineRead(const task:TVstOfflineTask;option:TVstOfflineOption;ReadSource:Boolean
+  ):Boolean;
+begin
+  Result:=CallHost(amOfflineRead,Int32(ReadSource),IntPtr(option),@task)<>0;
+end;
+
+function TVPlugBase.OfflineWrite(const task:TVstOfflineTask;option:TVstOfflineOption):Boolean;
+begin
+  Result:=CallHost(amOfflineWrite,0,IntPtr(option),@task)<>0;
+end;
+
+function TVPlugBase.OfflineGetCurrentPass:Int32;
+begin
+  Result:=CallHost(amOfflineGetCurrentPass);
+end;
+
+function TVPlugBase.OfflineGetCurrentMetaPass:Int32;
+begin
+  Result:=CallHost(amOfflineGetCurrentMetaPass);
+end;
+
+function TVPlugBase.GetHostVendorString:AnsiString;
+var
+  buffer:array[1..kVstMaxVendorStrLen] of AnsiChar;
+begin
+  CallHost(amGetVendorString,0,0,@buffer);
+  buffer[kVstMaxVendorStrLen]:=#0;
+  Result:=buffer;
+end;
+
+function TVPlugBase.GetHostProductString:AnsiString;
+var
+  buffer:array[1..kVstMaxProductStrLen] of AnsiChar;
+begin
+  CallHost(amGetVendorString,0,0,@buffer);
+  buffer[kVstMaxProductStrLen]:=#0;
+  Result:=buffer;
+end;
+
+function TVPlugBase.GetHostVendorVersion:Int32;
+begin
+  Result:=CallHost(amGetVendorVersion);
+end;
+
+function TVPlugBase.HostVendorSpecific(index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;
+begin
+  Result:=CallHost(amVendorSpecific,index,value,ptr,opt);
+end;
+
+function TVPlugBase.HostCanDo(text:AnsiString):Boolean;
+begin
+  Result:=CallHost(amCanDo,0,0,PAnsiChar(text))=1;
+end;
+
+function TVPlugBase.GetHostLanguage:Int32;
+begin
+  Result:=CallHost(amGetLanguage);
+end;
+
+function TVPlugBase.GetDirectory:AnsiString;
+begin
+  Result:=PAnsiChar(FromIntPtr(CallHost(amGetDirectory)));
+end;
+
+function TVPlugBase.UpdateDisplay:Boolean;
+begin
+  Result:=CallHost(amUpdateDisplay)<>0;
+end;
+
+function TVPlugBase.BeginEdit(index:Int32):Boolean;
+begin
+  Result:=CallHost(amBeginEdit,index)<>0;
+end;
+
+function TVPlugBase.EndEdit(index:Int32):Boolean;
+begin
+  Result:=CallHost(amEndEdit,index)<>0;
+end;
+
+function TVPlugBase.HostOpenFileSelector(const FileSelect:TVstFileSelect):Boolean;
+begin
+  Result:=CallHost(amOpenFileSelector,0,0,@FileSelect)<>0;
+end;
+
+function TVPlugBase.HostCloseFileSelector(const FileSelect:TVstFileSelect):Boolean;
+begin
+  Result:=CallHost(amCloseFileSelector,0,0,@FileSelect)<>0;
 end;
 
 function TVPlugBase.CallHost(opcode:TAMOpcodes):IntPtr;
@@ -675,8 +918,9 @@ procedure TVPreset.CopyParams(const Params:TArrParams);
 var
   i:Integer;
 begin
-  for i:=0 to FLength-1 do
-    FValues[i]:=Params[i];
+  if Length(Params)=FLength then
+    for i:=0 to FLength-1 do
+      FValues[i]:=Params[i];
 end;
 
 { TVPresetBase }
@@ -697,19 +941,62 @@ begin
     SetParameter(i,Params[i]);
 end;
 
+function TVPresetBase.InternalStorePreset:TArrParams;
+var
+  i:Integer;
+begin
+  Result:=nil;
+  Setlength(Result,FNumParam);
+  for i:=0 to FNumParam-1 do
+    Result[i]:=GetParameter(i);
+end;
+
+procedure TVPresetBase.LoadDefaultPreset;
+begin
+  GenerateDefaultPreset;
+  InternalLoadPreset(FDefaultPreset);
+end;
+
 procedure TVPresetBase.DiasableDAWPreset;
 begin
   FDisableDAWPreset:=True;
+end;
+
+function TVPresetBase.GetCurPreset:Integer;
+begin
+  Result:=FCurPreset;
+end;
+
+function TVPresetBase.GetPresetNum:Integer;
+begin
+  Result:=FNumPreset;
 end;
 
 procedure TVPresetBase.AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
 begin
   if Length(ParamValues)=FNumParam then
   begin
-    FPresets.Add(TVPreset.Create(AName,ParamValues,FNumParam));
     Inc(FNumPreset);
+    FPresets.Add(TVPreset.Create(AName,ParamValues,FNumParam));
     if not FDisableDAWPreset then
       FEffect.NumPrograms:=FNumPreset;
+  end;
+end;
+
+procedure TVPresetBase.InsertPreset;
+begin
+  GenerateDefaultPreset;
+  if FNumPreset=0 then
+  begin
+    AddPreset('',FDefaultPreset);
+    InitPreset;
+  end
+  else if FCurPreset<FNumPreset then
+  begin
+    FPresets.Insert(FCurPreset,TVPreset.Create('',FDefaultPreset,FNumParam));
+    InternalSavePreset;
+    InitPreset;
+    Inc(FNumPreset);
   end;
 end;
 
@@ -721,34 +1008,104 @@ begin
   end;
 end;
 
+procedure TVPresetBase.RandomPreset;
+var
+  params:TArrParams;
+  i:Integer;
+begin
+  params:=nil;
+  SetLength(params,FNumParam);
+  Randomize;
+  for i:=0 to FNumParam-1 do
+    params[i]:=Random;
+  InternalLoadPreset(params);
+end;
+
 procedure TVPresetBase.InitPreset;
 begin
-  if FPresets.Count>0 then
+  if FCurPreset<FNumPreset then
   begin
-    if not Assigned(FDefaultPreset) then
-      SetLength(FDefaultPreset,FNumParam);
+    LoadDefaultPreset;
     FPresets.Items[FCurPreset].CopyParams(FDefaultPreset);
     FPresets.Items[FCurPreset].Name:='Init';
-    InternalLoadPreset(FDefaultPreset);
   end;
 end;
 
 procedure TVPresetBase.RenamePreset(const AName:AnsiString);
 begin
-  if (AName<>'') and (FPresets.Count>0) then
+  if (AName<>'') and (FCurPreset<FNumPreset) then
     FPresets.Items[FCurPreset].Name:=AName;
 end;
 
 procedure TVPresetBase.DeletePreset;
 begin
-  if FPresets.Count>0 then
+  if FNumPreset>0 then
   begin
     FPresets.Delete(FCurPreset);
     Dec(FNumPreset);
-    if FCurPreset=FNumPreset then
+    if (FCurPreset=FNumPreset) then
       Dec(FCurPreset);
+    if FCurPreset<0 then
+      FCurPreset:=0;
     if FPresets.Count>0 then
-      InternalLoadPreset(FPresets.Items[FCurPreset].Values);
+      InternalLoadPreset(FPresets.Items[FCurPreset].Values)
+    else
+      LoadDefaultPreset;
+  end;
+end;
+
+procedure TVPresetBase.InternalSavePreset;
+begin
+  FPresets.Items[FCurPreset].CopyParams(InternalStorePreset);
+end;
+
+procedure TVPresetBase.GenerateDefaultPreset;
+begin
+  if not Assigned(FDefaultPreset) then
+  SetLength(FDefaultPreset,FNumParam);
+end;
+
+procedure TVPresetBase.NextPreset;
+begin
+  if FCurPreset<FNumPreset then
+  begin
+    InternalSavePreset;
+    if FCurPreset=FNumPreset-1 then
+      FCurPreset:=0
+    else
+      Inc(FCurPreset);;
+    InternalLoadPreset(FPresets.Items[FCurPreset].Values);
+  end;
+end;
+
+procedure TVPresetBase.PrevPreset;
+begin
+  if FCurPreset<FNumPreset then
+  begin
+    InternalSavePreset;
+    if FCurPreset=0 then
+      FCurPreset:=FNumPreset-1
+    else
+      Dec(FCurPreset);;
+    InternalLoadPreset(FPresets.Items[FCurPreset].Values);
+  end;
+end;
+
+procedure TVPresetBase.CopyPreset;
+begin
+  if FCurPreset<FNumPreset then
+  begin
+    FPresets.Items[FCurPreset].CopyParams(InternalStorePreset);
+    FClipboard:=FPresets.Items[FCurPreset].Values;
+  end;
+end;
+
+procedure TVPresetBase.PastePreset;
+begin
+  if FCurPreset<FNumPreset then
+  begin
+    FPresets.Items[FCurPreset].CopyParams(FClipboard);
+    InternalLoadPreset(FClipboard);
   end;
 end;
 
@@ -758,15 +1115,12 @@ begin
   inherited Destroy;
 end;
 
-function TVPresetBase.GetPreset:Integer;
-begin
-  Result:=FCurPreset;
-end;
-
 function TVPresetBase.GetPresetName:AnsiString;
 begin
-  if FNumPreset>0 then
-    Result:=FPresets.Items[FCurPreset].Name;
+  if FCurPreset<FNumPreset then
+    Result:=FPresets.Items[FCurPreset].Name
+  else
+    Result:='';
 end;
 
 function TVPresetBase.GetPresetNameIndexed(index:Integer;const ptr:PAnsiChar):Integer;
@@ -778,18 +1132,18 @@ begin
   end else Result:=0;
 end;
 
-procedure TVPresetBase.SetPreset(NewPreset:Integer);
+procedure TVPresetBase.SetPreset(index:Integer);
 begin
-  if (NewPreset>=0) and (NewPreset<FNumPreset) then
+  if (index>=0) and (index<FNumPreset) then
   begin
-    InternalLoadPreset(FPresets.Items[NewPreset].Values);
-    FCurPreset:=NewPreset;
+    InternalLoadPreset(FPresets.Items[index].Values);
+    FCurPreset:=index;
   end;
 end;
 
 procedure TVPresetBase.SetPresetName(ptr:PAnsiChar);
 begin
-  if FPresets.Count>0 then
+  if FNumPreset>0 then
     FPresets.Items[FCurPreset].Name:=ptr;
 end;
 
@@ -826,14 +1180,18 @@ end;
 procedure TVMidiBase.ProcessEvents(Events:PVstEvents);
 var
   i:Integer;
+  Event:TVstEvent;
 begin
   if Assigned(Events) then
     with Events^ do
     for i:=0 to NumEvents-1 do
-      if Events[i]^.Typ=kVstMidiType then
-        ProcessMidiEvent(PVstMidiEvent(Events[i])^)
-      else if Events[i]^.Typ=kVstSysExType then
+    begin
+      Event:=Events[i]^;
+      if Event.Typ=kVstMidiType then
+        ProcessMidiEvent(TVstMidiEvent(Event))
+      else if Event.Typ=kVstSysExType then
         ;
+    end;
 end;
 
 

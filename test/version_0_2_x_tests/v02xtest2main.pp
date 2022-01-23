@@ -40,11 +40,14 @@ begin
   Param.SetCustomParamDisplay(@GetParamDisplay);
   Preset.SetDefaultPreset([0.5]);
   Preset.AddPreset('Preset 0: default',[0.5]);
+  Preset.DiasableDAWPreset;
   Preset.AddPreset('Preset 1: doubled',[1.0]);
   Preset.AddPreset('Preset 2: silence',[0.0]);
+  Preset.AddPreset('Preset 3: 66.666%',[2/3]);
   Editor.SetGui(TFormTest2); // You can't access Editor.Gui if not called SetGui first
   Gui:=Editor.Gui as TFormTest2;
   Gui.Plugin:=self;
+  Gui.UpdatePreset;
   Editor.SetIdle(@Gui.Idle); // Have to set here
 end;
 

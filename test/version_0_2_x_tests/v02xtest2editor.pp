@@ -13,11 +13,26 @@ type
   { TFormTest2 }
 
   TFormTest2 = class(TForm)
+    ButtonAddPreset:TButton;
+    ButtonDeletePreset:TButton;
     ButtonInitPreset:TButton;
+    ButtonNextPreset:TButton;
+    ButtonPrevPreset:TButton;
+    ButtonRandomPreset:TButton;
+    ButtonRenamePreset:TButton;
+    ButtonInsertPreset:TButton;
     LabelGain:TLabel;
+    LabelPresetShow:TLabel;
     MemoLog:TMemo;
     TrackBarGain:TTrackBar;
+    procedure ButtonAddPresetClick(Sender:TObject);
+    procedure ButtonDeletePresetClick(Sender:TObject);
     procedure ButtonInitPresetClick(Sender:TObject);
+    procedure ButtonNextPresetClick(Sender:TObject);
+    procedure ButtonPrevPresetClick(Sender:TObject);
+    procedure ButtonRandomPresetClick(Sender:TObject);
+    procedure ButtonRenamePresetClick(Sender:TObject);
+    procedure ButtonInsertPresetClick(Sender:TObject);
     procedure FormCreate(Sender:TObject);
     procedure TrackBarGainChange(Sender:TObject);
     procedure TrackBarGainMouseDown(Sender:TObject;Button:TMouseButton;Shift:TShiftState;X,Y:Integer);
@@ -29,6 +44,7 @@ type
     procedure Idle;
     procedure logln(const log:string);overload;
     procedure logln(const fmt:string;const args:array of const);overload;
+    procedure UpdatePreset;
   end;
 
 implementation
@@ -46,11 +62,59 @@ begin
   LabelGain.Caption:=Format('Gain: %.2fdB  %.2f',[VstAmp2dB(1.0),0.5]);
   // Cannot access Plugin here !
   // Plugin.Editor.SetIdle(@Idle); //< It's not allowed
+  LabelPresetShow.Caption:='';
 end;
 
 procedure TFormTest2.ButtonInitPresetClick(Sender:TObject);
 begin
   Plugin.Preset.InitPreset;
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonNextPresetClick(Sender:TObject);
+begin
+  Plugin.Preset.NextPreset;
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonPrevPresetClick(Sender:TObject);
+begin
+  Plugin.Preset.PrevPreset;
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonRandomPresetClick(Sender:TObject);
+begin
+  Plugin.Preset.RandomPreset;
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonRenamePresetClick(Sender:TObject);
+begin
+  Plugin.Preset.RenamePreset(TimeToStr(Now));
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonInsertPresetClick(Sender:TObject);
+begin
+  Plugin.Preset.InsertPreset;
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonDeletePresetClick(Sender:TObject);
+begin
+  Plugin.Preset.DeletePreset;
+  UpdatePreset;
+end;
+
+procedure TFormTest2.ButtonAddPresetClick(Sender:TObject);
+var
+  e:Extended;
+begin
+  Randomize;
+  e:=Random;
+  Plugin.Preset.AddPreset(Format('Preset %.2f',[e]),[e]);
+  UpdatePreset;
 end;
 
 procedure TFormTest2.Idle;
@@ -91,6 +155,12 @@ procedure TFormTest2.TrackBarGainMouseUp(Sender:TObject;Button:TMouseButton;Shif
 begin
   // Optional, not mandatory
   Plugin.Editor.EditEnd(0);
+end;
+
+procedure TFormTest2.UpdatePreset;
+begin
+  LabelPresetShow.Caption:=Format('Cur:%d, Num:%d, Name:%s',
+    [Plugin.Preset.GetCurPreset,Plugin.Preset.GetPresetNum,Plugin.Preset.GetPresetName]);
 end;
 
 end.

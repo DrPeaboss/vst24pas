@@ -93,7 +93,7 @@ procedure TVEditor.Open(ParentHandle:Pointer);
 begin
   FGui.ParentWindow:=ToIntPtr(ParentHandle);
   FGui.Show;
-  FPlugin.Base.CallHost(amSizeWindow,FGui.Width,FGui.Height);
+  FPlugin.Host.SizeWindow(FGui.Width,FGui.Height);
   FOpening:=True;
 end;
 
@@ -127,13 +127,13 @@ end;
 procedure TVEditor.EditBegin(index:integer);
 begin
   {$ifdef debug}dbgln('Called EditBegin, index: %d',[index]);{$endif}
-  FPlugin.Base.CallHost(amBeginEdit,index);
+  FPlugin.Host.BeginEdit(index);
 end;
 
 procedure TVEditor.EditEnd(index:integer);
 begin
   {$ifdef debug}dbgln('Called EditEnd, index: %d',[index]);{$endif}
-  FPlugin.Base.CallHost(amEndEdit,index);
+  FPlugin.Host.EndEdit(index);
 end;
 
 procedure TVEditor.SetIdle(IdleProc:TObjProc);

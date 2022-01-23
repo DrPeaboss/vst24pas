@@ -28,6 +28,7 @@ type
   private
     FPluginBase:TVPluginBase;
     FEditorBase:TVEditorBase;
+    FHost:IVHost;
     FBase:IVPlugBase;
     FParam:IVParam;
     FPreset:IVPreset;
@@ -48,6 +49,7 @@ type
     constructor Create(AHost:THostCallback);virtual;
     destructor Destroy;override;
     function GetAEffect:PAEffect;
+    property Host:IVHost read FHost;
     property Base:IVPlugBase read FBase;
     property Param:IVParam read FParam;
     property Preset:IVPreset read FPreset;
@@ -241,6 +243,7 @@ begin
     Include(Flags,effFlagsCanReplacing);
 {$endif}
   end;
+  FPluginBase.GetInterface(iidIVHost,FHost);
   FPluginBase.GetInterface(iidIVPlugBase,FBase);
   FPluginBase.GetInterface(iidIVParam,FParam);
   FPluginBase.GetInterface(iidIVPreset,FPreset);
@@ -273,7 +276,7 @@ begin
     effOpen: ;
     effClose: ;
     effSetProgram: FPluginBase.SetPreset(value);
-    effGetProgram: Result:=FPluginBase.GetPreset;
+    effGetProgram: Result:=FPluginBase.GetCurPreset;
     effSetProgramName: FPluginBase.SetPresetName(ptr);
     effGetProgramName: VstStrncpy(ptr,FPluginBase.GetPresetName,23);
     effGetParamLabel: VstStrncpy(ptr,FPluginBase.GetParamLabel(index),7);
