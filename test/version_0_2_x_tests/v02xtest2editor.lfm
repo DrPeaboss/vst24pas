@@ -109,7 +109,7 @@ object FormTest2: TFormTest2
     Left = 128
     Height = 31
     Top = 80
-    Width = 112
+    Width = 120
     Caption = 'InsertPreset'
     OnClick = ButtonInsertPresetClick
     TabOrder = 8
@@ -122,5 +122,16 @@ object FormTest2: TFormTest2
     Caption = 'RandomPreset'
     OnClick = ButtonRandomPresetClick
     TabOrder = 9
+  end
+  object ComboBoxPresets: TComboBox
+    Left = 392
+    Height = 28
+    Top = 115
+    Width = 224
+    ItemHeight = 20
+    OnChange = ComboBoxPresetsChange
+    ReadOnly = True
+    Style = csDropDownList
+    TabOrder = 10
   end
 end

@@ -21,6 +21,7 @@ type
     ButtonRandomPreset:TButton;
     ButtonRenamePreset:TButton;
     ButtonInsertPreset:TButton;
+    ComboBoxPresets:TComboBox;
     LabelGain:TLabel;
     LabelPresetShow:TLabel;
     MemoLog:TMemo;
@@ -33,6 +34,7 @@ type
     procedure ButtonRandomPresetClick(Sender:TObject);
     procedure ButtonRenamePresetClick(Sender:TObject);
     procedure ButtonInsertPresetClick(Sender:TObject);
+    procedure ComboBoxPresetsChange(Sender:TObject);
     procedure FormCreate(Sender:TObject);
     procedure TrackBarGainChange(Sender:TObject);
     procedure TrackBarGainMouseDown(Sender:TObject;Button:TMouseButton;Shift:TShiftState;X,Y:Integer);
@@ -44,7 +46,8 @@ type
     procedure Idle;
     procedure logln(const log:string);overload;
     procedure logln(const fmt:string;const args:array of const);overload;
-    procedure UpdatePreset;
+    procedure UpdateDisplay;
+    procedure UpdatePresetItems;
   end;
 
 implementation
@@ -68,43 +71,49 @@ end;
 procedure TFormTest2.ButtonInitPresetClick(Sender:TObject);
 begin
   Plugin.Preset.InitPreset;
-  UpdatePreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonNextPresetClick(Sender:TObject);
 begin
-  Plugin.Preset.NextPreset;
-  UpdatePreset;
+  ComboBoxPresets.ItemIndex:=Plugin.Preset.NextPreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonPrevPresetClick(Sender:TObject);
 begin
-  Plugin.Preset.PrevPreset;
-  UpdatePreset;
+  ComboBoxPresets.ItemIndex:=Plugin.Preset.PrevPreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonRandomPresetClick(Sender:TObject);
 begin
   Plugin.Preset.RandomPreset;
-  UpdatePreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonRenamePresetClick(Sender:TObject);
 begin
   Plugin.Preset.RenamePreset(TimeToStr(Now));
-  UpdatePreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonInsertPresetClick(Sender:TObject);
 begin
   Plugin.Preset.InsertPreset;
-  UpdatePreset;
+  UpdateDisplay;
+end;
+
+procedure TFormTest2.ComboBoxPresetsChange(Sender:TObject);
+begin
+  Plugin.Preset.SetPreset(ComboBoxPresets.ItemIndex);
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonDeletePresetClick(Sender:TObject);
 begin
   Plugin.Preset.DeletePreset;
-  UpdatePreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.ButtonAddPresetClick(Sender:TObject);
@@ -114,7 +123,7 @@ begin
   Randomize;
   e:=Random;
   Plugin.Preset.AddPreset(Format('Preset %.2f',[e]),[e]);
-  UpdatePreset;
+  UpdateDisplay;
 end;
 
 procedure TFormTest2.Idle;
@@ -157,10 +166,33 @@ begin
   Plugin.Editor.EditEnd(0);
 end;
 
-procedure TFormTest2.UpdatePreset;
+procedure TFormTest2.UpdateDisplay;
 begin
   LabelPresetShow.Caption:=Format('Cur:%d, Num:%d, Name:%s',
     [Plugin.Preset.GetCurPreset,Plugin.Preset.GetPresetNum,Plugin.Preset.GetPresetName]);
+  UpdatePresetItems;
+end;
+
+procedure TFormTest2.UpdatePresetItems;
+var
+  strarr:array of AnsiString;
+  astr:AnsiString;
+  curpreset,presets:Integer;
+begin
+  if Plugin.Preset.NumberNameChanged then
+  begin
+    ComboBoxPresets.Items.Clear;
+    strarr := Plugin.Preset.GetPresetNameArray;
+    if Length(strarr)>0 then
+    begin
+      for astr in strarr do
+        ComboBoxPresets.Items.Add(astr);
+      curpreset:=Plugin.Preset.GetCurPreset;
+      presets:=Plugin.Preset.GetPresetNum;
+      if curpreset<presets then
+        ComboBoxPresets.ItemIndex:=curpreset;
+      end;
+  end;
 end;
 
 end.

@@ -85,23 +85,32 @@ type
 
   PArrParams = ^TArrParams;
   TArrParams = array of single;
+  TArrAnsiString = array of AnsiString;
 
   IVPreset = interface
     ['{1EC361D2-C325-4A0C-8FC9-D17EB5EAF0B2}']
     procedure DiasableDAWPreset;
+    // Return true when preset number or name changed
+    function NumberNameChanged:Boolean;
     function GetCurPreset:Integer;
     function GetPresetNum:Integer;
     function GetPresetName:AnsiString;
+    function GetPresetNameArray:TArrAnsiString;
+    // Set default preset that used by InitPreset and InsertPreset
     procedure SetDefaultPreset(const ParamValues:TArrParams);
-    procedure SetPreset(index:Integer);
+    procedure SetPreset(index:Integer);overload;
+    // Set preset by name (if there are duplicate names, only use the first one)
+    procedure SetPreset(const AName:AnsiString);overload;
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
     procedure RenamePreset(const AName:AnsiString);
     procedure InitPreset;
     procedure InsertPreset;
     procedure DeletePreset;
     procedure RandomPreset;
-    procedure NextPreset;
-    procedure PrevPreset;
+    // Change to next preset and return the index
+    function NextPreset:Integer;
+    // Change to previous preset and return the index
+    function PrevPreset:Integer;
     procedure CopyPreset;
     procedure PastePreset;
     //procedure LoadFromFile;
@@ -304,6 +313,8 @@ type
     FDefaultPreset:TArrParams;
     FClipboard:TArrParams;
     FDisableDAWPreset:Boolean;
+    FNumberNameChanged:Boolean;
+    procedure SetNumberNameChanged;
     procedure InternalLoadPreset(const Params:TArrParams);
     function InternalStorePreset:TArrParams;inline;
     procedure InternalSavePreset;
@@ -312,16 +323,19 @@ type
   protected
     FNumPreset:Integer;
     procedure DiasableDAWPreset;
+    function NumberNameChanged:Boolean;
     function GetPresetNum:Integer;
+    function GetPresetNameArray:TArrAnsiString;
     procedure SetDefaultPreset(const ParamValues:TArrParams);
+    procedure SetPreset(const AName:AnsiString);overload;
     procedure AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
     procedure RenamePreset(const AName:AnsiString);
     procedure InitPreset;
     procedure InsertPreset;
     procedure DeletePreset;
     procedure RandomPreset;
-    procedure NextPreset;
-    procedure PrevPreset;
+    function NextPreset:Integer;
+    function PrevPreset:Integer;
     procedure CopyPreset;
     procedure PastePreset;
     //procedure LoadFromFile;
@@ -330,7 +344,7 @@ type
     constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
     function GetCurPreset:Integer;
-    procedure SetPreset(index:Integer);
+    procedure SetPreset(index:Integer);overload;
     function GetPresetName:AnsiString;
     procedure SetPresetName(ptr:PAnsiChar);
     function GetPresetNameIndexed(index:Integer;const ptr:PAnsiChar):Integer;
@@ -933,6 +947,11 @@ begin
   FPresets:=TPresetList.Create(True);
 end;
 
+procedure TVPresetBase.SetNumberNameChanged;
+begin
+  FNumberNameChanged:=True;
+end;
+
 procedure TVPresetBase.InternalLoadPreset(const Params:TArrParams);
 var
   i:Integer;
@@ -962,6 +981,13 @@ begin
   FDisableDAWPreset:=True;
 end;
 
+function TVPresetBase.NumberNameChanged:Boolean;
+begin
+  Result:=FNumberNameChanged;
+  if Result then
+    FNumberNameChanged:=False;
+end;
+
 function TVPresetBase.GetCurPreset:Integer;
 begin
   Result:=FCurPreset;
@@ -972,6 +998,19 @@ begin
   Result:=FNumPreset;
 end;
 
+function TVPresetBase.GetPresetNameArray:TArrAnsiString;
+var
+  i:Integer;
+begin
+  Result:=nil;
+  if FNumPreset>0 then
+  begin
+    SetLength(Result,FNumPreset);
+    for i:=0 to FNumPreset-1 do
+      Result[i]:=FPresets.Items[i].Name;
+  end;
+end;
+
 procedure TVPresetBase.AddPreset(const AName:AnsiString;const ParamValues:TArrParams);
 begin
   if Length(ParamValues)=FNumParam then
@@ -980,6 +1019,7 @@ begin
     FPresets.Add(TVPreset.Create(AName,ParamValues,FNumParam));
     if not FDisableDAWPreset then
       FEffect.NumPrograms:=FNumPreset;
+    SetNumberNameChanged;
   end;
 end;
 
@@ -990,6 +1030,7 @@ begin
   begin
     AddPreset('',FDefaultPreset);
     InitPreset;
+    SetNumberNameChanged;
   end
   else if FCurPreset<FNumPreset then
   begin
@@ -997,6 +1038,7 @@ begin
     InternalSavePreset;
     InitPreset;
     Inc(FNumPreset);
+    SetNumberNameChanged;
   end;
 end;
 
@@ -1006,6 +1048,18 @@ begin
   begin
     FDefaultPreset:=ParamValues;
   end;
+end;
+
+procedure TVPresetBase.SetPreset(const AName:AnsiString);
+var
+  i:Integer;
+begin
+  for i:=0 to FPresets.Count-1 do
+    if FPresets.Items[i].Name=AName then
+    begin
+      SetPreset(i);
+      Break;
+    end;
 end;
 
 procedure TVPresetBase.RandomPreset;
@@ -1028,13 +1082,17 @@ begin
     LoadDefaultPreset;
     FPresets.Items[FCurPreset].CopyParams(FDefaultPreset);
     FPresets.Items[FCurPreset].Name:='Init';
+    SetNumberNameChanged;
   end;
 end;
 
 procedure TVPresetBase.RenamePreset(const AName:AnsiString);
 begin
   if (AName<>'') and (FCurPreset<FNumPreset) then
+  begin
     FPresets.Items[FCurPreset].Name:=AName;
+    SetNumberNameChanged;
+  end;
 end;
 
 procedure TVPresetBase.DeletePreset;
@@ -1051,6 +1109,7 @@ begin
       InternalLoadPreset(FPresets.Items[FCurPreset].Values)
     else
       LoadDefaultPreset;
+    SetNumberNameChanged;
   end;
 end;
 
@@ -1065,7 +1124,7 @@ begin
   SetLength(FDefaultPreset,FNumParam);
 end;
 
-procedure TVPresetBase.NextPreset;
+function TVPresetBase.NextPreset:Integer;
 begin
   if FCurPreset<FNumPreset then
   begin
@@ -1075,10 +1134,11 @@ begin
     else
       Inc(FCurPreset);;
     InternalLoadPreset(FPresets.Items[FCurPreset].Values);
+    Result:=FCurPreset;
   end;
 end;
 
-procedure TVPresetBase.PrevPreset;
+function TVPresetBase.PrevPreset:Integer;
 begin
   if FCurPreset<FNumPreset then
   begin
@@ -1088,6 +1148,7 @@ begin
     else
       Dec(FCurPreset);;
     InternalLoadPreset(FPresets.Items[FCurPreset].Values);
+    Result:=FCurPreset;
   end;
 end;
 
@@ -1134,7 +1195,7 @@ end;
 
 procedure TVPresetBase.SetPreset(index:Integer);
 begin
-  if (index>=0) and (index<FNumPreset) then
+  if (index<>FCurPreset) and (index>=0) and (index<FNumPreset) then
   begin
     InternalLoadPreset(FPresets.Items[index].Values);
     FCurPreset:=index;

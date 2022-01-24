@@ -47,7 +47,7 @@ begin
   Editor.SetGui(TFormTest2); // You can't access Editor.Gui if not called SetGui first
   Gui:=Editor.Gui as TFormTest2;
   Gui.Plugin:=self;
-  Gui.UpdatePreset;
+  Gui.UpdateDisplay;
   Editor.SetIdle(@Gui.Idle); // Have to set here
 end;
 
