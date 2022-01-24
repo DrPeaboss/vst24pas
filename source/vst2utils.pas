@@ -18,10 +18,10 @@ uses
 
 
 // Convert TAEffectOpcodes to strings
-function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;overload;
+function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;inline;overload;
 function VstAEOpcode2Str(opcode:Int32):string;overload;
 // Convert TAudioMasterOpcodes to strings
-function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;overload;
+function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;inline;overload;
 function VstAMOpcode2Str(opcode:Int32):string;overload;
 // Convert the amplitude to decibels
 function VstAmp2dB(const value: double): double; inline; overload;
@@ -37,12 +37,12 @@ function VstAmp2dBString(const value: single): AnsiString;
 function VstInt2String(const value: single): AnsiString;
 // Convert strings to THostCanDo
 function VstString2HostCanDo(const str:ansistring):THostCanDo;overload;
-function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;overload;
+function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;inline;overload;
 // Convert THostCanDo to strings
 function VstHostCanDo2String(hcd:THostCanDo):ansistring;
 // Convert strings to TPlugCanDo
 function VstString2PlugCanDo(const str:ansistring):TPlugCanDo;overload;
-function VstString2PlugCanDo(sz:PAnsiChar):TPlugCanDo;overload;
+function VstString2PlugCanDo(sz:PAnsiChar):TPlugCanDo;inline;overload;
 // Convert TPlugCanDo to strings
 function VstPlugCanDo2String(pcd:TPlugCanDo):ansistring;
 
@@ -54,7 +54,13 @@ uses
 
 function VstAEOpcode2Str(opcode:TAEffectOpcodes):string;
 begin
-  case opcode of
+  Result:=VstAEOpcode2Str(Ord(opcode));
+end;
+
+function VstAEOpcode2Str(opcode:Int32):string;
+begin
+  if (opcode>=0) and (opcode<kVstAEOpcodeMax) then
+  case TAEOpcodes(opcode) of
     effOpen:Result:='effOpen';
     effClose:Result:='effClose';
     effSetProgram:Result:='effSetProgram';
@@ -141,20 +147,19 @@ begin
     effGetNumMidiInputChannels:Result:='effGetNumMidiInputChannels';
     effGetNumMidiOutputChannels:Result:='effGetNumMidiOutputChannels';
 {$endif}
-  end;
-end;
-
-function VstAEOpcode2Str(opcode:Int32):string;
-begin
-  if (opcode>=0) and (opcode<kVstAEOpcodeMax) then
-    Result:=VstAEOpcode2Str(TAEOpcodes(opcode))
-  else
-    Result:='Unknown opcode '+IntToStr(opcode);
+  end
+  else Result:='Unknown AEOpcode: '+IntToStr(opcode);
 end;
 
 function VstAMOpcode2Str(opcode:TAudioMasterOpcodes):string;
 begin
-  case opcode of
+  Result:=VstAMOpcode2Str(Ord(opcode));
+end;
+
+function VstAMOpcode2Str(opcode:Int32):string;
+begin
+  if (opcode>=0) and (opcode<kVstAMOpcodeMax) then
+  case TAMOpcodes(opcode) of
     amAutomate:Result:='amAutomate';
     amVersion:Result:='amVersion';
     amCurrentId:Result:='amCurrentId';
@@ -205,15 +210,8 @@ begin
     amEditFile:Result:='amEditFile';
     amGetChunkFile:Result:='amGetChunkFile';
     amGetInputSpeakerArrangement:Result:='amGetInputSpeakerArrangement';
-  end;
-end;
-
-function VstAMOpcode2Str(opcode:Int32):string;
-begin
-  if (opcode>=0) and (opcode<kVstAMOpcodeMax) then
-    Result:=VstAMOpcode2Str(TAMOpcodes(opcode))
-  else
-    Result:='Unknown opcode '+IntToStr(opcode);
+  end
+  else Result:='Unknown AMOpcode: '+IntToStr(opcode);
 end;
 
 function VstAmp2dB(const value: double): double;
@@ -330,8 +328,11 @@ begin
 end;
 
 function VstString2HostCanDo(sz:PAnsiChar):THostCanDo;
+var
+  s:ansistring;
 begin
-  Result:=VstString2HostCanDo(sz);
+  s:=sz;
+  Result:=VstString2HostCanDo(s);
 end;
 
 function VstHostCanDo2String(hcd:THostCanDo):ansistring;
