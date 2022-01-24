@@ -134,4 +134,33 @@ object FormTest2: TFormTest2
     Style = csDropDownList
     TabOrder = 10
   end
+  object ButtonSaveToFile: TButton
+    Left = 392
+    Height = 31
+    Top = 80
+    Width = 102
+    Caption = 'SaveToFile'
+    OnClick = ButtonSaveToFileClick
+    TabOrder = 11
+  end
+  object ButtonLoadFromFile: TButton
+    Left = 258
+    Height = 31
+    Top = 80
+    Width = 124
+    Caption = 'LoadFromFile'
+    OnClick = ButtonLoadFromFileClick
+    TabOrder = 12
+  end
+  object SaveDialogFxp: TSaveDialog
+    Title = 'Save preset file as'
+    Filter = 'Preset file|*.fxp'
+    Left = 480
+    Top = 72
+  end
+  object OpenDialogFxp: TOpenDialog
+    Filter = 'Preset file|*.fxp'
+    Left = 288
+    Top = 64
+  end
 end

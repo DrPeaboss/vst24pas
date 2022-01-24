@@ -113,8 +113,8 @@ type
     function PrevPreset:Integer;
     procedure CopyPreset;
     procedure PastePreset;
-    //procedure LoadFromFile;
-    //procedure SaveToFile;
+    function LoadFromFile(FileName:AnsiString):Boolean;
+    function SaveToFile(FileName:AnsiString):Boolean;
   end;
 
   TMidiStatus = packed record
@@ -338,8 +338,8 @@ type
     function PrevPreset:Integer;
     procedure CopyPreset;
     procedure PastePreset;
-    //procedure LoadFromFile;
-    //procedure SaveToFile;
+    function LoadFromFile(FileName:AnsiString):Boolean;
+    function SaveToFile(FileName:AnsiString):Boolean;
   public
     constructor Create(AHost:THostCallback;Plugin:TObject);
     destructor Destroy;override;
@@ -1170,6 +1170,77 @@ begin
   end;
 end;
 
+function TVPresetBase.LoadFromFile(FileName:AnsiString):Boolean;
+var
+  fxp:TFxProgram;
+  fs:TFileStream;
+  params:TArrParams;
+begin
+  Result:=False;
+  params:=nil;
+  if FileExists(FileName) then
+  begin
+    fs:=TFileStream.Create(FileName,fmOpenRead);
+    try
+      fs.ReadBuffer(fxp,56);
+      if (fxp.ChunkMagic=Int32(CMagic)) and
+         (BEtoN(fxp.FxID)=FEffect.UniqueID) and
+         (BEtoN(fxp.NumParams)=FNumParam) and
+         (BEtoN(fxp.FxVersion)=FEffect.Version) and
+         (fxp.FxMagic=Int32(FMagic)) then
+      begin
+         setlength(params,FNumParam);
+         fs.ReadBuffer(params[0],FNumParam*4);
+         InternalLoadPreset(params);
+         SetPresetName(@fxp.PrgName);
+         Result:=True;
+      end;
+    finally
+      fs.Free;
+    end;
+  end;
+end;
+
+function TVPresetBase.SaveToFile(FileName:AnsiString):Boolean;
+
+  function ExtractFileNameWithoutExt(AName:AnsiString):Ansistring;
+  var
+    dotidx:SizeInt;
+  begin
+    Result:=ExtractFileName(AName);
+    dotidx:=Result.IndexOf('.');
+    if dotidx>0 then
+      Result:=Copy(Result,1,dotidx);
+  end;
+
+var
+  pfxp:PFxProgram;
+  fs:TFileStream;
+  fxpsize,i:Integer;
+begin
+  Result:=False;
+  fxpsize:=56+FNumParam*4;
+  pfxp:=GetMem(fxpsize);
+  pfxp^.ChunkMagic:=Int32(CMagic);
+  pfxp^.ByteSize:=NtoBE(fxpsize-8);
+  pfxp^.FxMagic:=Int32(FMagic);
+  pfxp^.Version:=NtoBE(1);
+  pfxp^.FxID:=NtoBE(FEffect.UniqueID);
+  pfxp^.FxVersion:=NtoBE(FEffect.Version);
+  pfxp^.NumParams:=NtoBE(FNumParam);
+  pfxp^.PrgName:=ExtractFileNameWithoutExt(FileName);
+  for i:=0 to FNumParam-1 do
+    pfxp^.Content.Params[i]:=GetParameter(i);
+  fs:=TFileStream.Create(filename,fmOpenWrite or fmCreate);
+  try
+    fs.WriteBuffer(pfxp^,fxpsize);
+    Result:=True;
+  finally
+    fs.Free;
+    Freemem(pfxp);
+  end;
+end;
+
 destructor TVPresetBase.Destroy;
 begin
   FPresets.Free;
@@ -1197,6 +1268,7 @@ procedure TVPresetBase.SetPreset(index:Integer);
 begin
   if (index<>FCurPreset) and (index>=0) and (index<FNumPreset) then
   begin
+    InternalSavePreset;
     InternalLoadPreset(FPresets.Items[index].Values);
     FCurPreset:=index;
   end;
@@ -1205,7 +1277,10 @@ end;
 procedure TVPresetBase.SetPresetName(ptr:PAnsiChar);
 begin
   if FNumPreset>0 then
+  begin
     FPresets.Items[FCurPreset].Name:=ptr;
+    SetNumberNameChanged;
+  end;
 end;
 
 { TVMidiBase }

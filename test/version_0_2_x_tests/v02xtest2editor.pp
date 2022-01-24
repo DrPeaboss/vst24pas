@@ -16,24 +16,30 @@ type
     ButtonAddPreset:TButton;
     ButtonDeletePreset:TButton;
     ButtonInitPreset:TButton;
+    ButtonLoadFromFile:TButton;
     ButtonNextPreset:TButton;
     ButtonPrevPreset:TButton;
     ButtonRandomPreset:TButton;
     ButtonRenamePreset:TButton;
     ButtonInsertPreset:TButton;
+    ButtonSaveToFile:TButton;
     ComboBoxPresets:TComboBox;
     LabelGain:TLabel;
     LabelPresetShow:TLabel;
     MemoLog:TMemo;
+    OpenDialogFxp:TOpenDialog;
+    SaveDialogFxp:TSaveDialog;
     TrackBarGain:TTrackBar;
     procedure ButtonAddPresetClick(Sender:TObject);
     procedure ButtonDeletePresetClick(Sender:TObject);
     procedure ButtonInitPresetClick(Sender:TObject);
+    procedure ButtonLoadFromFileClick(Sender:TObject);
     procedure ButtonNextPresetClick(Sender:TObject);
     procedure ButtonPrevPresetClick(Sender:TObject);
     procedure ButtonRandomPresetClick(Sender:TObject);
     procedure ButtonRenamePresetClick(Sender:TObject);
     procedure ButtonInsertPresetClick(Sender:TObject);
+    procedure ButtonSaveToFileClick(Sender:TObject);
     procedure ComboBoxPresetsChange(Sender:TObject);
     procedure FormCreate(Sender:TObject);
     procedure TrackBarGainChange(Sender:TObject);
@@ -74,6 +80,19 @@ begin
   UpdateDisplay;
 end;
 
+procedure TFormTest2.ButtonLoadFromFileClick(Sender:TObject);
+begin
+  OpenDialogFxp.InitialDir:=Plugin.Host.GetDirectory;
+  if OpenDialogFxp.Execute then
+  begin
+    if Plugin.Preset.LoadFromFile(OpenDialogFxp.FileName) then
+      ShowMessage('Load OK')
+    else
+      ShowMessage('Load Error');
+  end;
+  UpdateDisplay;
+end;
+
 procedure TFormTest2.ButtonNextPresetClick(Sender:TObject);
 begin
   ComboBoxPresets.ItemIndex:=Plugin.Preset.NextPreset;
@@ -102,6 +121,18 @@ procedure TFormTest2.ButtonInsertPresetClick(Sender:TObject);
 begin
   Plugin.Preset.InsertPreset;
   UpdateDisplay;
+end;
+
+procedure TFormTest2.ButtonSaveToFileClick(Sender:TObject);
+begin
+  SaveDialogFxp.InitialDir:=Plugin.Host.GetDirectory;
+  if SaveDialogFxp.Execute then
+  begin
+    if Plugin.Preset.SaveToFile(SaveDialogFxp.FileName) then
+      ShowMessage('Save OK')
+    else
+      ShowMessage('Save Error');
+  end;
 end;
 
 procedure TFormTest2.ComboBoxPresetsChange(Sender:TObject);
