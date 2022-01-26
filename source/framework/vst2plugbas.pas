@@ -117,18 +117,10 @@ type
     function SaveToFile(FileName:AnsiString):Boolean;
   end;
 
-  TMidiStatus = packed record
-    IsNew:Boolean;
-    Command:Byte;
-    Note:Byte;
-    Velocity:Byte;
-  end;
-
   TOnMidiInProc = procedure(Command,Note,Velocity:Byte) of object;
 
   IVMidi = interface
     ['{18FA3F13-B878-4B3D-B390-EAE022FAC248}']
-    function QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
     procedure SetOnMidiIn(MidiInProc:TOnMidiInProc);
   end;
 
@@ -354,11 +346,9 @@ type
 
   TVMidiBase = class(TVPresetBase,IVMidi)
   private
-    FMidiStatus:TMidiStatus;
     FOnMidiIn:TOnMidiInProc;
     procedure ProcessMidiEvent(const Event:TVstMidiEvent);
   protected
-    function QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
     procedure SetOnMidiIn(MidiInProc:TOnMidiInProc);
   public
     procedure ProcessEvents(Events:PVstEvents);
@@ -1182,11 +1172,12 @@ begin
   begin
     fs:=TFileStream.Create(FileName,fmOpenRead);
     try
+      fxp:=Default(TFxProgram);
       fs.ReadBuffer(fxp,56);
       if (fxp.ChunkMagic=Int32(CMagic)) and
          (BEtoN(fxp.FxID)=FEffect.UniqueID) and
          (BEtoN(fxp.NumParams)=FNumParam) and
-         (BEtoN(fxp.FxVersion)=FEffect.Version) and
+         (BEtoN(fxp.FxVersion)<=FEffect.Version) and
          (fxp.FxMagic=Int32(FMagic)) then
       begin
          setlength(params,FNumParam);
@@ -1289,23 +1280,6 @@ procedure TVMidiBase.ProcessMidiEvent(const Event:TVstMidiEvent);
 begin
   if Assigned(FOnMidiIn) then
     FOnMidiIn(Event.MidiData[0],Event.MidiData[1],Event.MidiData[2]);
-  FMidiStatus.IsNew:=True;
-  FMidiStatus.Command:=Event.MidiData[0];
-  FMidiStatus.Note:=Event.MidiData[1];
-  FMidiStatus.Velocity:=Event.MidiData[2];
-end;
-
-function TVMidiBase.QueryNewMidiData(out Command,Note,Velocity:Byte):Boolean;
-begin
-  Result:=False;
-  if FMidiStatus.IsNew then
-  begin
-    Result:=True;
-    Command:=FMidiStatus.Command;
-    Note:=FMidiStatus.Note;
-    Velocity:=FMidiStatus.Velocity;
-    FMidiStatus.IsNew:=False;
-  end;
 end;
 
 procedure TVMidiBase.SetOnMidiIn(MidiInProc:TOnMidiInProc);
