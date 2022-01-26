@@ -5,7 +5,7 @@ unit vmain;
 interface
 
 uses
-  vst2intf,vst2plugui;
+  vst2intf,vst2plugui,classes;
 
 type
 
@@ -15,19 +15,22 @@ type
   private
     FMidiEventCount:Integer;
     FMidiSysexCount:Integer;
+    FLogList:TStringList;
   protected
     function Dispatcher(opcode:TAEOpcodes;index:Int32;value:IntPtr;ptr:Pointer;opt:Single):IntPtr;override;
   public
     constructor Create(AHost:THostCallback);override;
+    destructor Destroy;override;
     procedure ProcessEvents(Events:PVstEvents);
     procedure ProcessMidiEvent(const MidiEvent:TVstMidiEvent);
     procedure ProcessMidiSysex(const SysexEvent:TVstMidiSysexEvent);
+    property LogList:TStringList read FLogList;
   end;
 
 implementation
 
 uses
-  veditor;
+  veditor,sysutils;
 
 { TPlug }
 
@@ -40,6 +43,8 @@ begin
 end;
 
 constructor TPlug.Create(AHost:THostCallback);
+var
+  frm:TFormain;
 begin
   inherited Create(AHost);
   with Base do
@@ -51,6 +56,16 @@ begin
     SetNames('MidiReceiveTest','PeaZomboss','vst24pas: test');
   end;
   Editor.SetGui(TFormain);
+  frm:=TFormain(Editor.Gui);
+  Editor.SetIdle(@frm.Idle);
+  frm.Plug:=Self;
+  FLogList:=TStringList.Create;
+end;
+
+destructor TPlug.Destroy;
+begin
+  FLogList.Free;
+  inherited Destroy;
 end;
 
 procedure TPlug.ProcessEvents(Events:PVstEvents);
@@ -81,20 +96,17 @@ end;
 }
 
 procedure TPlug.ProcessMidiEvent(const MidiEvent:TVstMidiEvent);
-var
-  frm:TFormain;
 begin
-  frm:= TFormain(Editor.Gui);
-  frm.LogMemo.Lines.Add('%d: Got Midi Event --> ctrl:%X, note:%d, velo:%d, NoteOffVelocity: %d',
-    [FMidiEventCount,MidiEvent.MidiData[0],MidiEvent.MidiData[1],MidiEvent.MidiData[2],
-    MidiEvent.NoteOffVelocity]);
+  // Should not operate GUI thread in process thread
+  FLogList.Add('%d: Got Midi Event -->ctrl:%X, note:%d, velo:%d, detune:%d',
+    [FMidiEventCount,MidiEvent.MidiData[0],MidiEvent.MidiData[1],MidiEvent.MidiData[2],MidiEvent.Detune]);
   inc(FMidiEventCount);
 end;
 
 procedure TPlug.ProcessMidiSysex(const SysexEvent:TVstMidiSysexEvent);
 begin
-  TFormain(Editor.Gui).LogMemo.Lines.Add('%d Got Midi Sysex Event, ByteSize: %d',
-    [FMidiSysexCount,SysexEvent.ByteSize]);
+  FLogList.Add(Format('%d Got Midi Sysex Event, ByteSize: %d',
+    [FMidiSysexCount,SysexEvent.ByteSize]));
   inc(FMidiSysexCount);
 end;
 

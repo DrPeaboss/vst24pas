@@ -45,6 +45,7 @@
         <Filename Value="veditor.pp"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Formain"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>

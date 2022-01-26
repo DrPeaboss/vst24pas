@@ -28,6 +28,8 @@ type
     FPhaseIncrement:T;
     FGain:T;
     FIsMuted:Boolean;
+    FTailLen:Integer;
+    FMaxTail:Integer;
     procedure UpdateIncrement;
     procedure SetFreq(AValue:T);
     procedure SetSampleRate(AValue:T);
@@ -36,6 +38,8 @@ type
     constructor Create(AOscMode:TOscModes;AFreq:T=440;APhase:T=0;ASampleRate:T=44100);
     procedure Generage(const Buf:PT;SampleFrames:Integer);
     function NextSample:T;
+    procedure Reset;
+    procedure Release;
     property OscMode:TOscModes read FOscMode write FOscMode;
     property Freq:T read FFreq write SetFreq;
     property SampleRate:T read FSampleRate write SetSampleRate;
@@ -51,6 +55,8 @@ function NoteToFrequency(Note:Int8):Single;
 
 implementation
 
+uses math;
+
 function NoteToFrequency(Note:Int8):Single;
 const
   StandardA4 = 440.0;
@@ -64,7 +70,7 @@ end;
 
 procedure TOscillator.UpdateIncrement;
 begin
-  FPhaseIncrement:=FFreq*2*PI/FSampleRate;
+  FPhaseIncrement:=FFreq*TwoPi/FSampleRate;
 end;
 
 procedure TOscillator.SetFreq(AValue:T);
@@ -87,6 +93,7 @@ begin
   UpdateIncrement;
   FGain:=1;
   FIsMuted:=True;
+  FMaxTail:=440;
 end;
 
 constructor TOscillator.Create(AOscMode:TOscModes;AFreq:T;APhase:T;ASampleRate:T);
@@ -98,6 +105,7 @@ begin
   UpdateIncrement;
   FGain:=1;
   FIsMuted:=True;
+  FMaxTail:=440;
 end;
 
 procedure TOscillator.Generage(const Buf:PT;SampleFrames:Integer);
@@ -156,6 +164,10 @@ begin
 end;
 
 function TOscillator.NextSample:T;
+const
+  HalfPI=PI*0.5;
+  QuarterPI=PI*0.25;
+  FourDivPI=4/PI;
 begin
   Result:=0;
   if IsMuted then Exit;
@@ -173,13 +185,31 @@ begin
         Result:=-1;
     end;
     omTriangle: begin
-      Result:=2.0 * ( abs(2.0*FPhase/TwoPi-1.0) - 0.5);
+      //Result:=2.0 * ( abs(2.0*(FPhase-0.5)/TwoPi-1.0) - 0.5);
+      Result:=(ArcSin(abs(sin((FPhase+HalfPI)/2)))-QuarterPI)*FourDivPI; // Zero start
     end;
   end;
   Result:=Result*FGain;
+  if FTailLen>0 then
+  begin
+    Result:=Result*(FTailLen/FMaxTail);
+    Dec(FTailLen);
+    if FTailLen=0 then FIsMuted:=True;
+  end;
   FPhase:=FPhase+FPhaseIncrement;
   while FPhase>=TwoPi do
     FPhase:=FPhase-TwoPi;
+end;
+
+procedure TOscillator.Reset;
+begin
+  FPhase:=0;
+  FTailLen:=0;
+end;
+
+procedure TOscillator.Release;
+begin
+  FTailLen:=FMaxTail;
 end;
 
 end.
