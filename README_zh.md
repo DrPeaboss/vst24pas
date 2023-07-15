@@ -36,7 +36,7 @@ PS:
 
 ## 不再支持 VST 2
 
-详见 https://forums.steinberg.net/t/vst-2-discontinued/761383 (2022/01/19 发布)
+详见 <https://helpcenter.steinberg.de/hc/en-us/articles/4409561018258-VST-2-Discontinued>
 
 未来更多的 DAW 会取消对 VST 2 的支持
 

@@ -36,7 +36,7 @@ Attention to the `Target` option above.
 
 ## VST 2 discontinued
 
-See https://forums.steinberg.net/t/vst-2-discontinued/761383 (Posted at 2022/01/19)
+See <https://helpcenter.steinberg.de/hc/en-us/articles/4409561018258-VST-2-Discontinued>
 
 In the future, more and more DAW will discontinue VST 2.
 
