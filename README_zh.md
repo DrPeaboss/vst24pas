@@ -44,4 +44,4 @@ PS:
 
 ## 关于 VST 3
 
-对于 FPC 和 Delphi 来说，兼容 VST 3 困难重重
+你可以在这里找到 VST 3 的API <https://github.com/DrPeaboss/vst3-pas>

@@ -44,4 +44,4 @@ So, it's time to use VST 3
 
 ## About VST 3
 
-Yes, there are many difficulties for FPC/Delphi to compatible VST 3.
+Now you can find the VST 3 API bindings at <https://github.com/DrPeaboss/vst3-pas>
